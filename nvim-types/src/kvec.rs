@@ -1,5 +1,4 @@
 use core::ffi;
-use std::marker::PhantomData;
 use std::mem::{self, MaybeUninit};
 use std::num::NonZeroUsize;
 use std::ops::RangeBounds;
