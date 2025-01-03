@@ -7,7 +7,7 @@ use error::{alloc_failed, slice_error};
 
 #[repr(C)]
 #[derive(Debug)]
-pub(super) struct KVec<T> {
+pub struct KVec<T> {
     pub(super) len: usize,
     pub(super) capacity: usize,
     pub(super) ptr: NonNull<T>,
