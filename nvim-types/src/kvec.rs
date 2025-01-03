@@ -146,16 +146,16 @@ impl<T> KVec<T> {
     ///
     /// Always allocates space for at least len + additional elements.
     pub fn reserve(&mut self, additional: usize) {
-        if Self::ZST {
-            self.capacity += additional;
-            return;
-        }
         let Some(min_capacity) = self.next_minimum_capacity(additional) else {
             return;
         };
         let new_capacity = min_capacity
             .checked_next_power_of_two()
             .unwrap_or(min_capacity);
+        if Self::ZST {
+            self.capacity += new_capacity.get();
+            return;
+        }
         self.realloc(new_capacity.get());
     }
 
@@ -200,11 +200,7 @@ impl<T> KVec<T> {
         // SAFETY: additional is always bigger than remaining which is checked above
         let new_capacity = self.capacity + additional - remaining;
         debug_assert_ne!(new_capacity, 0);
-        unsafe {
-            Some(NonZeroUsize::new_unchecked(
-                new_capacity
-            ))
-        }
+        unsafe { Some(NonZeroUsize::new_unchecked(new_capacity)) }
     }
 
     // Inlined as most of the conditions are likely to be checked in call sites.
