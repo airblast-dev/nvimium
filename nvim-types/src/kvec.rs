@@ -229,7 +229,7 @@ impl<T> KVec<T> {
     /// Push an element to the end of the [`KVec`]
     ///
     /// When pushing multiple elements in the [`KVec`] prefer it's [`Extend`] implementation or
-    /// [`KVec::extend_from_slice`] if cloning from a slice.
+    /// [`KVec::extend_from_slice`] if cloning from a slice to avoid extra allocation visits.
     pub fn push(&mut self, element: T) {
         self.reserve_exact(1);
 
