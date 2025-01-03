@@ -72,14 +72,29 @@ impl<T> KVec<T> {
         }
     }
 
+    /// Returns the number elements present in the [`KVec`]
     #[inline(always)]
     pub const fn len(&self) -> usize {
         self.len
     }
 
+    /// Set the length of the [`KVec`]
+    ///
+    /// This should usually called after initializing elements via [`KVec::spare_capacity_mut`].
+    ///
+    /// # Safety
+    ///
+    /// Calling this function when len items are not initialized may cause undefined behavior.
     #[inline(always)]
     pub const unsafe fn set_len(&mut self, len: usize) {
         self.len = len;
+    }
+
+
+    /// Returns the total capacity of the [`KVec`]
+    #[inline(always)]
+    pub const fn capacity(&self) -> usize {
+        self.capacity
     }
 
     /// Initialize [`KVec`] with for at least capacity elements.
