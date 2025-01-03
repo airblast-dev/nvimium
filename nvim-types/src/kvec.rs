@@ -182,7 +182,8 @@ impl<T> KVec<T> {
     /// The remaining capacity in [`KVec`]
     #[inline(always)]
     fn remaining_capacity(&self) -> usize {
-        self.capacity - self.len()
+        debug_assert!(self.capacity() >= self.len());
+        self.capacity() - self.len()
     }
 
     /// Returns the minimum new capacity.
@@ -197,9 +198,11 @@ impl<T> KVec<T> {
             return None;
         }
         // SAFETY: additional is always bigger than remaining which is checked above
+        let new_capacity = self.capacity + additional - remaining;
+        debug_assert_ne!(new_capacity, 0);
         unsafe {
             Some(NonZeroUsize::new_unchecked(
-                self.capacity + additional - remaining,
+                new_capacity
             ))
         }
     }
