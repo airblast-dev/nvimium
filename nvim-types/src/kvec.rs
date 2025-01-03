@@ -327,7 +327,7 @@ impl<T> Extend<T> for KVec<T> {
 }
 
 /// TODO: probably safety problems, check std implementation
-pub struct Drain<'a, T> {
+struct Drain<'a, T> {
     start: usize,
     end: usize,
     iter: std::slice::Iter<'a, T>,
