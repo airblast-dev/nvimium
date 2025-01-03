@@ -369,3 +369,132 @@ const _: () = assert!(
     mem::size_of::<KVec<[u32; 1]>>()
         == mem::size_of::<usize>() * 2 + mem::size_of::<*mut [u32; 10]>()
 );
+
+#[cfg(test)]
+mod tests {
+    use std::mem::MaybeUninit;
+
+    type KVec = super::KVec<String>;
+
+    #[test]
+    fn new() {
+        let kv = KVec::new();
+        assert_eq!(kv.len(), 0);
+        assert_eq!(kv.capacity(), 0);
+    }
+
+    #[test]
+    fn as_slice() {
+        let mut kv = KVec::new();
+        assert_eq!(kv.as_slice(), &[] as &[String]);
+        kv.push(String::from("Hello, World!"));
+        assert_eq!(kv.as_slice(), &[String::from("Hello, World!")] as &[String]);
+    }
+
+    #[test]
+    fn with_capacity() {
+        let kv = KVec::with_capacity(10);
+        assert_eq!(kv.len(), 0);
+        assert_eq!(kv.capacity(), 10);
+    }
+
+    #[test]
+    fn reserve() {
+        let mut kv = KVec::new();
+
+        // should not change ptr
+        let ptr = kv.as_ptr();
+        kv.reserve(0);
+        assert_eq!(kv.as_ptr(), ptr);
+
+        // should set the capacity to the next power of two
+        // the pointer should also change since at this stage it should be a dangling pointer
+        let ptr = kv.as_ptr();
+        kv.reserve(10);
+        assert_ne!(ptr, kv.as_ptr());
+        assert_eq!(kv.len(), 0);
+        assert_eq!(kv.capacity(), 16);
+
+        // we already allocated, everything should be the same
+        kv.reserve(10);
+        assert_ne!(ptr, kv.as_ptr());
+        assert_eq!(kv.len(), 0);
+        assert_eq!(kv.capacity(), 16);
+
+        // check if reserve 0 changes the pointer, essentially checks if we visit the allocator
+        // (miri will always change the pointer on realloc regardless of the block size)
+        let ptr = kv.as_ptr();
+        kv.reserve(0);
+        assert_eq!(kv.as_ptr(), ptr);
+    }
+
+    #[test]
+    fn reserve_exact() {
+        // just read the comments in the reserve tests, pretty much the same story
+        let mut kv = KVec::new();
+
+        let ptr = kv.as_ptr();
+        kv.reserve_exact(0);
+        assert_eq!(kv.as_ptr(), ptr);
+        assert_eq!(kv.len(), 0);
+
+        kv.reserve_exact(1);
+        assert_ne!(kv.as_ptr(), ptr);
+        assert_eq!(kv.len(), 0);
+
+        // the ptr may not change if the allocator extends the block, with miri the pointer always
+        // changes on allocator visits
+        #[allow(unused_variables)]
+        let ptr = kv.as_ptr();
+        kv.reserve_exact(2);
+        #[cfg(miri)]
+        assert_ne!(kv.as_ptr(), ptr);
+        assert_eq!(kv.len(), 0);
+
+        let ptr = kv.as_ptr();
+        kv.reserve_exact(0);
+        assert_eq!(kv.as_ptr(), ptr);
+        assert_eq!(kv.len(), 0);
+        kv.reserve_exact(2);
+        assert_eq!(kv.as_ptr(), ptr);
+        assert_eq!(kv.len(), 0);
+    }
+
+    #[test]
+    fn spare_capacity_mut() {
+        let mut kv = KVec::new();
+
+        assert_eq!(kv.spare_capacity_mut().len(), 0);
+
+        kv.reserve(32);
+        assert_eq!(kv.spare_capacity_mut().len(), 32);
+
+        kv.reserve(33);
+        assert_eq!(kv.spare_capacity_mut().len(), 64);
+
+        let mut kv = KVec::new();
+
+        assert_eq!(kv.spare_capacity_mut().len(), 0);
+
+        kv.reserve_exact(32);
+        assert_eq!(kv.spare_capacity_mut().len(), 32);
+
+        kv.reserve_exact(33);
+        assert_eq!(kv.spare_capacity_mut().len(), 33);
+
+        kv.reserve_exact(20);
+        assert_eq!(kv.spare_capacity_mut().len(), 33);
+    }
+}
+
+/// KVec does not take any responsibility when it comes to dropping
+/// This is just to make miri not complain in tests about memory leaks.
+/// might remove this later depending on how things go in other types.
+#[cfg(miri)]
+impl<T> Drop for KVec<T> {
+    fn drop(&mut self) {
+        unsafe {
+            self.drop();
+        }
+    }
+}
