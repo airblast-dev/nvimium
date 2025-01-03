@@ -591,4 +591,24 @@ mod tests {
 
         unsafe { kv.drop() };
     }
+
+    #[test]
+    fn extend() {
+        let mut kv = KVec::new();
+
+        kv.extend(["1", "2", "3", "4"].into_iter().map(String::from));
+        assert_eq!(kv.len(), 4);
+        unsafe {
+            kv.drop();
+        }
+    }
+
+    #[test]
+    fn extend_from_slice() {
+        let mut kv = KVec::new();
+        kv.extend_from_slice(&[String::from("1"), String::from("2"), String::from("3")]);
+        assert_eq!(kv.capacity(), 3);
+        assert_eq!(kv.len(), 3);
+        unsafe { kv.drop() };
+    }
 }
