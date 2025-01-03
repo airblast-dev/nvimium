@@ -60,7 +60,7 @@ impl<T> KVec<T> {
 
     /// Returns a pointer to the internal buffer
     #[inline(always)]
-    fn as_ptr(&self) -> *mut T {
+    pub const fn as_ptr(&self) -> *mut T {
         self.ptr.as_ptr()
     }
 
