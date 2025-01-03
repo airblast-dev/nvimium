@@ -1,0 +1,340 @@
+use core::ffi;
+use std::marker::PhantomData;
+use std::mem::{self, MaybeUninit};
+use std::num::NonZeroUsize;
+use std::ops::RangeBounds;
+use std::ptr::NonNull;
+
+use error::{alloc_failed, slice_error};
+
+#[repr(C)]
+#[derive(Debug)]
+pub(super) struct KVec<T> {
+    pub(super) len: usize,
+    pub(super) capacity: usize,
+    pub(super) ptr: NonNull<T>,
+}
+
+impl<T> KVec<T> {
+    pub(super) const T_SIZE: usize = mem::size_of::<T>();
+    pub(super) const ZST: bool = Self::T_SIZE == 0;
+
+    /// Initialize an empty [`KVec`]
+    ///
+    /// Will not allocate until reserve methods are called, or elements are appended.
+    #[inline(always)]
+    pub const fn new() -> Self {
+        Self {
+            len: 0,
+            capacity: 0,
+            ptr: NonNull::dangling(),
+        }
+    }
+
+    #[inline]
+    pub const fn as_slice(&self) -> &[T] {
+        self.slice_check();
+        // since self.ptr is non null, a slice is always valid since [`NonNull::dangling`] is
+        // correctly aligned.
+        unsafe { std::slice::from_raw_parts(self.ptr.as_ptr(), self.len) }
+    }
+
+    #[inline]
+    pub const fn as_mut_slice(&mut self) -> &mut [T] {
+        self.slice_check();
+        // since self.ptr is non null, a slice is always valid since [`NonNull::dangling`] is
+        // correctly aligned.
+        unsafe { std::slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len) }
+    }
+
+    /// Returns the uninitialized but allocated space for `T`
+    #[inline]
+    pub const fn spare_capacity_mut(&mut self) -> &mut [MaybeUninit<T>] {
+        self.slice_check();
+        unsafe {
+            std::slice::from_raw_parts_mut(
+                self.ptr.add(self.len).cast::<MaybeUninit<T>>().as_ptr(),
+                self.capacity - self.len(),
+            )
+        }
+    }
+
+    #[track_caller]
+    #[inline(always)]
+    const fn slice_check(&self) {
+        // see docs for `std::slice::from_raw_parts*`
+        let Some(byte_size) = Self::T_SIZE.checked_mul(self.len()) else {
+            slice_error();
+        };
+        let max_slice_len = isize::MAX as usize;
+        if byte_size > max_slice_len {
+            slice_error();
+        }
+    }
+
+    #[inline(always)]
+    pub const fn len(&self) -> usize {
+        self.len
+    }
+
+    #[inline(always)]
+    pub const unsafe fn set_len(&mut self, len: usize) {
+        self.len = len;
+    }
+
+    /// Initialize [`KVec`] with for at least capacity elements.
+    ///
+    /// Does not allocate if capacity is 0 or T is a ZST.
+    ///
+    /// # Guarantee's
+    ///
+    /// This function is guaranteed to at least allocate for `capacity` elements.
+    pub fn with_capacity(capacity: usize) -> Self {
+        // We shouldn't be storing ZST's in any use case, but if we do, just return a dangling pointer.
+        let ptr = if Self::ZST || capacity == 0 {
+            NonNull::dangling()
+        } else {
+            let Some(byte_cap) = capacity.checked_mul(Self::T_SIZE) else {
+                alloc_failed();
+            };
+
+            // When the requested size is 0, malloc may return NULL or a dangling pointer.
+            // To always have a non null pointer we check the capacity above.
+            debug_assert_ne!(byte_cap, 0);
+
+            let ptr = unsafe { libc::malloc(byte_cap) };
+            if ptr.is_null() {
+                alloc_failed();
+            }
+            unsafe { NonNull::new_unchecked(ptr as *mut T) }
+        };
+
+        Self {
+            len: 0,
+            capacity,
+            ptr,
+        }
+    }
+
+    /// Reserve space for at least additional elements
+    ///
+    /// If enough space already exists for the additional elements, this will not allocate.
+    /// If you already know the *exact* total number of elements that [`KVec`] will contain, prefer
+    /// [`KVec::with_capacity`] or [`KVec::reserve_exact`] as this function will often allocate
+    /// extra space.
+    ///
+    /// # Guarantee's
+    ///
+    /// Always allocates space for at least len + additional elements.
+    pub fn reserve(&mut self, additional: usize) {
+        if Self::ZST {
+            self.capacity += additional;
+            return;
+        }
+        let Some(min_capacity) = self.next_minimum_capacity(additional) else {
+            return;
+        };
+        let new_capacity = min_capacity
+            .checked_next_power_of_two()
+            .unwrap_or(min_capacity);
+        self.realloc(new_capacity.get());
+    }
+
+    /// Reserve space for at least additional elements
+    ///
+    /// If enough space already exists for the additional elements, this will not allocate.
+    /// Generally [`KVec::reserve`] should be preferred.
+    ///
+    /// # Guarantee's
+    ///
+    /// Always allocates space for at least len + additional elements.
+    pub fn reserve_exact(&mut self, additional: usize) {
+        if Self::ZST {
+            self.capacity += additional;
+            return;
+        }
+        let Some(new_capacity) = self.next_minimum_capacity(additional) else {
+            return;
+        };
+
+        self.realloc(new_capacity.get());
+    }
+
+    /// The remaining capacity in [`KVec`]
+    #[inline(always)]
+    fn remaining_capacity(&self) -> usize {
+        self.capacity - self.len()
+    }
+
+    /// Returns the minimum new capacity.
+    ///
+    /// If additional elements already fits, this returns None.
+    #[inline]
+    fn next_minimum_capacity(&self, additional: usize) -> Option<NonZeroUsize> {
+        let remaining = self.remaining_capacity();
+
+        // check if we already have enough space
+        if remaining >= additional {
+            return None;
+        }
+        // SAFETY: additional is always bigger than remaining which is checked above
+        unsafe {
+            Some(NonZeroUsize::new_unchecked(
+                self.capacity + additional - remaining,
+            ))
+        }
+    }
+
+    // Inlined as most of the conditions are likely to be checked in call sites.
+    #[inline(always)]
+    fn realloc(&mut self, new_capacity: usize) {
+        if Self::ZST {
+        } else if new_capacity == 0 && self.capacity > 0 {
+            unsafe { libc::free(self.ptr.as_ptr() as *mut ffi::c_void) };
+        } else {
+            let Some(byte_capacity) = new_capacity.checked_mul(Self::T_SIZE) else {
+                alloc_failed();
+            };
+            let ptr = if self.capacity == 0 {
+                unsafe { libc::malloc(byte_capacity) }
+            } else {
+                unsafe { libc::realloc(self.ptr.as_ptr() as *mut ffi::c_void, byte_capacity) }
+            };
+            if ptr.is_null() {
+                alloc_failed();
+            }
+            self.ptr = unsafe { NonNull::new_unchecked(ptr as *mut T) };
+        }
+        self.capacity = new_capacity;
+    }
+
+    /// Push an element to the end of the [`KVec`]
+    ///
+    /// When pushing multiple elements in the [`KVec`] prefer it's [`Extend`] implementation or
+    /// [`KVec::extend_from_slice`] if cloning from a slice.
+    pub fn push(&mut self, element: T) {
+        self.reserve_exact(1);
+
+        // SAFETY: reserve_exact guarantees that at least space for one element will be allocated
+        unsafe { self.push_unchecked(element) };
+    }
+
+    /// Push T without checking for capacity.
+    ///
+    /// # Safety
+    ///     
+    /// Callers must guarantee that enough space is allocated. It is undefined behavior otherwise.
+    unsafe fn push_unchecked(&mut self, element: T) {
+        if !Self::ZST {
+            unsafe {
+                self.ptr.add(self.len()).write(element);
+            }
+        }
+        unsafe { self.set_len(self.len() + 1) };
+    }
+
+    /// Append the elements to the end by cloning
+    ///
+    /// To use with iterators see [`KVec`]'s [`Extend::extend`] implementation.
+    pub fn extend_from_slice(&mut self, s: &[T])
+    where
+        T: Clone,
+    {
+        self.reserve_exact(s.len());
+        if !Self::ZST {
+            let spare = unsafe { self.spare_capacity_mut().get_unchecked_mut(..s.len()) };
+            for i in 0..s.len() {
+                spare[i].write(s[i].clone());
+            }
+        }
+
+        unsafe { self.set_len(self.len() + s.len()) };
+    }
+
+    /// Drain the elements in range
+    ///
+    /// Similar to [`Vec::drain`], this returns an iterator that yields the items in range.
+    ///
+    /// # Panics
+    ///
+    /// If the range exceeds the bounds of the [`KVec`] this will panic.
+    fn drain<R: RangeBounds<usize>>(&mut self, range: R) -> Drain<'_, T> {
+        use std::ops::Bound;
+        let start = match range.start_bound() {
+            Bound::Unbounded => 0,
+            Bound::Included(i) => *i,
+            Bound::Excluded(i) => i.saturating_add(1),
+        };
+        let end = match range.end_bound() {
+            Bound::Unbounded => self.len,
+            Bound::Included(i) => *i,
+            Bound::Excluded(i) => i.saturating_sub(1),
+        };
+
+        assert!(start < self.len());
+        assert!(start <= end);
+        assert!(end < self.len());
+        unsafe {
+            Drain {
+                start,
+                end,
+                kvec: NonNull::new_unchecked(self as *mut _),
+                iter: self.as_slice()[start..end].iter(),
+            }
+        }
+    }
+}
+
+impl<T> Extend<T> for KVec<T> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        let mut iter = iter.into_iter();
+        while let Some(element) = iter.next() {
+            self.reserve(iter.size_hint().0);
+            self.push(element);
+        }
+    }
+}
+
+/// TODO: probably safety problems, check std implementation
+pub struct Drain<'a, T> {
+    start: usize,
+    end: usize,
+    iter: std::slice::Iter<'a, T>,
+    kvec: NonNull<KVec<T>>,
+}
+
+impl<T> Iterator for Drain<'_, T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter
+            .next()
+            .map(|elt| unsafe { std::ptr::read(elt as *const T) })
+    }
+}
+
+impl<T> Drop for Drain<'_, T> {
+    fn drop(&mut self) {
+        // add ZST check
+        unsafe {
+            let kvec = self.kvec.as_mut();
+            for elt in
+                kvec.as_mut_slice()[self.start..self.end.min(self.iter.as_slice().len())].iter_mut()
+            {
+                std::ptr::drop_in_place(elt as *mut T);
+            }
+            let src = kvec.ptr.add(self.start);
+            let dst = kvec.ptr.add(self.end);
+            libc::memcpy(
+                dst.as_ptr() as *mut ffi::c_void,
+                src.as_ptr() as *const ffi::c_void,
+                (self.end - self.start) * mem::size_of::<T>(),
+            );
+            kvec.set_len(kvec.len() - (self.end - self.start));
+        }
+    }
+}
+
+const _: () = assert!(
+    mem::size_of::<KVec<[u32; 1]>>()
+        == mem::size_of::<usize>() * 2 + mem::size_of::<*mut [u32; 10]>()
+);

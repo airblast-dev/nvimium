@@ -1,0 +1,8 @@
+[package]
+name = "nvim-types"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libc = { workspace = true }
+error = { workspace = true }

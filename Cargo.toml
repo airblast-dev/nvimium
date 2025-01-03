@@ -1,0 +1,13 @@
+[package]
+name = "nvim-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[workspace.dependencies]
+libc = "0.2.169"
+error = { path = "./error" }
+
+[workspace]
+members = [ "error", "nvim-types"]
