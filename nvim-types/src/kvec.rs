@@ -300,8 +300,20 @@ impl<T> KVec<T> {
             }
         }
     }
+}
 
-    pub unsafe fn drop(&mut self) {
+impl<T> Extend<T> for KVec<T> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        let mut iter = iter.into_iter();
+        while let Some(element) = iter.next() {
+            self.reserve(iter.size_hint().0.max(1));
+            unsafe { self.push_unchecked(element) };
+        }
+    }
+}
+
+impl<T> Drop for KVec<T> {
+    fn drop(&mut self) {
         if Self::ZST || self.capacity == 0 {
             return;
         }
@@ -311,16 +323,6 @@ impl<T> KVec<T> {
         }
         unsafe {
             libc::free(self.as_ptr() as *mut libc::c_void);
-        }
-    }
-}
-
-impl<T> Extend<T> for KVec<T> {
-    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
-        let mut iter = iter.into_iter();
-        while let Some(element) = iter.next() {
-            self.reserve(iter.size_hint().0.max(1));
-            unsafe { self.push_unchecked(element) };
         }
     }
 }
@@ -394,9 +396,6 @@ mod tests {
         assert_eq!(kv.as_slice(), &[] as &[String]);
         kv.push(String::from("Hello, World!"));
         assert_eq!(kv.as_slice(), &[String::from("Hello, World!")] as &[String]);
-        unsafe {
-            kv.drop();
-        }
     }
 
     #[test]
@@ -405,9 +404,6 @@ mod tests {
         assert!(kv.len() + kv.len == 0);
         kv.reserve(2);
         assert!(kv.len() + kv.len == 0);
-        unsafe {
-            kv.drop();
-        }
     }
 
     #[test]
@@ -417,19 +413,13 @@ mod tests {
         kv.reserve(2);
         assert_eq!(kv.capacity, 2);
         assert_eq!(kv.capacity(), 2);
-        unsafe {
-            kv.drop();
-        }
     }
 
     #[test]
     fn with_capacity() {
-        let mut kv = KVec::with_capacity(10);
+        let kv = KVec::with_capacity(10);
         assert_eq!(kv.len(), 0);
         assert_eq!(kv.capacity(), 10);
-        unsafe {
-            kv.drop();
-        }
     }
 
     #[test]
@@ -460,10 +450,6 @@ mod tests {
         let ptr = kv.as_ptr();
         kv.reserve(0);
         assert_eq!(kv.as_ptr(), ptr);
-
-        unsafe {
-            kv.drop();
-        }
     }
 
     #[test]
@@ -496,23 +482,17 @@ mod tests {
         kv.reserve_exact(2);
         assert_eq!(kv.as_ptr(), ptr);
         assert_eq!(kv.len(), 0);
-
-        unsafe {
-            kv.drop();
-        }
     }
 
     #[test]
     fn next_minimum_capacity() {
-        let mut kv = KVec::new();
+        let kv = KVec::new();
         assert_eq!(kv.next_minimum_capacity(0), None);
         assert_eq!(kv.next_minimum_capacity(1), NonZeroUsize::new(1));
         assert_eq!(kv.next_minimum_capacity(3), NonZeroUsize::new(3));
         assert_eq!(kv.next_minimum_capacity(5), NonZeroUsize::new(5));
         assert_eq!(kv.next_minimum_capacity(8), NonZeroUsize::new(8));
         assert_eq!(kv.next_minimum_capacity(10), NonZeroUsize::new(10));
-
-        unsafe { kv.drop() };
     }
 
     #[test]
@@ -526,9 +506,6 @@ mod tests {
 
         kv.reserve(33);
         assert_eq!(kv.spare_capacity_mut().len(), 64);
-        unsafe {
-            kv.drop();
-        }
 
         let mut kv = KVec::new();
 
@@ -542,10 +519,6 @@ mod tests {
 
         kv.reserve_exact(20);
         assert_eq!(kv.spare_capacity_mut().len(), 33);
-
-        unsafe {
-            kv.drop();
-        }
     }
 
     #[test]
@@ -557,10 +530,6 @@ mod tests {
         assert_eq!(kv.remaining_capacity(), 16);
         kv.reserve(32);
         assert_eq!(kv.remaining_capacity(), 32);
-
-        unsafe {
-            kv.drop();
-        }
     }
 
     #[test]
@@ -587,8 +556,6 @@ mod tests {
         #[cfg(miri)]
         assert_ne!(ptr, kv.as_ptr());
         assert_eq!(kv.len(), 3);
-
-        unsafe { kv.drop() };
     }
 
     #[test]
@@ -597,9 +564,6 @@ mod tests {
 
         kv.extend(["1", "2", "3", "4"].into_iter().map(String::from));
         assert_eq!(kv.len(), 4);
-        unsafe {
-            kv.drop();
-        }
     }
 
     #[test]
@@ -608,6 +572,5 @@ mod tests {
         kv.extend_from_slice(&[String::from("1"), String::from("2"), String::from("3")]);
         assert_eq!(kv.capacity(), 3);
         assert_eq!(kv.len(), 3);
-        unsafe { kv.drop() };
     }
 }
