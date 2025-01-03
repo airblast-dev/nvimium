@@ -1,4 +1,3 @@
-use core::ffi;
 use std::mem::{self, MaybeUninit};
 use std::num::NonZeroUsize;
 use std::ops::RangeBounds;
@@ -208,7 +207,7 @@ impl<T> KVec<T> {
     fn realloc(&mut self, new_capacity: usize) {
         if Self::ZST {
         } else if new_capacity == 0 && self.capacity > 0 {
-            unsafe { libc::free(self.ptr.as_ptr() as *mut ffi::c_void) };
+            unsafe { libc::free(self.ptr.as_ptr() as *mut libc::c_void) };
         } else {
             let Some(byte_capacity) = new_capacity.checked_mul(Self::T_SIZE) else {
                 alloc_failed();
@@ -216,7 +215,7 @@ impl<T> KVec<T> {
             let ptr = if self.capacity == 0 {
                 unsafe { libc::malloc(byte_capacity) }
             } else {
-                unsafe { libc::realloc(self.ptr.as_ptr() as *mut ffi::c_void, byte_capacity) }
+                unsafe { libc::realloc(self.ptr.as_ptr() as *mut libc::c_void, byte_capacity) }
             };
             if ptr.is_null() {
                 alloc_failed();
@@ -311,7 +310,7 @@ impl<T> KVec<T> {
             unsafe { std::ptr::drop_in_place(ptr.add(i)) }
         }
         unsafe {
-            libc::free(self.as_ptr() as *mut ffi::c_void);
+            libc::free(self.as_ptr() as *mut libc::c_void);
         }
     }
 }
@@ -356,8 +355,8 @@ impl<T> Drop for Drain<'_, T> {
             let src = kvec.ptr.add(self.start);
             let dst = kvec.ptr.add(self.end);
             libc::memcpy(
-                dst.as_ptr() as *mut ffi::c_void,
-                src.as_ptr() as *const ffi::c_void,
+                dst.as_ptr() as *mut libc::c_void,
+                src.as_ptr() as *const libc::c_void,
                 (self.end - self.start) * mem::size_of::<T>(),
             );
             kvec.set_len(kvec.len() - (self.end - self.start));
