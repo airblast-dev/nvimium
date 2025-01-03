@@ -372,8 +372,6 @@ const _: () = assert!(
 
 #[cfg(test)]
 mod tests {
-    use std::mem::MaybeUninit;
-
     type KVec = super::KVec<String>;
 
     #[test]
