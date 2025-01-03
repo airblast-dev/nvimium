@@ -321,8 +321,8 @@ impl<T> Extend<T> for KVec<T> {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
         let mut iter = iter.into_iter();
         while let Some(element) = iter.next() {
-            self.reserve(iter.size_hint().0);
-            self.push(element);
+            self.reserve(iter.size_hint().0.max(1));
+            unsafe { self.push_unchecked(element) };
         }
     }
 }
