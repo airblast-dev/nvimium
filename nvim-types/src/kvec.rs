@@ -301,6 +301,19 @@ impl<T> KVec<T> {
             }
         }
     }
+
+    pub unsafe fn drop(&mut self) {
+        if Self::ZST || self.capacity == 0 {
+            return;
+        }
+        let ptr = self.as_ptr();
+        for i in 0..self.len() {
+            unsafe { std::ptr::drop_in_place(ptr.add(i)) }
+        }
+        unsafe {
+            libc::free(self.as_ptr() as *mut ffi::c_void);
+        }
+    }
 }
 
 impl<T> Extend<T> for KVec<T> {
