@@ -58,6 +58,11 @@ impl<T> KVec<T> {
         }
     }
 
+    #[inline(always)]
+    fn as_ptr(&self) -> *mut T {
+        self.ptr.as_ptr()
+    }
+
     #[track_caller]
     #[inline(always)]
     const fn slice_check(&self) {
@@ -88,7 +93,6 @@ impl<T> KVec<T> {
     pub const unsafe fn set_len(&mut self, len: usize) {
         self.len = len;
     }
-
 
     /// Returns the total capacity of the [`KVec`]
     #[inline(always)]
