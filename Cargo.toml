@@ -7,7 +7,7 @@ edition = "2021"
 
 [workspace.dependencies]
 libc = "0.2.169"
-error = { path = "./error" }
+panics = { path = "./panics" }
 
 [workspace]
-members = [ "error", "nvim-types"]
+members = [ "panics", "nvim-types"]

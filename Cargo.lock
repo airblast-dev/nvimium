@@ -3,10 +3,6 @@
 version = 4
 
 [[package]]
-name = "error"
-version = "0.1.0"
-
-[[package]]
 name = "libc"
 version = "0.2.169"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -20,6 +16,13 @@ version = "0.1.0"
 name = "nvim-types"
 version = "0.1.0"
 dependencies = [
- "error",
+ "libc",
+ "panics",
+]
+
+[[package]]
+name = "panics"
+version = "0.1.0"
+dependencies = [
  "libc",
 ]
