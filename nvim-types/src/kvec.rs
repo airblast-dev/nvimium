@@ -1,6 +1,6 @@
 use std::mem::{self, MaybeUninit};
 use std::num::NonZeroUsize;
-use std::ops::RangeBounds;
+use std::ops::{Deref, DerefMut, RangeBounds};
 use std::ptr::NonNull;
 
 use error::{alloc_failed, slice_error};
@@ -276,21 +276,9 @@ impl<T> KVec<T> {
     ///
     /// If the range exceeds the bounds of the [`KVec`] this will panic.
     fn drain<R: RangeBounds<usize>>(&mut self, range: R) -> Drain<'_, T> {
-        use std::ops::Bound;
-        let start = match range.start_bound() {
-            Bound::Unbounded => 0,
-            Bound::Included(i) => *i,
-            Bound::Excluded(i) => i.saturating_add(1),
-        };
-        let end = match range.end_bound() {
-            Bound::Unbounded => self.len,
-            Bound::Included(i) => *i,
-            Bound::Excluded(i) => i.saturating_sub(1),
-        };
+        let std::ops::Range { start, end } =
+            range_bound_to_range(self, range).expect("range bounds must never be out of bounds");
 
-        assert!(start < self.len());
-        assert!(start <= end);
-        assert!(end < self.len());
         unsafe {
             Drain {
                 start,
@@ -302,6 +290,19 @@ impl<T> KVec<T> {
     }
 }
 
+impl <T>Deref for KVec<T> {
+    type Target = [T];
+    fn deref(&self) -> &Self::Target {
+        self.as_slice()
+    }
+}
+
+impl <T> DerefMut for KVec<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.as_mut_slice()
+    }
+}
+
 impl<T> Extend<T> for KVec<T> {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
         let mut iter = iter.into_iter();
@@ -310,6 +311,28 @@ impl<T> Extend<T> for KVec<T> {
             unsafe { self.push_unchecked(element) };
         }
     }
+}
+
+#[inline]
+fn range_bound_to_range<T, R: RangeBounds<usize>>(
+    kv: &KVec<T>,
+    r: R,
+) -> Option<std::ops::Range<usize>> {
+    use std::ops::Bound;
+    let start = match r.start_bound() {
+        Bound::Unbounded => 0,
+        Bound::Included(i) => *i,
+        Bound::Excluded(i) => i.saturating_add(1),
+    };
+    let end = match r.end_bound() {
+        Bound::Unbounded => kv.len,
+        Bound::Included(i) => *i,
+        Bound::Excluded(i) => i.saturating_sub(1),
+    };
+    if (start < kv.len()) || (start <= end) || (end < kv.len()) {
+        return Some(start..end);
+    }
+    None
 }
 
 impl<T> Drop for KVec<T> {
