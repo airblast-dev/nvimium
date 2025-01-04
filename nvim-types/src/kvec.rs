@@ -3,7 +3,7 @@ use std::num::NonZeroUsize;
 use std::ops::{Deref, DerefMut, RangeBounds};
 use std::ptr::NonNull;
 
-use error::{alloc_failed, slice_error};
+use panics::{alloc_failed, slice_error};
 
 #[repr(C)]
 #[derive(Debug)]
@@ -290,14 +290,14 @@ impl<T> KVec<T> {
     }
 }
 
-impl <T>Deref for KVec<T> {
+impl<T> Deref for KVec<T> {
     type Target = [T];
     fn deref(&self) -> &Self::Target {
         self.as_slice()
     }
 }
 
-impl <T> DerefMut for KVec<T> {
+impl<T> DerefMut for KVec<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.as_mut_slice()
     }
