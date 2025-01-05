@@ -41,8 +41,9 @@ impl String {
         Self::with_capacity(0)
     }
 
-
-    /// Returns the current capacity
+    /// Returns the capacity of the buffer
+    ///
+    /// The capacity includes the space for the null byte making it always larger than zero.
     #[inline(always)]
     pub fn capacity(&self) -> NonZeroUsize {
         self.capacity
