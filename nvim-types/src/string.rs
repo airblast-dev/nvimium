@@ -59,6 +59,7 @@ impl String {
         self.len
     }
 
+    #[inline(always)]
     pub unsafe fn set_len(&mut self, new_len: usize) {
         self.len = new_len;
     }
@@ -127,7 +128,8 @@ impl String {
     /// Create a read only copy of the [`String`]
     ///
     /// Prefer this over cloning the value.
-    fn as_thinstr(&self) -> ThinString {
+    #[inline(always)]
+    pub const fn as_thinstr(&self) -> ThinString {
         unsafe { ThinString::new(self.len, self.data) }
     }
 
@@ -243,7 +245,7 @@ impl<'a> ThinString<'a> {
     /// The lifetime provided must be the same lifetime of the pointer.
     /// See [`String::as_thinstr`] for a function that makes use of this.
     #[inline(always)]
-    unsafe fn new<'b>(len: usize, data: NonNull<libc::c_char>) -> ThinString<'a>
+    const unsafe fn new<'b>(len: usize, data: NonNull<libc::c_char>) -> ThinString<'a>
     where
         'a: 'b,
     {
