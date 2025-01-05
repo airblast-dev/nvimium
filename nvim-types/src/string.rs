@@ -1,5 +1,6 @@
 use std::{
-    ffi::CStr, fmt::Debug, marker::PhantomData, num::NonZeroUsize, ops::Deref, ptr::NonNull,
+    borrow::Borrow, ffi::CStr, fmt::Debug, marker::PhantomData, num::NonZeroUsize, ops::Deref,
+    ptr::NonNull,
 };
 
 use panics::{alloc_failed, not_null_terminated};
@@ -230,7 +231,7 @@ impl Drop for String {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq)]
 struct ThinString<'a> {
     data: NonNull<libc::c_char>,
     len: libc::size_t,
@@ -314,6 +315,12 @@ impl<'a> ThinString<'a> {
 //    dbg!(th);
 //}
 
+impl PartialEq for ThinString<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data || self.as_slice() == other.as_slice()
+    }
+}
+
 impl Debug for ThinString<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let l = std::string::String::from_utf8_lossy(self.as_slice());
@@ -322,6 +329,22 @@ impl Debug for ThinString<'_> {
             .field("len", &self.len)
             .field("repr", &l)
             .finish()
+    }
+}
+
+impl Borrow<[u8]> for ThinString<'_> {
+    fn borrow(&self) -> &[u8] {
+        self.as_slice_with_null()
+    }
+}
+
+impl Default for ThinString<'static> {
+    fn default() -> Self {
+        Self {
+            data: unsafe { NonNull::new_unchecked(c"".as_ptr() as *mut libc::c_char) },
+            len: 0,
+            __p: PhantomData,
+        }
     }
 }
 
