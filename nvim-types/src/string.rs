@@ -214,14 +214,6 @@ impl Debug for String {
     }
 }
 
-// If modifying lifetimes of ThinString or related methods, make sure this doesnt compile
-//fn borrow_check() {
-//    let s = String::new();
-//    let th = s.as_thinstr();
-//    drop(s);
-//    dbg!(th);
-//}
-
 const _: () = assert!(
     std::mem::size_of::<usize>() + std::mem::size_of::<ThinString>()
         == std::mem::size_of::<String>()
@@ -302,6 +294,14 @@ impl<'a> ThinString<'a> {
         }
     }
 }
+
+// If modifying lifetimes of ThinString or related methods, make sure this doesnt compile
+//fn borrow_check() {
+//    let s = String::new();
+//    let th = s.as_thinstr();
+//    drop(s);
+//    dbg!(th);
+//}
 
 impl Debug for ThinString<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
