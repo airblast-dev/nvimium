@@ -268,6 +268,7 @@ impl<'a> ThinString<'a> {
     ///
     /// For similar reasons to [`std::ffi::CStr`] this does not allow mutating the buffer. Thus the
     /// returned pointer can be cast to a *mut but it should never be mutated.
+    #[inline(always)]
     pub const fn as_ptr(&self) -> *const u8 {
         self.data.cast::<u8>().as_ptr() as *const u8
     }
