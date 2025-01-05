@@ -173,6 +173,32 @@ impl<'a> Extend<&'a [u8]> for String {
     }
 }
 
+impl std::io::Write for String {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.push(buf);
+        Ok(buf.len())
+    }
+
+    fn write_all(&mut self, buf: &[u8]) -> std::io::Result<()> {
+        self.push(buf);
+        Ok(())
+    }
+
+    fn write_vectored(&mut self, bufs: &[std::io::IoSlice<'_>]) -> std::io::Result<usize> {
+        let additional = bufs.iter().map(|s| s.len()).sum();
+        self.reserve_exact(additional);
+        for buf in bufs {
+            self.push(buf.deref());
+        }
+
+        Ok(additional)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 impl Debug for String {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let l = std::string::String::from_utf8_lossy(self.as_thinstr().as_slice());
