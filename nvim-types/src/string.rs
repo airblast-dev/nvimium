@@ -73,7 +73,7 @@ impl String {
             len: 0,
             data: unsafe { NonNull::new_unchecked(ptr) },
 
-            capacity: unsafe { NonZeroUsize::new_unchecked( cap.saturating_add(1) ) },
+            capacity: unsafe { NonZeroUsize::new_unchecked(cap.saturating_add(1)) },
         }
     }
 
