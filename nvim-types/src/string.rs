@@ -38,7 +38,7 @@ impl String {
 
     /// Allocate a [`String`] with a capacity
     ///
-    /// Allocated for cap + 1 to make the [`String`] null terminated.
+    /// Allocates for cap + 1 to make the [`String`] null terminated.
     fn with_capacity(cap: usize) -> Self {
         let ptr = unsafe { libc::malloc(cap + 1) };
         if ptr.is_null() {
