@@ -163,6 +163,15 @@ impl String {
     }
 }
 
+impl<'a> Extend<&'a [u8]> for String {
+    fn extend<T: IntoIterator<Item = &'a [u8]>>(&mut self, iter: T) {
+        let mut iter = iter.into_iter();
+        while let Some(sl) = iter.next() {
+            self.reserve(sl.len() + iter.size_hint().0);
+            self.push(sl);
+        }
+    }
+}
 
 impl Debug for String {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
