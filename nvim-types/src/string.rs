@@ -218,7 +218,7 @@ impl<'a> ThinString<'a> {
     ///
     /// # Panics
     ///
-    /// The bytes must always be terminated with a null byte ("\0") even if empty.
+    /// The bytes must always be terminated with a null byte (0 or "\0") even if empty.
     #[inline]
     pub fn from_null_terminated<B: 'a + AsRef<[u8]>>(b: B) -> ThinString<'a> {
         let slice = b.as_ref();
