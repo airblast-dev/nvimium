@@ -478,3 +478,35 @@ mod string_alloc {
         assert_eq!(s.as_thinstr().as_slice(), b"abc123");
     }
 }
+
+#[cfg(test)]
+mod thinstr {
+    use super::{String, ThinString};
+
+    fn new_s() -> String {
+        let mut s = String::new();
+        s.push(b"aasdas");
+        s
+    }
+
+    #[test]
+    fn as_slice() {
+        let th = ThinString::default();
+        assert_eq!(th.as_slice(), &[]);
+        assert_eq!(th.as_slice_with_null(), &[0]);
+
+        let s = new_s();
+        let slice = s.as_thinstr().as_slice();
+        assert_eq!(slice, b"aasdas");
+
+        let slice = s.as_thinstr().as_slice_with_null();
+        assert_eq!(slice, b"aasdas\0");
+    }
+
+    #[test]
+    fn as_ptr() {
+        let s = new_s();
+        let th = s.as_thinstr();
+        assert_eq!(s.as_ptr(), th.as_ptr());
+    }
+}
