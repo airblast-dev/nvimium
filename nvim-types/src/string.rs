@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, num::NonZeroUsize, ops::Deref, ptr::NonNull};
+use std::{fmt::Debug, marker::PhantomData, num::NonZeroUsize, ops::Deref, ptr::NonNull};
 
 use panics::{alloc_failed, not_null_terminated};
 
@@ -161,6 +161,22 @@ impl String {
     }
 }
 
+
+impl Debug for String {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let l = std::string::String::from_utf8_lossy(self.as_thinstr().as_slice());
+        let mut ds = f.debug_struct("String");
+
+        let s_dbg = ds
+            .field("data", &self.data)
+            .field("len", &self.len())
+            .field("capacity", &self.capacity())
+            .field("repr", &l);
+
+        s_dbg.finish()
+    }
+}
+
 // If modifying lifetimes of ThinString or related methods, make sure this doesnt compile
 //fn borrow_check() {
 //    let s = String::new();
@@ -181,7 +197,7 @@ impl Drop for String {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 struct ThinString<'a> {
     data: NonNull<libc::c_char>,
     len: libc::size_t,
@@ -233,6 +249,17 @@ impl<'a> ThinString<'a> {
             data: unsafe { NonNull::new_unchecked(slice.as_ptr() as *mut libc::c_char) },
             __p: PhantomData::<&'a u8>,
         }
+    }
+}
+
+impl Debug for ThinString<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let l = std::string::String::from_utf8_lossy(self.as_slice());
+        let mut ds = f.debug_struct("ThinString<'_>");
+        ds.field("data", &self.data)
+            .field("len", &self.len)
+            .field("repr", &l)
+            .finish()
     }
 }
 
