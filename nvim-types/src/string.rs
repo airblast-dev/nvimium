@@ -58,7 +58,7 @@ impl String {
     ///
     /// Prefer this over cloning the value.
     fn as_thinstr(&self) -> ThinString {
-        ThinString::new(self.len, self.data)
+        unsafe { ThinString::new(self.len, self.data) }
     }
 
     /// Leaks the [`String`]
@@ -67,7 +67,7 @@ impl String {
     /// FFI boundry where the foreign function will free it. Almost always [`String::as_thinstr`]
     /// should be preferred unless you really know you need this.
     fn leak(self) -> ThinString<'static> {
-        let th = ThinString::new(self.len, self.data);
+        let th = unsafe { ThinString::new(self.len, self.data) };
         std::mem::forget(self);
         th
     }
@@ -101,7 +101,6 @@ struct ThinString<'a> {
 }
 
 impl<'a> ThinString<'a> {
-
     /// Initialize a new ThinString using a pointer and a length
     ///
     /// # Safety
