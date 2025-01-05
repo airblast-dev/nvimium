@@ -259,11 +259,15 @@ impl<'a> ThinString<'a> {
     /// Derefrencing the pointer is always safe as it is non null and the pointer will always
     /// point to a readable value. If the [`ThinString`] is empty the first byte is always a null byte
     /// (0, b"\0").
+    ///
+    /// For similar reasons to [`std::ffi::CStr`] this does not allow mutating the buffer. Thus the
+    /// returned pointer can be cast to a *mut but it should never be mutated.
     pub const fn as_ptr(&self) -> *const u8 {
         self.data.cast::<u8>().as_ptr() as *const u8
     }
 
-    /// Returns a slice of the buffers bytes
+    /// Returns a slice of the buffers bytes without a null byte
+    #[inline(always)]
     pub const fn as_slice(&self) -> &'a [u8] {
         unsafe { std::slice::from_raw_parts(self.data.as_ptr() as *mut u8, self.len) }
     }
@@ -330,10 +334,17 @@ impl<'a> From<&'a CStr> for ThinString<'a> {
 impl<'a> TryFrom<&'a str> for ThinString<'a> {
     type Error = ThinStringError;
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_bytes())
+    }
+}
+
+impl<'a> TryFrom<&'a [u8]> for ThinString<'a> {
+    type Error = ThinStringError;
+    fn try_from(value: &'a [u8]) -> Result<Self, Self::Error> {
         if value.is_empty() {
-            return Err(ThinStringError::EmptyString);
+            return Err(ThinStringError::Empty);
         }
-        if value.as_bytes()[value.len() - 1] != 0 {
+        if value[value.len() - 1] != 0 {
             return Err(ThinStringError::NotNullTerminated);
         }
 
@@ -348,7 +359,7 @@ impl<'a> TryFrom<&'a str> for ThinString<'a> {
 #[derive(Clone, Copy, Debug)]
 enum ThinStringError {
     NotNullTerminated,
-    EmptyString,
+    Empty,
 }
 
 #[cfg(test)]
