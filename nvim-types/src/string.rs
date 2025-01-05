@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, ops::Deref, ptr::NonNull};
+use std::{marker::PhantomData, num::NonZeroUsize, ops::Deref, ptr::NonNull};
 
 use panics::{alloc_failed, not_null_terminated};
 
@@ -28,12 +28,30 @@ struct String {
     len: libc::size_t,
 
     // when passing to neovim, the rest of the fields must be trimmed out
-    capacity: usize,
+    capacity: NonZeroUsize,
 }
 
+// all methods that change the size of the buffer, or convert self to another type must be placed
+// here.
+//
+// anything else should be implemented on ThinString
 impl String {
+    #[inline(always)]
     fn new() -> Self {
         Self::with_capacity(0)
+    }
+
+
+    /// Returns the current capacity
+    #[inline(always)]
+    pub fn capacity(&self) -> NonZeroUsize {
+        self.capacity
+    }
+
+    /// The total length of the string excluding the null byte
+    #[inline(always)]
+    pub fn len(&self) -> usize {
+        self.len
     }
 
     /// Allocate a [`String`] with a capacity
@@ -50,8 +68,51 @@ impl String {
             len: 0,
             data: unsafe { NonNull::new_unchecked(ptr) },
 
-            capacity: cap + 1,
+            capacity: unsafe { NonZeroUsize::new_unchecked( cap.saturating_add(1) ) },
         }
+    }
+
+    #[inline(always)]
+    fn remaining_capacity(&self) -> usize {
+        self.capacity.get() - self.len - 1
+    }
+
+    pub fn reserve(&mut self, additional: usize) {
+        let Some(min_cap) = self.minimum_alloc_capacity(additional) else {
+            return;
+        };
+
+        let new_capacity = min_cap.checked_next_power_of_two().unwrap_or(min_cap);
+        self.realloc(new_capacity);
+    }
+
+    pub fn reserve_exact(&mut self, additional: usize) {
+        let Some(new_cap) = self.minimum_alloc_capacity(additional) else {
+            return;
+        };
+        self.realloc(new_cap);
+    }
+
+    #[inline(always)]
+    fn minimum_alloc_capacity(&self, additional: usize) -> Option<NonZeroUsize> {
+        let remaining = self.remaining_capacity();
+        if remaining >= additional {
+            return None;
+        }
+        unsafe {
+            Some(NonZeroUsize::new_unchecked(
+                self.capacity.get() + additional - remaining,
+            ))
+        }
+    }
+
+    fn realloc(&mut self, new_capacity: NonZeroUsize) {
+        let ptr = unsafe { libc::realloc(self.data.as_ptr() as *mut libc::c_void, self.len + 1) };
+        if ptr.is_null() {
+            alloc_failed();
+        }
+        self.data = unsafe { NonNull::new_unchecked(ptr as *mut libc::c_char) };
+        self.capacity = new_capacity;
     }
 
     /// Create a read only copy of the [`String`]
