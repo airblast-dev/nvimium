@@ -182,7 +182,7 @@ impl<'a> ThinString<'a> {
 
     /// Returns a slice of the buffers bytes
     fn as_slice(&self) -> &[u8] {
-        unsafe { std::slice::from_raw_parts(self.data.as_ptr().cast(), self.len) }
+        unsafe { std::slice::from_raw_parts(self.data.as_ptr() as *mut u8, self.len) }
     }
 
     /// Initialize a [`ThinString`] from raw bytes
