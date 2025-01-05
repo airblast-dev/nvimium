@@ -65,6 +65,16 @@ impl String {
         self.len = new_len;
     }
 
+    #[inline(always)]
+    pub fn as_ptr(&self) -> *const u8 {
+        self.data.as_ptr() as *const u8
+    }
+
+    #[inline(always)]
+    pub fn as_mut_ptr(&self) -> *mut u8 {
+        self.data.as_ptr() as *mut u8
+    }
+
     /// Allocate a [`String`] with a capacity
     ///
     /// Allocates for cap + 1 to make the [`String`] null terminated.
