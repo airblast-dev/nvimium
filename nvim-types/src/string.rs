@@ -1,4 +1,6 @@
-use std::{fmt::Debug, marker::PhantomData, num::NonZeroUsize, ops::Deref, ptr::NonNull};
+use std::{
+    ffi::CStr, fmt::Debug, marker::PhantomData, num::NonZeroUsize, ops::Deref, ptr::NonNull,
+};
 
 use panics::{alloc_failed, not_null_terminated};
 
@@ -312,6 +314,40 @@ impl Debug for ThinString<'_> {
             .field("repr", &l)
             .finish()
     }
+}
+
+impl<'a> From<&'a CStr> for ThinString<'a> {
+    fn from(value: &'a CStr) -> Self {
+        Self {
+            len: value.count_bytes(),
+            data: unsafe { NonNull::new_unchecked(value.as_ptr() as *mut libc::c_char) },
+            __p: PhantomData,
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a str> for ThinString<'a> {
+    type Error = ThinStringError;
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        if value.is_empty() {
+            return Err(ThinStringError::EmptyString);
+        }
+        if value.as_bytes()[value.len() - 1] != 0 {
+            return Err(ThinStringError::NotNullTerminated);
+        }
+
+        Ok(Self {
+            len: value.len() - 1,
+            data: unsafe { NonNull::new_unchecked(value.as_ptr() as *mut libc::c_char) },
+            __p: PhantomData,
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+enum ThinStringError {
+    NotNullTerminated,
+    EmptyString,
 }
 
 #[cfg(test)]
