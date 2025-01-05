@@ -257,12 +257,12 @@ impl<'a> ThinString<'a> {
     /// Derefrencing the pointer is always safe as it is non null and the pointer will always
     /// point to a readable value. If the [`ThinString`] is empty the first byte is always a null byte
     /// (0, b"\0").
-    pub fn as_ptr(&self) -> *const u8 {
+    pub const fn as_ptr(&self) -> *const u8 {
         self.data.cast::<u8>().as_ptr() as *const u8
     }
 
     /// Same as [`ThinString::as_ptr`] but returns a pointer to mutable values
-    pub fn as_mut_ptr(&mut self) -> *mut u8 {
+    pub const fn as_mut_ptr(&mut self) -> *mut u8 {
         self.data.cast::<u8>().as_ptr()
     }
 
