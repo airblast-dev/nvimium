@@ -242,7 +242,9 @@ impl<'a> ThinString<'a> {
     ///
     /// # Safety
     ///
-    /// The lifetime provided must be the same lifetime of the pointer.
+    /// The lifetime provided must be the same lifetime of the pointer and `data.add(len)` must
+    /// point to a null byte.
+    ///
     /// See [`String::as_thinstr`] for a function that makes use of this.
     #[inline(always)]
     const unsafe fn new<'b>(len: usize, data: NonNull<libc::c_char>) -> ThinString<'a>
