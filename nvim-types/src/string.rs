@@ -235,3 +235,53 @@ impl<'a> ThinString<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod string_alloc {
+    use super::String;
+
+    #[test]
+    fn new() {
+        let s = String::new();
+        assert_eq!(s.capacity().get(), 1);
+        assert_eq!(s.len(), 0);
+    }
+
+    #[test]
+    fn capacity() {
+        let mut s = String::new();
+        assert_eq!(s.capacity().get(), 1);
+        s.reserve_exact(5);
+        assert_eq!(s.capacity().get(), 5);
+    }
+
+    #[test]
+    fn with_capacity() {
+        let s = String::with_capacity(0);
+        assert_eq!(s.capacity().get(), 1);
+        let s = String::with_capacity(10);
+        assert_eq!(s.capacity().get(), 11);
+    }
+
+    #[test]
+    fn reserve() {
+        let mut s = String::new();
+        s.reserve(2);
+        assert_eq!(s.capacity().get(), 4);
+        assert_eq!(s.len(), 0);
+        s.reserve(5);
+        assert_eq!(s.capacity().get(), 8);
+        assert_eq!(s.len(), 0);
+    }
+
+    #[test]
+    fn reserve_exact() {
+        let mut s = String::new();
+        s.reserve_exact(1);
+        assert_eq!(s.capacity().get(), 2);
+        assert_eq!(s.len(), 0);
+        s.reserve_exact(5);
+        assert_eq!(s.capacity().get(), 6);
+        assert_eq!(s.len(), 0);
+    }
+}
