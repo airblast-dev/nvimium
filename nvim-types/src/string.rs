@@ -24,6 +24,8 @@ use panics::{alloc_failed, not_null_terminated};
 /// This also means you should provide a [`ThinString`] when calling C bindings directly.
 #[repr(C)]
 struct String {
+    // TODO: check feasability of overallocating some bytes to store capacity in allocation
+    // This might allow us to introduce some optimizations in the API.
     data: NonNull<libc::c_char>,
     len: libc::size_t,
 
