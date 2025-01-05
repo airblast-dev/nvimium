@@ -137,6 +137,28 @@ impl String {
         std::mem::forget(self);
         th
     }
+
+    fn push<'a, B: 'a + AsRef<[u8]>>(&mut self, string: B) {
+        let slice = string.as_ref();
+        self.reserve_exact(slice.len());
+        // SAFETY: self.data is NonNull and we have reserved space to push the string
+        // it is now safe to copy the bytes
+        //
+        // preferred to use libc::memcpy for better binary size
+        unsafe {
+            libc::memcpy(
+                self.data.add(self.len()).as_ptr() as *mut libc::c_void,
+                slice.as_ptr() as *mut libc::c_void,
+                slice.len(),
+            );
+        }
+
+        // SAFETY: the values have been initialized above, it is now safe to set the new length.
+        unsafe { self.set_len(self.len() + slice.len()) };
+
+        // SAFETY: we already had enough space, just write the null byte
+        unsafe { self.data.as_ptr().add(self.len()).write(0) };
+    }
 }
 
 // If modifying lifetimes of ThinString or related methods, make sure this doesnt compile
