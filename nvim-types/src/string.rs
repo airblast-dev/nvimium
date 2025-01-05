@@ -292,11 +292,17 @@ impl<'a> ThinString<'a> {
     }
 }
 
-// If modifying lifetimes of ThinString or related methods, make sure this doesnt compile
+// If modifying lifetimes of ThinString or related methods, make sure these doesnt compile
 //fn borrow_check() {
 //    let s = String::new();
 //    let th = s.as_thinstr();
 //    drop(s);
+//    dbg!(th);
+//}
+//fn mut_check() {
+//    let mut s = String::new();
+//    let th = s.as_thinstr();
+//    s.reserve_exact(1);
 //    dbg!(th);
 //}
 
