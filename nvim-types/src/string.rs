@@ -55,6 +55,10 @@ impl String {
         self.len
     }
 
+    pub unsafe fn set_len(&mut self, new_len: usize) {
+        self.len = new_len;
+    }
+
     /// Allocate a [`String`] with a capacity
     ///
     /// Allocates for cap + 1 to make the [`String`] null terminated.
