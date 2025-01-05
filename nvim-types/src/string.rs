@@ -118,7 +118,8 @@ impl String {
     }
 
     fn realloc(&mut self, new_capacity: NonZeroUsize) {
-        let ptr = unsafe { libc::realloc(self.data.as_ptr() as *mut libc::c_void, self.len + 1) };
+        let ptr =
+            unsafe { libc::realloc(self.data.as_ptr() as *mut libc::c_void, new_capacity.get()) };
         if ptr.is_null() {
             alloc_failed();
         }
