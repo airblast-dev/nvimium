@@ -400,12 +400,6 @@ mod tests {
 
     type KVec = super::KVec<String>;
 
-    /// KVec does not take any responsibility when it comes to dropping
-    /// This is just to make miri not complain in tests about memory leaks.
-    /// might remove this later depending on how things go in other types.
-    ///
-    /// To avoid miri complaining about memory leaks [`KVec::drop`] is used.
-
     #[test]
     fn new() {
         let kv = KVec::new();
