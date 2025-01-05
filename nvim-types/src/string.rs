@@ -263,11 +263,6 @@ impl<'a> ThinString<'a> {
         self.data.cast::<u8>().as_ptr() as *const u8
     }
 
-    /// Same as [`ThinString::as_ptr`] but returns a pointer to mutable values
-    pub const fn as_mut_ptr(&mut self) -> *mut u8 {
-        self.data.cast::<u8>().as_ptr()
-    }
-
     /// Returns a slice of the buffers bytes
     pub const fn as_slice(&self) -> &'a [u8] {
         unsafe { std::slice::from_raw_parts(self.data.as_ptr() as *mut u8, self.len) }
