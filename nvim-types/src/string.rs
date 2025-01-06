@@ -378,18 +378,24 @@ impl<'a> ThinString<'a> {
 
 // TODO: use the trycompile crate
 // If modifying lifetimes of ThinString or related methods, make sure these doesnt compile
-//fn borrow_check() {
-//    let s = String::new();
-//    let th = s.as_thinstr();
-//    drop(s);
-//    dbg!(th);
-//}
-//fn mut_check() {
-//    let mut s = String::new();
-//    let th = s.as_thinstr();
-//    s.reserve_exact(1);
-//    dbg!(th);
-//}
+//  fn borrow_check() {
+//      let s = String::new();
+//      let th = s.as_thinstr();
+//      drop(s);
+//      dbg!(th);
+//  }
+//  fn mut_check() {
+//      let mut s = String::new();
+//      let th = s.as_thinstr();
+//      s.reserve_exact(1);
+//      dbg!(th);
+//  }
+//  fn slice_check() {
+//      let mut s = String::new();
+//      let sl = s.as_thinstr().as_slice();
+//      s.reserve_exact(1);
+//      dbg!(sl);
+//  }
 
 impl PartialEq for ThinString<'_> {
     fn eq(&self, other: &Self) -> bool {
