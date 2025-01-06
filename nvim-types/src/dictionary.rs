@@ -3,7 +3,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::{kvec::KVec, object::Object};
+use crate::{kvec::KVec, object::Object, string::String};
 
 #[repr(C)]
 pub struct DictKVec {
@@ -27,17 +27,32 @@ impl DerefMut for Dictionary {
     }
 }
 
-#[repr(C)]
-pub struct KeyValPair(String, Object);
+impl Dictionary {
+    pub fn get<B: AsRef<[u8]>>(&self, key: B) -> Option<&Object> {
+        self.deref().iter().find_map(
+            |DictKVec { key: k, object: o }| {
+                if k == key.as_ref() {
+                    Some(o)
+                } else {
+                    None
+                }
+            },
+        )
+    }
+
+    pub fn insert<T: Into<DictKVec>>(&mut self, key_val: T) {
+        let DictKVec { key, object } = key_val.into();
+    }
+}
 
 #[repr(C)]
 pub struct TypedDictionary<B> {
-    inner: KVec<KeyValPair>,
+    inner: KVec<DictKVec>,
     __p: PhantomData<B>,
 }
 
 impl<B> Deref for TypedDictionary<B> {
-    type Target = [KeyValPair];
+    type Target = [DictKVec];
     fn deref(&self) -> &Self::Target {
         self.inner.deref()
     }
