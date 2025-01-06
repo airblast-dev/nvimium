@@ -1,5 +1,4 @@
 mod arena;
-mod non_owned;
 mod array;
 mod dictionary;
 mod kvec;
