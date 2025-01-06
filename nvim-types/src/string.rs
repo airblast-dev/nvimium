@@ -1,6 +1,6 @@
 use std::{
-    borrow::Borrow, ffi::CStr, fmt::Debug, marker::PhantomData, num::NonZeroUsize, ops::Deref,
-    ptr::NonNull,
+    borrow::Borrow, ffi::CStr, fmt::Debug, hash::Hash, marker::PhantomData, num::NonZeroUsize,
+    ops::Deref, ptr::NonNull,
 };
 
 use panics::{alloc_failed, not_null_terminated};
@@ -26,6 +26,7 @@ use panics::{alloc_failed, not_null_terminated};
 ///
 /// This also means you should provide a [`ThinString`] when calling C bindings directly.
 #[repr(C)]
+#[derive(Eq)]
 struct String {
     // TODO: check feasability of overallocating some bytes to store capacity in allocation
     // This might allow us to introduce some optimizations in the API.
@@ -73,6 +74,16 @@ impl String {
     #[inline(always)]
     pub fn as_mut_ptr(&self) -> *mut u8 {
         self.data.as_ptr() as *mut u8
+    }
+
+    #[inline(always)]
+    pub fn as_slice(&self) -> &[u8] {
+        self.as_thinstr().as_slice()
+    }
+
+    #[inline(always)]
+    pub fn as_slice_with_null(&self) -> &[u8] {
+        self.as_thinstr().as_slice_with_null()
     }
 
     /// Allocate a [`String`] with a capacity
@@ -215,6 +226,48 @@ impl std::io::Write for String {
     }
 }
 
+impl PartialEq for String {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_thinstr() == other.as_thinstr()
+    }
+}
+
+impl<'a> PartialEq<ThinString<'a>> for String {
+    fn eq(&self, other: &ThinString<'a>) -> bool {
+        other.eq(self)
+    }
+}
+
+impl PartialEq<str> for String {
+    fn eq(&self, other: &str) -> bool {
+        self.as_slice() == other.as_bytes()
+    }
+}
+
+impl PartialEq<[u8]> for String {
+    fn eq(&self, other: &[u8]) -> bool {
+        self.as_slice() == other
+    }
+}
+
+impl PartialEq<CStr> for String {
+    fn eq(&self, other: &CStr) -> bool {
+        self.as_thinstr().eq(other)
+    }
+}
+
+impl<T: AsRef<[u8]>> PartialEq<T> for String {
+    fn eq(&self, other: &T) -> bool {
+        self.as_slice() == other.as_ref()
+    }
+}
+
+impl Hash for String {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        state.write(self.as_slice_with_null());
+    }
+}
+
 impl Debug for String {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let l = std::string::String::from_utf8_lossy(self.as_thinstr().as_slice());
@@ -323,6 +376,7 @@ impl<'a> ThinString<'a> {
     }
 }
 
+// TODO: use the trycompile crate
 // If modifying lifetimes of ThinString or related methods, make sure these doesnt compile
 //fn borrow_check() {
 //    let s = String::new();
@@ -340,6 +394,30 @@ impl<'a> ThinString<'a> {
 impl PartialEq for ThinString<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.data == other.data || self.as_slice() == other.as_slice()
+    }
+}
+
+impl PartialEq<String> for ThinString<'_> {
+    fn eq(&self, other: &String) -> bool {
+        self.data == other.data || self.as_slice() == other.as_thinstr().as_slice()
+    }
+}
+
+impl<T: AsRef<[u8]>> PartialEq<T> for ThinString<'_> {
+    fn eq(&self, other: &T) -> bool {
+        self.as_slice() == other.as_ref()
+    }
+}
+
+impl PartialEq<[u8]> for ThinString<'_> {
+    fn eq(&self, other: &[u8]) -> bool {
+        self.as_slice() == other
+    }
+}
+
+impl PartialEq<CStr> for ThinString<'_> {
+    fn eq(&self, other: &CStr) -> bool {
+        self.as_slice_with_null() == other.to_bytes_with_nul()
     }
 }
 
@@ -539,6 +617,32 @@ mod thinstr {
     }
 
     #[test]
+    fn default() {
+        let th = ThinString::default();
+        assert!(th.is_empty());
+        assert!(!th.as_ptr().is_null());
+        assert!(unsafe { *th.as_ptr() } == 0);
+    }
+
+    #[test]
+    fn eq() {
+        let s = new_s();
+        let th = ThinString::default();
+
+        assert_ne!(s, th);
+        assert_eq!(s, s.as_thinstr());
+        assert_eq!(s.as_thinstr(), s);
+        let s2 = new_s();
+        assert_eq!(s, s2);
+        assert_eq!(s.as_thinstr(), s2.as_thinstr());
+        assert_eq!(s.as_thinstr(), s2);
+        assert_eq!(s2, s.as_thinstr());
+
+        assert_eq!(s, "aasdas");
+        // TODO: add more tests
+    }
+
+    #[test]
     fn as_slice() {
         let th = ThinString::default();
         assert_eq!(th.as_slice(), &[]);
@@ -565,5 +669,16 @@ mod thinstr {
         assert!(s.as_thinstr().is_empty());
         s.push("bawawa");
         assert!(!s.as_thinstr().is_empty());
+    }
+
+    #[test]
+    fn from_null_terminated() {
+        let _th = ThinString::from_null_terminated(c"Hello".to_bytes_with_nul());
+    }
+
+    #[test]
+    #[should_panic]
+    fn from_null_terminated_no_null() {
+        let _th = ThinString::from_null_terminated("Hello");
     }
 }
