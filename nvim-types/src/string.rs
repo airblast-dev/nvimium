@@ -508,7 +508,7 @@ impl<'a> TryFrom<&'a [u8]> for ThinString<'a> {
 }
 
 #[derive(Clone, Copy, Debug)]
-enum ThinStringError {
+pub enum ThinStringError {
     NotNullTerminated,
     Empty,
 }
