@@ -313,7 +313,7 @@ impl Drop for String {
 
 #[repr(C)]
 #[derive(Clone, Copy, Eq)]
-struct ThinString<'a> {
+pub struct ThinString<'a> {
     data: NonNull<libc::c_char>,
     len: libc::size_t,
     __p: PhantomData<&'a u8>,
