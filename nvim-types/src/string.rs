@@ -614,7 +614,7 @@ mod string_fmt {
 
 #[cfg(test)]
 mod thinstr {
-    use super::{String, ThinString};
+    use super::{String, ThinString, ThinStringError};
 
     fn new_s() -> String {
         let mut s = String::new();
@@ -646,6 +646,28 @@ mod thinstr {
 
         assert_eq!(s, "aasdas");
         // TODO: add more tests
+    }
+
+    #[test]
+    fn from() {
+        let th = ThinString::from(c"Hello");
+        assert_eq!(th, "Hello");
+    }
+
+    #[test]
+    fn try_from() -> Result<(), ThinStringError> {
+        let th = ThinString::try_from("a\0")?;
+        assert_eq!(th, "a");
+        let th = ThinString::try_from(b"a\0".as_slice())?;
+        assert_eq!(th, "a");
+
+        Ok(())
+    }
+
+    #[test]
+    fn try_from_fails() {
+        assert!(ThinString::try_from("a").is_err());
+        assert!(ThinString::try_from(b"a".as_slice()).is_err());
     }
 
     #[test]
