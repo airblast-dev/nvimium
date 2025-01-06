@@ -28,10 +28,13 @@ impl DerefMut for Dictionary {
 }
 
 impl Dictionary {
-    pub fn get<B: AsRef<[u8]>>(&self, key: B) -> Option<&Object> {
+    pub fn get<K>(&self, key: K) -> Option<&Object>
+    where
+        String: PartialEq<K>,
+    {
         self.deref().iter().find_map(
             |DictKVec { key: k, object: o }| {
-                if k == key.as_ref() {
+                if *k == key {
                     Some(o)
                 } else {
                     None
@@ -40,8 +43,23 @@ impl Dictionary {
         )
     }
 
-    pub fn insert<T: Into<DictKVec>>(&mut self, key_val: T) {
-        let DictKVec { key, object } = key_val.into();
+    pub fn insert<K>(&mut self, key: K, mut object: Object) -> Option<Object>
+    where
+        String: PartialEq<K> + From<K>,
+    {
+        for DictKVec { key: k, object: o } in self.0.iter_mut() {
+            if *k == key {
+                std::mem::swap(o, &mut object);
+                return Some(object);
+            }
+        }
+
+        self.0.push(DictKVec {
+            key: String::from(key),
+            object,
+        });
+
+        None
     }
 }
 
@@ -65,3 +83,9 @@ impl<B> DerefMut for TypedDictionary<B> {
 }
 
 const _: () = assert!(24 == std::mem::size_of::<Dictionary>());
+
+#[cfg(test)]
+mod dict {
+    #[test]
+    fn get() {}
+}
