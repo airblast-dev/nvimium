@@ -70,26 +70,42 @@ impl String {
         self.len
     }
 
+    /// Set the current length of the [`String`]
+    ///
+    /// Shrinking and growing the length is Undefined Behavior if the bytes are not initialized.
+    /// The length value should not include the null byte.
+    ///
+    /// # Safety
+    ///
+    /// The length should only be modified if the null byte is moved to the end of the allocation
+    /// and enough space is allocated.
     #[inline(always)]
     pub unsafe fn set_len(&mut self, new_len: usize) {
         self.len = new_len;
     }
 
+    /// Get a immutable pointer to the buffer
     #[inline(always)]
     pub fn as_ptr(&self) -> *const u8 {
         self.data.as_ptr() as *const u8
     }
 
+    /// Get a mutable pointer to the buffer
     #[inline(always)]
     pub fn as_mut_ptr(&self) -> *mut u8 {
         self.data.as_ptr() as *mut u8
     }
 
+    /// Get the buffer as a slice
+    ///
+    /// The slice does not include the null byte. For a slice that does include the null byte use
+    /// [`String::as_slice_with_null`].
     #[inline(always)]
     pub fn as_slice(&self) -> &[u8] {
         self.as_thinstr().as_slice()
     }
 
+    /// Get the buffer as a slice with the terminating null byte
     #[inline(always)]
     pub fn as_slice_with_null(&self) -> &[u8] {
         self.as_thinstr().as_slice_with_null()
@@ -118,6 +134,11 @@ impl String {
         self.capacity.get() - self.len - 1
     }
 
+    /// Reserve space for additional elements
+    ///
+    /// Does not allocate if enough space is available.
+    /// If allocating this function will allocate extra space to avoid multiple visit to the
+    /// allocator, where that is not desired use [`String::reserve_exact`].
     pub fn reserve(&mut self, additional: usize) {
         let Some(min_cap) = self.minimum_alloc_capacity(additional) else {
             return;
@@ -127,6 +148,10 @@ impl String {
         self.realloc(new_capacity);
     }
 
+    /// Reserve space for additional elements
+    ///
+    /// Does not allocate if enough space is available. This will allocate the minimum amount of
+    /// space possible when allocating.
     pub fn reserve_exact(&mut self, additional: usize) {
         let Some(new_cap) = self.minimum_alloc_capacity(additional) else {
             return;
@@ -159,7 +184,8 @@ impl String {
 
     /// Create a read only copy of the [`String`]
     ///
-    /// Prefer this over cloning the value.
+    /// Prefer this over cloning the value. When passing to raw C functions this should be used
+    /// instead of [`String`].
     #[inline(always)]
     pub const fn as_thinstr(&self) -> ThinString {
         unsafe { ThinString::new(self.len, self.data) }
@@ -176,7 +202,11 @@ impl String {
         th
     }
 
-    fn push<'a, B: 'a + AsRef<[u8]>>(&mut self, string: B) {
+    /// Push some bytes to the end of the [`String`]
+    ///
+    /// This will allocate the minimal amount needed to add the bytes. When pushing bytes in a loop
+    /// prefer [`String`]'s [`Extend`] implementation.
+    pub fn push<'a, B: 'a + AsRef<[u8]>>(&mut self, string: B) {
         let slice = string.as_ref();
         self.reserve_exact(slice.len());
         // SAFETY: self.data is NonNull and we have reserved space to push the string
@@ -319,6 +349,10 @@ pub struct ThinString<'a> {
     __p: PhantomData<&'a u8>,
 }
 
+/// A non-owned string type
+///
+/// [`ThinString`] can be constructed by calling [`String::as_thinstr`], or one of its [`TryFrom`]
+/// implementations that accept any byte slice that is terminated with a null byte.
 impl<'a> ThinString<'a> {
     /// Initialize a new ThinString using a pointer and a length
     ///
