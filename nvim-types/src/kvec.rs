@@ -387,6 +387,14 @@ impl<T: Clone> From<&[T]> for KVec<T> {
     }
 }
 
+impl<T> FromIterator<T> for KVec<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut kv = Self::new();
+        kv.extend(iter);
+        kv
+    }
+}
+
 #[inline]
 fn range_bound_to_range<T, R: RangeBounds<usize>>(
     kv: &KVec<T>,
@@ -666,6 +674,14 @@ mod tests {
     }
 
     #[test]
+    fn from_iter() {
+        let kv = KVec::from_iter([String::from("1"), String::from("2"), String::from("3")]);
+        assert_eq!(kv.as_slice(), &["1", "2", "3"]);
+        assert_eq!(kv.len(), 3);
+        assert_eq!(kv.len(), 3);
+    }
+
+    #[test]
     fn remove() {
         let mut kv = KVec::from([String::from("a"), String::from("b")].as_slice());
         let rem = kv.remove(0);
@@ -721,7 +737,8 @@ mod tests {
     #[test]
     #[should_panic]
     fn remove_panics() {
-        let mut kv = KVec::from([String::from("a"), String::from("b"), String::from("c")].as_slice());
+        let mut kv =
+            KVec::from([String::from("a"), String::from("b"), String::from("c")].as_slice());
         kv.remove(3);
     }
 
