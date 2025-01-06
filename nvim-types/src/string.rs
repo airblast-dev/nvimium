@@ -289,6 +289,11 @@ impl<'a> ThinString<'a> {
         unsafe { std::slice::from_raw_parts(self.data.as_ptr() as *mut u8, self.len) }
     }
 
+    #[inline(always)]
+    pub const fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     // Returns a slice of the buffers bytes without a null byte
     #[inline(always)]
     pub const fn as_slice_with_null(&self) -> &'a [u8] {
