@@ -7,7 +7,21 @@ use panics::{alloc_failed, not_null_terminated};
 
 /// A String type passed to wrapper functions
 ///
-/// This is not exactly the same as the String type in neovim, that would be [`ThinString`].
+/// Compared to [`std`] types, [`String`] is like a [`Vec<u8>`] and a [`ThinString`] is like a `&str`.
+///
+/// Neovim does not always check if a null byte is before the end of the string. Some functions
+/// work fine with null bytes in the middle of the string others do not. Generally pushing a null
+/// byte should be avoided. Pushing a null byte does not cause undefined behavior but
+/// rather unspecified behavior (most commonly a string gets cut off once it encounters the first
+/// null byte). This does not cause any issues in this library but rather when its passed to
+/// neovim.
+///
+/// # Implementation Details
+///
+/// If you are only interacting with functions defined in this library you can safely skip this
+/// section. These are only important if you are calling FFI functions directly.
+///
+/// This struct not exactly the same as the String type in neovim, that would be [`ThinString`].
 ///
 /// This is due to a few reasons:
 /// - The layout does not allow us to specify the capacity in it fields, this causes issues as it
@@ -19,12 +33,7 @@ use panics::{alloc_failed, not_null_terminated};
 ///     change would be a visit to the allocator. Using a [`ThinString`] we are able to store the
 ///     capacity and avoid many visits to the allocator.
 ///
-/// Compared to [`std`] types, [`String`] is like a [`Vec<u8>`] and a [`ThinString`] is like a `&str`.
-///
-/// To avoid using conversion methods on every call site, [`String`] implements [`std::ops::Deref`] for
-/// [`ThinString`].
-///
-/// This also means you should provide a [`ThinString`] when calling C bindings directly.
+/// This means you should provide a [`ThinString`] when calling C bindings directly.
 #[repr(C)]
 #[derive(Eq)]
 struct String {
@@ -187,6 +196,15 @@ impl String {
 
         // SAFETY: we already had enough space, just write the null byte
         unsafe { self.data.as_ptr().add(self.len()).write(0) };
+    }
+}
+
+impl<B: AsRef<[u8]>> From<B> for String {
+    fn from(value: B) -> Self {
+        let s = value.as_ref();
+        let mut st = String::with_capacity(s.len());
+        st.push(s);
+        st
     }
 }
 
