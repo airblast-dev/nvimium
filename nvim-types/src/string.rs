@@ -27,8 +27,8 @@ use panics::{alloc_failed, not_null_terminated};
 /// - The layout does not allow us to specify the capacity in it fields, this causes issues as it
 ///     increases the size of data passed to neovim.
 /// - The passed string is not always freed by neovim which means we cannot implement [`Drop`] on
-///     the string that is passed. Instead, the [`ThinString`] is given to neovim. This is done to
-///     avoid any double free's or memory leaks.
+///     the string that is passed. Instead, the [`ThinString`] is given to neovim where it does not
+///     require ownership. This is done to avoid any double free's or memory leaks.
 /// - Since we would be unable to store the capacity in the value provided to neovim, every length
 ///     change would be a visit to the allocator. Using a [`ThinString`] we are able to store the
 ///     capacity and avoid many visits to the allocator.
