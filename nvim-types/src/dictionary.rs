@@ -1,4 +1,7 @@
-use std::{marker::PhantomData, ops::Deref};
+use std::{
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+};
 
 use crate::{kvec::KVec, object::Object};
 
@@ -18,6 +21,12 @@ impl Deref for Dictionary {
     }
 }
 
+impl DerefMut for Dictionary {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 #[repr(C)]
 pub struct KeyValPair(String, Object);
 
@@ -31,6 +40,12 @@ impl<B> Deref for TypedDictionary<B> {
     type Target = [KeyValPair];
     fn deref(&self) -> &Self::Target {
         self.inner.deref()
+    }
+}
+
+impl<B> DerefMut for TypedDictionary<B> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
     }
 }
 
