@@ -220,13 +220,12 @@ impl Debug for String {
         let l = std::string::String::from_utf8_lossy(self.as_thinstr().as_slice());
         let mut ds = f.debug_struct("String");
 
-        let s_dbg = ds
-            .field("data", &self.data)
+        ds.field("data", &self.data)
             .field("len", &self.len())
             .field("capacity", &self.capacity())
-            .field("repr", &l);
+            .field("repr", &l.as_ref());
 
-        s_dbg.finish()
+        ds.finish()
     }
 }
 
@@ -497,6 +496,35 @@ mod string_alloc {
         assert_eq!(s.len(), 6);
         assert_eq!(s.as_thinstr().as_slice(), b"abc123");
         assert_eq!(unsafe { *s.data.as_ptr().add(6) }, 0);
+    }
+}
+
+#[cfg(test)]
+mod string_fmt {
+    use crate::string::{String, ThinString};
+
+    #[test]
+    fn debug_string() {
+        let f = format!("{:?}", String::new());
+        let pre_ptr = &f[0..15];
+        let post_ptr = {
+            let len_start = f.find("len:").unwrap();
+            &f[len_start..]
+        };
+        assert_eq!(pre_ptr, "String { data: ");
+        assert_eq!(post_ptr, "len: 0, capacity: 1, repr: \"\" }");
+    }
+
+    #[test]
+    fn debug_thinstring() {
+        let f = format!("{:?}", ThinString::default());
+        let pre_ptr = &f[0..23];
+        let post_ptr = {
+            let len_start = f.find("len:").unwrap();
+            &f[len_start..]
+        };
+        assert_eq!(pre_ptr, "ThinString<'_> { data: ");
+        assert_eq!(post_ptr, "len: 0, repr: \"\" }");
     }
 }
 
