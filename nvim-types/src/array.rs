@@ -7,7 +7,7 @@ use crate::{kvec::KVec, object::Object};
 /// The implementation intentionally does not provide methods on [`Array`] itself and delegates the
 /// implementations via [`Deref`] to [`KVec`]. See its documentation instead.
 #[repr(transparent)]
-pub struct Array(KVec<Object>);
+pub struct Array(pub KVec<Object>);
 
 impl Deref for Array {
     type Target = KVec<Object>;
