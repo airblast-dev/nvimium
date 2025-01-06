@@ -58,7 +58,7 @@ impl String {
 
     /// Returns the capacity of the buffer
     ///
-    /// The capacity includes the space for the null byte making it always larger than zero.
+    /// The capacity includes the space for the null byte making it always bigger than zero.
     #[inline(always)]
     pub fn capacity(&self) -> NonZeroUsize {
         self.capacity
