@@ -229,6 +229,20 @@ impl String {
     }
 }
 
+impl Clone for String {
+    fn clone(&self) -> Self {
+        let mut s = Self::with_capacity(self.len);
+        s.push(self.as_slice());
+        s
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        unsafe { self.set_len(0) };
+        self.reserve_exact(source.len());
+        self.push(source.as_slice());
+    }
+}
+
 impl<B: AsRef<[u8]>> From<B> for String {
     fn from(value: B) -> Self {
         let s = value.as_ref();
@@ -632,6 +646,26 @@ mod string_alloc {
         assert_eq!(s.len(), 6);
         assert_eq!(s.as_thinstr().as_slice(), b"abc123");
         assert_eq!(unsafe { *s.data.as_ptr().add(6) }, 0);
+    }
+
+    #[test]
+    fn clone() {
+        // growing
+        let s = String::from("Hello");
+        let mut s1 = String::new();
+        s1.clone_from(&s);
+        assert_eq!(s1.as_slice_with_null(), s.as_slice_with_null());
+        assert_eq!(s1.len(), 5);
+        assert_eq!(s1.capacity().get(), 6);
+        assert_eq!(s1.len() + 1, s1.capacity().get());
+
+        // shrinking
+        let s = String::from("hi");
+        let mut s1 = String::from("Hello");
+        s1.clone_from(&s);
+        assert_eq!(s1.as_slice_with_null(), s.as_slice_with_null());
+        assert_eq!(s1.len(), 2);
+        assert_eq!(s1.capacity().get(), 6);
     }
 }
 
