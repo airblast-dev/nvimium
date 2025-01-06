@@ -268,6 +268,72 @@ impl<T> KVec<T> {
         unsafe { self.set_len(self.len() + s.len()) };
     }
 
+    /// Removes and returns the element at index
+    ///
+    /// This is done by shifting all elements after it to the left.
+    /// Because this shifts over the elements after `index`, this is an *O*(*n*) operation.
+    /// If you don't need the elements order to be preserved, use [`KVec::swap_remove`] instead.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `index` is out of bounds.
+    pub fn remove(&mut self, index: usize) -> T {
+        let len = self.len();
+
+        #[cold]
+        #[track_caller]
+        #[inline(never)]
+        fn assert_failed(index: usize, len: usize) -> ! {
+            panic!("removal index (is {index}) should be < len (is {len})");
+        }
+
+        if index >= self.len() {
+            assert_failed(index, len)
+        }
+
+        unsafe {
+            let ptr = self.ptr.add(index);
+            let rem = ptr.read();
+            core::ptr::copy(ptr.add(1).as_ptr(), ptr.as_ptr(), len - index - 1);
+
+            self.set_len(len - 1);
+            rem
+        }
+    }
+
+    /// Removes and returns the element at index
+    ///
+    /// The element at `index` is replaced by the last element. This does not preserve the order of
+    /// elements, but is *O*(*1*). If you want to preserve the order of the elements use
+    /// [`KVec::remove`] instead.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `index` is out of bounds.
+    pub fn swap_remove(&mut self, index: usize) -> T {
+        let len = self.len();
+
+        #[cold]
+        #[track_caller]
+        #[inline(never)]
+        fn assert_failed(index: usize, len: usize) -> ! {
+            panic!("removal index (is {index}) should be < len (is {len})");
+        }
+
+        if index >= self.len() {
+            assert_failed(index, len)
+        }
+
+        unsafe {
+            let ptr = self.ptr.add(index);
+            let rem = ptr.read();
+
+            self.ptr.add(len - 1).copy_to(ptr, 1);
+            self.set_len(len - 1);
+            rem
+        }
+    }
+
     /// Drain the elements in range
     ///
     /// Similar to [`Vec::drain`], this returns an iterator that yields the items in range.
@@ -597,5 +663,58 @@ mod tests {
         kv.extend_from_slice(&[String::from("1"), String::from("2"), String::from("3")]);
         assert_eq!(kv.capacity(), 3);
         assert_eq!(kv.len(), 3);
+    }
+
+    #[test]
+    fn remove() {
+        let mut kv = KVec::from([String::from("a"), String::from("b")].as_slice());
+        let rem = kv.remove(0);
+
+        assert_eq!(rem, "a");
+        assert_eq!(kv.as_slice(), &[String::from("b")]);
+        assert_eq!(kv.len(), 1);
+
+        let rem = kv.remove(0);
+        assert_eq!(rem, "b");
+        assert_eq!(kv.as_slice(), &[] as &[&str]);
+        assert_eq!(kv.len(), 0);
+
+        let mut kv =
+            KVec::from([String::from("a"), String::from("b"), String::from("c")].as_slice());
+        let rem = kv.remove(1);
+        assert_eq!(rem, "b");
+        assert_eq!(kv.as_slice(), &["a", "c"]);
+        assert_eq!(kv.len(), 2);
+
+        let rem = kv.remove(0);
+        assert_eq!(rem, "a");
+        assert_eq!(kv.as_slice(), &[String::from("c")]);
+        assert_eq!(kv.len(), 1);
+
+        let rem = kv.remove(0);
+        assert_eq!(rem, "c");
+        assert_eq!(kv.as_slice(), &[] as &[&str]);
+        assert_eq!(kv.len(), 0);
+    }
+
+    #[test]
+    fn swap_remove() {
+        let mut kv =
+            KVec::from([String::from("a"), String::from("b"), String::from("c")].as_slice());
+
+        let rem = kv.swap_remove(0);
+        assert_eq!(rem, "a");
+        assert_eq!(kv.as_slice(), &["c", "b"]);
+        assert_eq!(kv.len(), 2);
+
+        let rem = kv.swap_remove(1);
+        assert_eq!(rem, "b");
+        assert_eq!(kv.as_slice(), &["c"]);
+        assert_eq!(kv.len(), 1);
+
+        let rem = kv.swap_remove(0);
+        assert_eq!(rem, "c");
+        assert_eq!(kv.as_slice(), &[] as &[&str]);
+        assert_eq!(kv.len(), 0);
     }
 }
