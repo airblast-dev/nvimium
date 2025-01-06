@@ -7,6 +7,12 @@ pub struct Object {
     inner: Inner,
 }
 
+impl Clone for Object {
+    fn clone(&self) -> Self {
+        todo!("impl clone for object")
+    }
+}
+
 union Inner {
     array: ManuallyDrop<Array>,
     dict: ManuallyDrop<Dictionary>,

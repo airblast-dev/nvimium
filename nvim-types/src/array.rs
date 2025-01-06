@@ -21,3 +21,9 @@ impl DerefMut for Array {
         &mut self.0
     }
 }
+
+impl From<&[Object]> for Array {
+    fn from(value: &[Object]) -> Self {
+        Self(KVec::from(value))
+    }
+}

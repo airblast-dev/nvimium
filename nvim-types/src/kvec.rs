@@ -313,6 +313,14 @@ impl<T> Extend<T> for KVec<T> {
     }
 }
 
+impl<T: Clone> From<&[T]> for KVec<T> {
+    fn from(value: &[T]) -> Self {
+        let mut kv = Self::new();
+        kv.extend_from_slice(value);
+        kv
+    }
+}
+
 #[inline]
 fn range_bound_to_range<T, R: RangeBounds<usize>>(
     kv: &KVec<T>,
