@@ -717,4 +717,18 @@ mod tests {
         assert_eq!(kv.as_slice(), &[] as &[&str]);
         assert_eq!(kv.len(), 0);
     }
+
+    #[test]
+    #[should_panic]
+    fn remove_panics() {
+        let mut kv = KVec::from([String::from("a"), String::from("b"), String::from("c")].as_slice());
+        kv.remove(3);
+    }
+
+    #[test]
+    #[should_panic]
+    fn remove_panics_empty() {
+        let mut kv = KVec::from([].as_slice());
+        kv.remove(0);
+    }
 }
