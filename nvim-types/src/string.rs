@@ -530,4 +530,12 @@ mod thinstr {
         let th = s.as_thinstr();
         assert_eq!(s.as_ptr(), th.as_ptr());
     }
+
+    #[test]
+    fn is_empty() {
+        let mut s = String::new();
+        assert!(s.as_thinstr().is_empty());
+        s.push("bawawa");
+        assert!(!s.as_thinstr().is_empty());
+    }
 }
