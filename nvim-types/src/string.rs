@@ -421,6 +421,7 @@ mod string_alloc {
         let s = String::new();
         assert_eq!(s.capacity().get(), 1);
         assert_eq!(s.len(), 0);
+        assert_eq!(unsafe { *s.data.as_ptr() }, 0);
     }
 
     #[test]
@@ -435,8 +436,11 @@ mod string_alloc {
     fn with_capacity() {
         let s = String::with_capacity(0);
         assert_eq!(s.capacity().get(), 1);
+        assert_eq!(unsafe { *s.data.as_ptr() }, 0);
+
         let s = String::with_capacity(10);
         assert_eq!(s.capacity().get(), 11);
+        assert_eq!(unsafe { *s.data.as_ptr() }, 0);
     }
 
     #[test]
@@ -445,26 +449,35 @@ mod string_alloc {
         s.reserve(2);
         assert_eq!(s.capacity().get(), 4);
         assert_eq!(s.len(), 0);
+        assert_eq!(unsafe { *s.data.as_ptr() }, 0);
+
         s.reserve(5);
         assert_eq!(s.capacity().get(), 8);
         assert_eq!(s.len(), 0);
+        assert_eq!(unsafe { *s.data.as_ptr() }, 0);
     }
 
     #[test]
     fn reserve_exact() {
         let mut s = String::new();
+        assert_eq!(unsafe { *s.data.as_ptr() }, 0);
+
         s.reserve_exact(1);
         assert_eq!(s.capacity().get(), 2);
         assert_eq!(s.len(), 0);
+        assert_eq!(unsafe { *s.data.as_ptr() }, 0);
+
         s.reserve_exact(5);
         assert_eq!(s.capacity().get(), 6);
         assert_eq!(s.len(), 0);
+        assert_eq!(unsafe { *s.data.as_ptr() }, 0);
     }
 
     #[test]
     fn as_thinstr() {
         let s = String::new();
         let th = s.as_thinstr();
+        assert_eq!(unsafe { *th.data.as_ptr() }, 0);
         assert_eq!(th.data, s.data);
         assert_eq!(th.len, s.len);
         unsafe { assert_eq!(th.data.as_ref(), s.data.as_ref()) };
@@ -473,14 +486,17 @@ mod string_alloc {
     #[test]
     fn push() {
         let mut s = String::new();
+        assert_eq!(unsafe { *s.data.as_ptr() }, 0);
         s.push(b"abc");
         assert_eq!(s.capacity().get(), 4);
         assert_eq!(s.len(), 3);
         assert_eq!(s.as_thinstr().as_slice(), b"abc");
+        assert_eq!(unsafe { *s.data.as_ptr().add(3) }, 0);
         s.push(b"123");
         assert_eq!(s.capacity().get(), 7);
         assert_eq!(s.len(), 6);
         assert_eq!(s.as_thinstr().as_slice(), b"abc123");
+        assert_eq!(unsafe { *s.data.as_ptr().add(6) }, 0);
     }
 }
 
