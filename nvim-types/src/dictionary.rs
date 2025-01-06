@@ -6,16 +6,17 @@ use std::{
 use crate::{kvec::KVec, object::Object, string::String};
 
 #[repr(C)]
-pub struct DictKVec {
+#[derive(Clone)]
+pub struct KeyValuePair {
     key: String,
     object: Object,
 }
 
 #[repr(transparent)]
-pub struct Dictionary(KVec<DictKVec>);
+pub struct Dictionary(KVec<KeyValuePair>);
 
 impl Deref for Dictionary {
-    type Target = [DictKVec];
+    type Target = [KeyValuePair];
     fn deref(&self) -> &Self::Target {
         self.0.deref()
     }
@@ -32,53 +33,65 @@ impl Dictionary {
     where
         String: PartialEq<K>,
     {
-        self.deref().iter().find_map(
-            |DictKVec { key: k, object: o }| {
-                if *k == key {
-                    Some(o)
-                } else {
-                    None
-                }
-            },
-        )
+        let index = self.find_by_key(&key)?;
+        unsafe { Some(&self.0.as_slice().get_unchecked(index).object) }
+    }
+
+    pub fn remove<K>(&mut self, key: K) -> Option<KeyValuePair>
+    where
+        String: PartialEq<K>,
+    {
+        let index = self.find_by_key(&key)?;
+        Some(self.0.swap_remove(index))
     }
 
     pub fn insert<K>(&mut self, key: K, mut object: Object) -> Option<Object>
     where
         String: PartialEq<K> + From<K>,
     {
-        for DictKVec { key: k, object: o } in self.0.iter_mut() {
-            if *k == key {
-                std::mem::swap(o, &mut object);
-                return Some(object);
+        let index = self.find_by_key(&key);
+        match index {
+            Some(index) => {
+                core::mem::swap(&mut object, unsafe {
+                    &mut self.0.get_unchecked_mut(index).object
+                });
+                Some(object)
+            }
+            None => {
+                self.0.push(KeyValuePair {
+                    key: String::from(key),
+                    object,
+                });
+                None
             }
         }
+    }
 
-        self.0.push(DictKVec {
-            key: String::from(key),
-            object,
-        });
-
-        None
+    /// Returns the index for a key if the key is present
+    ///
+    /// The returned index is guaranteed to be the index to the key value pair.
+    fn find_by_key<K>(&self, key: &K) -> Option<usize>
+    where
+        String: PartialEq<K>,
+    {
+        self.0
+            .iter()
+            .position(|KeyValuePair { key: k, .. }| *k == *key)
     }
 }
 
-#[repr(C)]
-pub struct TypedDictionary<B> {
-    inner: KVec<DictKVec>,
-    __p: PhantomData<B>,
-}
-
-impl<B> Deref for TypedDictionary<B> {
-    type Target = [DictKVec];
-    fn deref(&self) -> &Self::Target {
-        self.inner.deref()
+impl From<&[KeyValuePair]> for Dictionary {
+    fn from(value: &[KeyValuePair]) -> Self {
+        Self(KVec::from(value))
     }
 }
 
-impl<B> DerefMut for TypedDictionary<B> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
+impl<KV> FromIterator<KV> for Dictionary
+where
+    KV: Clone + Into<KeyValuePair>,
+{
+    fn from_iter<T: IntoIterator<Item = KV>>(iter: T) -> Self {
+        Self(KVec::from_iter(iter.into_iter().map(KV::into)))
     }
 }
 
