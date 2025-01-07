@@ -1,4 +1,5 @@
 mod core;
-mod func_types;
+pub mod func_types;
 
 pub use core::*;
+
