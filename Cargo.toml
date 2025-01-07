@@ -4,10 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+nvim-types = { workspace = true }
+nvim-funcs = { workspace = true }
+plugin = { path = "./plugin" }
 
 [workspace.dependencies]
 libc = "0.2.169"
 panics = { path = "./panics" }
+nvim-types = { path = "./nvim-types/" }
+nvim-funcs = { path = "./nvim-funcs/" }
 
 [workspace]
-members = [ "panics", "nvim-types"]
+members = [ "panics", "nvim-types", "nvim-funcs", "plugin"]
