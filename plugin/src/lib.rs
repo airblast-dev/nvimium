@@ -5,6 +5,7 @@
 ///
 /// # Example
 /// ```
+/// # use plugin::plugin;
 /// fn my_entry_point() {
 ///     // call neovim functions
 /// }
