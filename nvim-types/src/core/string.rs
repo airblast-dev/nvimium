@@ -426,17 +426,17 @@ impl<'a> ThinString<'a> {
     ///
     /// The bytes must always be terminated with a null byte (0 or "\0") even if empty.
     #[inline]
-    pub fn from_null_terminated<B: 'a + AsRef<[u8]>>(b: B) -> ThinString<'a> {
-        let slice = b.as_ref();
-        let last = slice.last().copied();
-        if last.is_none_or(|l| l != 0) {
-            not_null_terminated(last);
+    pub const fn from_null_terminated(b: &'a [u8]) -> ThinString<'a> {
+        let last = b.last().copied();
+        match last {
+            Some(1..) | None => not_null_terminated(last),
+            _ => {}
         }
 
         Self {
-            len: slice.len(),
+            len: b.len(),
             // SAFETY: slice pointers are always NonNull to optimize for use in enums.
-            data: unsafe { NonNull::new_unchecked(slice.as_ptr() as *mut libc::c_char) },
+            data: unsafe { NonNull::new_unchecked(b.as_ptr() as *mut libc::c_char) },
             __p: PhantomData::<&'a u8>,
         }
     }
@@ -793,6 +793,6 @@ mod thinstr {
     #[test]
     #[should_panic]
     fn from_null_terminated_no_null() {
-        let _th = ThinString::from_null_terminated("Hello");
+        let _th = ThinString::from_null_terminated("Hello".as_bytes());
     }
 }
