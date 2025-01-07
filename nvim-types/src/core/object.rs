@@ -3,6 +3,7 @@ use std::mem::ManuallyDrop;
 use crate::{array::Array, dictionary::Dictionary, string::{String, ThinString}};
 
 #[derive(Default)]
+#[repr(transparent)]
 pub struct Object(Inner);
 
 // For layout rules see https://rust-lang.github.io/rfcs/2195-really-tagged-unions.html
