@@ -1,7 +1,4 @@
-use std::{
-    marker::PhantomData,
-    ops::{Deref, DerefMut},
-};
+use std::ops::{Deref, DerefMut};
 
 use crate::{kvec::KVec, object::Object, string::String};
 
@@ -10,6 +7,18 @@ use crate::{kvec::KVec, object::Object, string::String};
 pub struct KeyValuePair {
     key: String,
     object: Object,
+}
+
+impl From<(String, Object)> for KeyValuePair {
+    fn from((key, object): (String, Object)) -> Self {
+        Self { key, object }
+    }
+}
+
+impl From<(Object, String)> for KeyValuePair {
+    fn from((object, key): (Object, String)) -> Self {
+        Self { key, object }
+    }
 }
 
 #[repr(transparent)]
@@ -99,6 +108,10 @@ const _: () = assert!(24 == std::mem::size_of::<Dictionary>());
 
 #[cfg(test)]
 mod dict {
+    use crate::object::Object;
+
+    use super::Dictionary;
+
     #[test]
     fn get() {}
 }
