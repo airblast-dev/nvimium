@@ -1,24 +1,45 @@
 use std::fmt::Display;
 
-use super::string::String;
+use super::string::{String, ThinString};
 
 #[derive(Clone, Debug)]
-struct Error {
-    msg: String,
+#[repr(C)]
+pub struct Error {
+    kind: ErrorType,
+    msg: *const u8,
+}
+
+#[derive(Clone, Copy, Debug)]
+#[repr(i64)]
+enum ErrorType {
+    None = -1,
+    Exception,
+    Validation,
 }
 
 impl Error {
-    pub fn new<S>(message: S) -> Self
-    where
-        String: From<S>,
-    {
+    #[inline(always)]
+    pub const fn none() -> Self {
         Self {
-            msg: String::from(message),
+            kind: ErrorType::None,
+            msg: core::ptr::null_mut(),
         }
     }
 
-    pub fn as_ptr(&self) -> *const u8 {
-        self.msg.as_ptr()
+    pub fn exception(th: ThinString) -> Self {
+        let s = String::from(th);
+        let ptr = s.as_ptr();
+        core::mem::forget(s);
+        Self {
+            kind: ErrorType::Exception,
+            msg: ptr,
+        }
+    }
+
+    pub fn validation(th: ThinString) -> Self {
+        let mut s = Self::exception(th);
+        s.kind = ErrorType::Validation;
+        s
     }
 }
 
