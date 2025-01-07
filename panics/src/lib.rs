@@ -32,12 +32,9 @@ pub const fn slice_error() -> ! {
 #[cold]
 #[track_caller]
 #[inline(never)]
-pub fn not_null_terminated(l: Option<u8>) -> ! {
-    if let Some(l) = l {
-        panic!(
-            "provided bytes should always be null terminated {:?} was found",
-            l
-        );
+pub const fn not_null_terminated(l: Option<u8>) -> ! {
+    if l.is_some() {
+        panic!("provided bytes should always be null terminated");
     } else {
         panic!("provided bytes length should always be > 0")
     }
