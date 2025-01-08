@@ -2,8 +2,9 @@ use nvim_types::{
     array::Array,
     error::Error,
     func_types::KeyMapMode,
+    object::Object,
     opts::{echo::EchoOpts, eval_statusline::EvalStatusLineOpts},
-    string::ThinString,
+    string::{String, ThinString},
     Arena,
 };
 
@@ -18,7 +19,7 @@ extern "C" {
     );
     pub fn nvim_del_mark<'a>(name: ThinString<'a>, err: *const Error);
     pub fn nvim_del_var<'a>(var_name: ThinString<'a>, err: *const Error);
-    // Array<Array<[String; 2]>> replace opts dict
+    // Array<Array<[String; 2]>>
     pub fn nvim_echo<'a>(chunks: Array, history: bool, opts: *const EchoOpts);
     pub fn nvim_err_write<'a>(s: ThinString<'a>);
     pub fn nvim_err_writeln<'a>(s: ThinString<'a>);
@@ -28,4 +29,10 @@ extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     );
+    pub fn nvim_exec_lua<'a>(
+        code: ThinString<'a>,
+        args: Array,
+        arena: *mut Arena,
+        err: *mut Error,
+    ) -> Object;
 }
