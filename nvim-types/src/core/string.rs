@@ -355,6 +355,14 @@ impl Drop for String {
     }
 }
 
+impl<'a> From<ThinString<'a>> for String {
+    fn from(value: ThinString<'a>) -> Self {
+        let mut s = Self::with_capacity(value.len());
+        s.push(value.as_slice());
+        s
+    }
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Eq)]
 pub struct ThinString<'a> {
@@ -399,6 +407,12 @@ impl<'a> ThinString<'a> {
     #[inline(always)]
     pub const fn as_ptr(&self) -> *const u8 {
         self.data.cast::<u8>().as_ptr() as *const u8
+    }
+
+    /// Returns the length of the string excluding the null byte
+    #[inline(always)]
+    pub const fn len(&self) -> usize {
+        self.len
     }
 
     /// Returns a slice of the buffers bytes without a null byte
@@ -559,6 +573,24 @@ impl<'a> TryFrom<&'a [u8]> for ThinString<'a> {
 pub enum ThinStringError {
     NotNullTerminated,
     Empty,
+}
+
+pub trait AsThinString {
+    fn as_thinstring(&self) -> ThinString<'_>;
+}
+
+impl AsThinString for String {
+    #[inline(always)]
+    fn as_thinstring(&self) -> ThinString<'_> {
+        self.as_thinstr()
+    }
+}
+
+impl AsThinString for ThinString<'_> {
+    #[inline(always)]
+    fn as_thinstring(&self) -> ThinString<'_> {
+        *self
+    }
 }
 
 #[cfg(test)]
