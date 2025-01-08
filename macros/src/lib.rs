@@ -42,7 +42,13 @@ macro_rules! masked_builder {
     };
 }
 
-/// Useful when defining a option type that is zero valid and has no Drop code
+/// Creates a default impl using [`core::mem::zeroed`]
+///
+/// Since many types passed to neovim use a mask to indicate if it has a field, we can just zero
+/// initialize them rather than to call default implementations.
+///
+/// Currently this safe for all neovim primitive types. Still marked as unsafe in case that
+/// changes.
 #[macro_export]
 macro_rules! fast_default {
     (unsafe $ident:ident$(< $( $gen:tt ),* >)?) => {
