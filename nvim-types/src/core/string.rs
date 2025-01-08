@@ -448,7 +448,7 @@ impl<'a> ThinString<'a> {
         }
 
         Self {
-            len: b.len(),
+            len: b.len() - 1,
             // SAFETY: slice pointers are always NonNull to optimize for use in enums.
             data: unsafe { NonNull::new_unchecked(b.as_ptr() as *mut libc::c_char) },
             __p: PhantomData::<&'a u8>,
