@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 libc = { workspace = true }
 panics = { workspace = true }
+macros = { workspace = true }

@@ -1,17 +1,16 @@
-use std::{marker::PhantomData, ptr::addr_of_mut};
+use std::marker::PhantomData;
 
-static mut ARENA: *mut Arena = core::ptr::null_mut();
 // arena_alloc_block for allocating
 #[repr(C)]
-#[derive(Clone, Copy)]
-struct Arena {
+#[derive(Clone, Copy, Debug)]
+pub struct Arena {
     cur_blk: *const libc::c_char,
     pos: libc::size_t,
     size: libc::size_t,
 }
 
 impl Arena {
-    const EMPTY: Arena = Arena {
+    pub const EMPTY: Arena = Arena {
         cur_blk: std::ptr::null_mut(),
         pos: 0,
         size: 0,
@@ -21,11 +20,11 @@ impl Arena {
         Self::EMPTY
     }
 
-    unsafe fn alloc(&mut self, size: libc::size_t, align: bool) -> *mut libc::c_char {
+    pub unsafe fn alloc(&mut self, size: libc::size_t, align: bool) -> *mut libc::c_char {
         unsafe { arena_alloc(self as *mut Arena, size, align) }
     }
 
-    unsafe fn finish(&mut self) -> ArenaMem {
+    pub unsafe fn finish(&mut self) -> ArenaMem {
         unsafe { arena_finish(self as *mut Arena) }
     }
 }

@@ -6,13 +6,15 @@ edition = "2021"
 [dependencies]
 nvim-types = { workspace = true }
 nvim-funcs = { workspace = true }
+macros = { workspace = true }
 plugin = { path = "./plugin" }
 
 [workspace.dependencies]
-libc = "0.2.169"
+libc = { version = "0.2.169", default-features = false }
 panics = { path = "./panics" }
 nvim-types = { path = "./nvim-types/" }
 nvim-funcs = { path = "./nvim-funcs/" }
+macros = { path = "./macros/" }
 
 [workspace]
-members = [ "panics", "nvim-types", "nvim-funcs", "plugin"]
+members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros"]
