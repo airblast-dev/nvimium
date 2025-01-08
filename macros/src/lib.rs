@@ -3,12 +3,16 @@ macro_rules! builder {
     (
         $(#[$meta:meta])*
         $pub:vis struct $ident:ident$(< $( $gen:tt ),* >)? {
-            $($vis:vis $field:ident: $field_ty:ty), *$(,)?
+            $(
+                $(#[$field_meta:meta])*
+                $vis:vis $field:ident: $field_ty:ty
+            ), *$(,)?
         }
     ) => {
         $(#[$meta])*
-        $pub struct $ident$(<$($gen),*>)? {
+        $pub struct $ident$(<$($gen),*>),* {
             $(
+                $(#[$field_meta])*
                 $vis $field: $field_ty
             ),*
         }
@@ -26,13 +30,17 @@ macro_rules! masked_builder {
     (
         $(#[$meta:meta])*
         $pub:vis struct $ident:ident$(< $( $gen:tt ),* >)? {
-            $($vis:vis $field:ident: $field_ty:ty), *$(,)?
+            $(
+                $(#[$field_meta:meta])*
+                $vis:vis $field:ident: $field_ty:ty
+            ), *$(,)?
         }
     ) => {
         $(#[$meta])*
         $pub struct $ident$(<$($gen),*>),* {
             mask: u64,
             $(
+                $(#[$field_meta])*
                 $vis $field: $field_ty
             ),*
         }
