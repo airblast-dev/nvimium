@@ -6,6 +6,7 @@ macro_rules! builder {
             $($vis:vis $field:ident: $field_ty:ty), *$(,)?
         }
     ) => {
+        $(#[$meta])*
         $pub struct $ident$(<$($gen),*>)? {
             $(
                 $vis $field: $field_ty
