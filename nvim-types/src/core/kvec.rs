@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::mem::{self, MaybeUninit};
 use std::num::NonZeroUsize;
 use std::ops::{Deref, DerefMut, RangeBounds};
@@ -6,11 +7,16 @@ use std::ptr::NonNull;
 use panics::{alloc_failed, slice_error};
 
 #[repr(C)]
-#[derive(Debug)]
 pub struct KVec<T> {
     pub(super) len: usize,
     pub(super) capacity: usize,
-    pub(super) ptr: NonNull<T>,
+    pub(super) ptr: *mut T,
+}
+
+impl<T: Debug> Debug for KVec<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.as_slice())
+    }
 }
 
 impl<T> KVec<T> {
@@ -25,7 +31,7 @@ impl<T> KVec<T> {
         Self {
             len: 0,
             capacity: 0,
-            ptr: NonNull::dangling(),
+            ptr: NonNull::dangling().as_ptr(),
         }
     }
 
@@ -34,7 +40,7 @@ impl<T> KVec<T> {
         self.slice_check();
         // since self.ptr is non null, a slice is always valid since [`NonNull::dangling`] is
         // correctly aligned.
-        unsafe { std::slice::from_raw_parts(self.ptr.as_ptr(), self.len) }
+        unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
     }
 
     #[inline]
@@ -42,7 +48,7 @@ impl<T> KVec<T> {
         self.slice_check();
         // since self.ptr is non null, a slice is always valid since [`NonNull::dangling`] is
         // correctly aligned.
-        unsafe { std::slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len) }
+        unsafe { std::slice::from_raw_parts_mut(self.ptr, self.len) }
     }
 
     /// Returns the uninitialized but allocated space for `T`
@@ -51,7 +57,7 @@ impl<T> KVec<T> {
         self.slice_check();
         unsafe {
             std::slice::from_raw_parts_mut(
-                self.ptr.add(self.len).cast::<MaybeUninit<T>>().as_ptr(),
+                self.ptr.add(self.len).cast::<MaybeUninit<T>>(),
                 self.capacity - self.len(),
             )
         }
@@ -60,7 +66,7 @@ impl<T> KVec<T> {
     /// Returns a pointer to the internal buffer
     #[inline(always)]
     pub const fn as_ptr(&self) -> *mut T {
-        self.ptr.as_ptr()
+        self.ptr
     }
 
     #[track_caller]
@@ -110,7 +116,7 @@ impl<T> KVec<T> {
     pub fn with_capacity(capacity: usize) -> Self {
         // We shouldn't be storing ZST's in any use case, but if we do, just return a dangling pointer.
         let ptr = if Self::ZST || capacity == 0 {
-            NonNull::dangling()
+            NonNull::dangling().as_ptr()
         } else {
             let Some(byte_cap) = capacity.checked_mul(Self::T_SIZE) else {
                 alloc_failed();
@@ -124,7 +130,7 @@ impl<T> KVec<T> {
             if ptr.is_null() {
                 alloc_failed();
             }
-            unsafe { NonNull::new_unchecked(ptr as *mut T) }
+            ptr as *mut T
         };
 
         Self {
@@ -207,7 +213,7 @@ impl<T> KVec<T> {
     fn realloc(&mut self, new_capacity: usize) {
         if Self::ZST {
         } else if new_capacity == 0 && self.capacity > 0 {
-            unsafe { libc::free(self.ptr.as_ptr() as *mut libc::c_void) };
+            unsafe { libc::free(self.ptr as *mut libc::c_void) };
         } else {
             let Some(byte_capacity) = new_capacity.checked_mul(Self::T_SIZE) else {
                 alloc_failed();
@@ -215,12 +221,12 @@ impl<T> KVec<T> {
             let ptr = if self.capacity == 0 {
                 unsafe { libc::malloc(byte_capacity) }
             } else {
-                unsafe { libc::realloc(self.ptr.as_ptr() as *mut libc::c_void, byte_capacity) }
+                unsafe { libc::realloc(self.ptr as *mut libc::c_void, byte_capacity) }
             };
             if ptr.is_null() {
                 alloc_failed();
             }
-            self.ptr = unsafe { NonNull::new_unchecked(ptr as *mut T) };
+            self.ptr = ptr as *mut T;
         }
         self.capacity = new_capacity;
     }
@@ -294,7 +300,7 @@ impl<T> KVec<T> {
         unsafe {
             let ptr = self.ptr.add(index);
             let rem = ptr.read();
-            core::ptr::copy(ptr.add(1).as_ptr(), ptr.as_ptr(), len - index - 1);
+            core::ptr::copy(ptr.add(1), ptr, len - index - 1);
 
             self.set_len(len - 1);
             rem
@@ -331,27 +337,6 @@ impl<T> KVec<T> {
             self.ptr.add(len - 1).copy_to(ptr, 1);
             self.set_len(len - 1);
             rem
-        }
-    }
-
-    /// Drain the elements in range
-    ///
-    /// Similar to [`Vec::drain`], this returns an iterator that yields the items in range.
-    ///
-    /// # Panics
-    ///
-    /// If the range exceeds the bounds of the [`KVec`] this will panic.
-    fn drain<R: RangeBounds<usize>>(&mut self, range: R) -> Drain<'_, T> {
-        let std::ops::Range { start, end } =
-            range_bound_to_range(self, range).expect("range bounds must never be out of bounds");
-
-        unsafe {
-            Drain {
-                start,
-                end,
-                kvec: NonNull::new_unchecked(self as *mut _),
-                iter: self.as_slice()[start..end].iter(),
-            }
         }
     }
 }
@@ -428,45 +413,6 @@ impl<T> Drop for KVec<T> {
         }
         unsafe {
             libc::free(self.as_ptr() as *mut libc::c_void);
-        }
-    }
-}
-
-/// TODO: probably safety problems, check std implementation
-struct Drain<'a, T> {
-    start: usize,
-    end: usize,
-    iter: std::slice::Iter<'a, T>,
-    kvec: NonNull<KVec<T>>,
-}
-
-impl<T> Iterator for Drain<'_, T> {
-    type Item = T;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter
-            .next()
-            .map(|elt| unsafe { std::ptr::read(elt as *const T) })
-    }
-}
-
-impl<T> Drop for Drain<'_, T> {
-    fn drop(&mut self) {
-        // add ZST check
-        unsafe {
-            let kvec = self.kvec.as_mut();
-            for elt in
-                kvec.as_mut_slice()[self.start..self.end.min(self.iter.as_slice().len())].iter_mut()
-            {
-                std::ptr::drop_in_place(elt as *mut T);
-            }
-            let src = kvec.ptr.add(self.start);
-            let dst = kvec.ptr.add(self.end);
-            libc::memcpy(
-                dst.as_ptr() as *mut libc::c_void,
-                src.as_ptr() as *const libc::c_void,
-                (self.end - self.start) * mem::size_of::<T>(),
-            );
-            kvec.set_len(kvec.len() - (self.end - self.start));
         }
     }
 }
