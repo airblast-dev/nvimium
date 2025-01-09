@@ -1,12 +1,19 @@
-use std::fmt::Display;
+use std::{ffi::CStr, fmt::{Debug, Display}};
 
 use super::string::{String, ThinString};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[repr(C)]
 pub struct Error {
     kind: ErrorType,
     msg: *const u8,
+}
+
+impl Debug for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let cs = unsafe { CStr::from_ptr(self.msg.cast()) };
+        write!(f, "{:?}: {:?}", self.kind, cs)
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
