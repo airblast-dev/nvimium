@@ -242,6 +242,11 @@ impl Clone for String {
         self.push(source.as_slice());
     }
 }
+impl Default for String {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl<B: AsRef<[u8]>> From<B> for String {
     fn from(value: B) -> Self {
