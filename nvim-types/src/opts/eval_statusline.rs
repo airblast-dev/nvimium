@@ -3,7 +3,7 @@ use macros::{fast_default, masked_builder};
 use crate::{string::ThinString, window::Window, Boolean, Integer};
 
 masked_builder!(
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, Default)]
     #[repr(C)]
     pub struct EvalStatusLineOpts<'a> {
         winid: Window,
@@ -16,4 +16,3 @@ masked_builder!(
     }
 );
 
-fast_default!(unsafe EvalStatusLineOpts<'static>);
