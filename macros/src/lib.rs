@@ -78,7 +78,7 @@ macro_rules! func_gen_masked {
             self.$field = $field.into();
             self
         }
-        $crate::func_gen_masked_inner!(3, $($inner: $inner_ty,)*);
+        $crate::func_gen_masked_inner!(2, $($inner: $inner_ty,)*);
     };
 }
 
