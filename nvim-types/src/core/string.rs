@@ -39,7 +39,7 @@ use panics::{alloc_failed, not_null_terminated};
 pub struct String {
     // TODO: check feasability of overallocating some bytes to store capacity in allocation
     // This might allow us to introduce some optimizations in the API.
-    data: NonNull<libc::c_char>,
+    data: *mut libc::c_char,
     len: libc::size_t,
 
     // when passing to neovim, the rest of the fields must be trimmed out
@@ -87,13 +87,13 @@ impl String {
     /// Get a immutable pointer to the buffer
     #[inline(always)]
     pub fn as_ptr(&self) -> *const u8 {
-        self.data.as_ptr() as *const u8
+        self.data as *const u8
     }
 
     /// Get a mutable pointer to the buffer
     #[inline(always)]
     pub fn as_mut_ptr(&self) -> *mut u8 {
-        self.data.as_ptr() as *mut u8
+        self.data as *mut u8
     }
 
     /// Get the buffer as a slice
@@ -123,7 +123,7 @@ impl String {
         unsafe { ptr.write(0) };
         Self {
             len: 0,
-            data: unsafe { NonNull::new_unchecked(ptr) },
+            data: ptr,
 
             capacity: unsafe { NonZeroUsize::new_unchecked(cap.saturating_add(1)) },
         }
@@ -173,12 +173,11 @@ impl String {
     }
 
     fn realloc(&mut self, new_capacity: NonZeroUsize) {
-        let ptr =
-            unsafe { libc::realloc(self.data.as_ptr() as *mut libc::c_void, new_capacity.get()) };
+        let ptr = unsafe { libc::realloc(self.data as *mut libc::c_void, new_capacity.get()) };
         if ptr.is_null() {
             alloc_failed();
         }
-        self.data = unsafe { NonNull::new_unchecked(ptr as *mut libc::c_char) };
+        self.data = ptr as *mut libc::c_char;
         self.capacity = new_capacity;
     }
 
@@ -196,7 +195,7 @@ impl String {
     /// To avoid memory leaks the allocation must be dropped manually or its ownership must pass an
     /// FFI boundry where the foreign function will free it. Almost always [`String::as_thinstr`]
     /// should be preferred unless you really know you need this.
-    fn leak(self) -> ThinString<'static> {
+    pub(crate) fn leak(self) -> ThinString<'static> {
         let th = unsafe { ThinString::new(self.len, self.data) };
         std::mem::forget(self);
         th
@@ -215,7 +214,7 @@ impl String {
         // preferred to use libc::memcpy for better binary size
         unsafe {
             libc::memcpy(
-                self.data.add(self.len()).as_ptr() as *mut libc::c_void,
+                self.data.add(self.len()) as *mut libc::c_void,
                 slice.as_ptr() as *mut libc::c_void,
                 slice.len(),
             );
@@ -225,7 +224,7 @@ impl String {
         unsafe { self.set_len(self.len() + slice.len()) };
 
         // SAFETY: we already had enough space, just write the null byte
-        unsafe { self.data.as_ptr().add(self.len()).write(0) };
+        unsafe { self.data.add(self.len()).write(0) };
     }
 }
 
@@ -356,7 +355,7 @@ const _: () = assert!(
 
 impl Drop for String {
     fn drop(&mut self) {
-        unsafe { libc::free(self.data.as_ptr() as *mut libc::c_void) };
+        unsafe { libc::free(self.data as *mut libc::c_void) };
     }
 }
 
@@ -371,7 +370,7 @@ impl<'a> From<ThinString<'a>> for String {
 #[repr(C)]
 #[derive(Clone, Copy, Eq)]
 pub struct ThinString<'a> {
-    data: NonNull<libc::c_char>,
+    data: *mut libc::c_char,
     len: libc::size_t,
     __p: PhantomData<&'a u8>,
 }
@@ -390,7 +389,7 @@ impl<'a> ThinString<'a> {
     ///
     /// See [`String::as_thinstr`] for a function that makes use of this.
     #[inline(always)]
-    const unsafe fn new<'b>(len: usize, data: NonNull<libc::c_char>) -> ThinString<'a>
+    const unsafe fn new<'b>(len: usize, data: *mut libc::c_char) -> ThinString<'a>
     where
         'a: 'b,
     {
@@ -411,7 +410,7 @@ impl<'a> ThinString<'a> {
     /// returned pointer can be cast to a *mut but it should never be mutated.
     #[inline(always)]
     pub const fn as_ptr(&self) -> *const u8 {
-        self.data.cast::<u8>().as_ptr() as *const u8
+        self.data.cast::<u8>() as *const u8
     }
 
     /// Returns the length of the string excluding the null byte
@@ -423,7 +422,7 @@ impl<'a> ThinString<'a> {
     /// Returns a slice of the buffers bytes without a null byte
     #[inline(always)]
     pub const fn as_slice(&self) -> &'a [u8] {
-        unsafe { std::slice::from_raw_parts(self.data.as_ptr() as *mut u8, self.len) }
+        unsafe { std::slice::from_raw_parts(self.data as *mut u8, self.len) }
     }
 
     #[inline(always)]
@@ -434,7 +433,7 @@ impl<'a> ThinString<'a> {
     // Returns a slice of the buffers bytes without a null byte
     #[inline(always)]
     pub const fn as_slice_with_null(&self) -> &'a [u8] {
-        unsafe { std::slice::from_raw_parts(self.data.as_ptr() as *mut u8, self.len + 1) }
+        unsafe { std::slice::from_raw_parts(self.data as *mut u8, self.len + 1) }
     }
 
     /// Initialize a [`ThinString`] from raw bytes
@@ -455,7 +454,7 @@ impl<'a> ThinString<'a> {
         Self {
             len: b.len() - 1,
             // SAFETY: slice pointers are always NonNull to optimize for use in enums.
-            data: unsafe { NonNull::new_unchecked(b.as_ptr() as *mut libc::c_char) },
+            data: b.as_ptr() as *mut libc::c_char,
             __p: PhantomData::<&'a u8>,
         }
     }
@@ -532,7 +531,7 @@ impl Borrow<[u8]> for ThinString<'_> {
 impl Default for ThinString<'static> {
     fn default() -> Self {
         Self {
-            data: unsafe { NonNull::new_unchecked(c"".as_ptr() as *mut libc::c_char) },
+            data: c"".as_ptr() as *mut libc::c_char,
             len: 0,
             __p: PhantomData,
         }
@@ -543,7 +542,7 @@ impl<'a> From<&'a CStr> for ThinString<'a> {
     fn from(value: &'a CStr) -> Self {
         Self {
             len: value.count_bytes(),
-            data: unsafe { NonNull::new_unchecked(value.as_ptr() as *mut libc::c_char) },
+            data: value.as_ptr() as *mut libc::c_char,
             __p: PhantomData,
         }
     }
@@ -568,7 +567,7 @@ impl<'a> TryFrom<&'a [u8]> for ThinString<'a> {
 
         Ok(Self {
             len: value.len() - 1,
-            data: unsafe { NonNull::new_unchecked(value.as_ptr() as *mut libc::c_char) },
+            data: value.as_ptr() as *mut libc::c_char,
             __p: PhantomData,
         })
     }
