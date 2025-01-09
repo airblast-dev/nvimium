@@ -1,5 +1,6 @@
 use nvim_types::{
     array::Array,
+    dictionary::Dictionary,
     error::Error,
     func_types::KeyMapMode,
     object::Object,
@@ -28,7 +29,7 @@ extern "C" {
         opts: *const EvalStatusLineOpts<'a>,
         arena: *mut Arena,
         err: *mut Error,
-    );
+    ) -> Dictionary;
     pub fn nvim_exec_lua<'a>(
         code: ThinString<'a>,
         args: Array,
