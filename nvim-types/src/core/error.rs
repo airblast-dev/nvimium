@@ -1,4 +1,7 @@
-use std::{ffi::CStr, fmt::{Debug, Display}};
+use std::{
+    ffi::CStr,
+    fmt::{Debug, Display},
+};
 
 use super::string::{String, ThinString};
 
@@ -11,7 +14,11 @@ pub struct Error {
 
 impl Debug for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let cs = unsafe { CStr::from_ptr(self.msg.cast()) };
+        let cs = if !self.msg.is_null() {
+            unsafe { CStr::from_ptr(self.msg.cast()) }
+        } else {
+            CStr::from_bytes_until_nul(c"null ptr".to_bytes()).unwrap()
+        };
         write!(f, "{:?}: {:?}", self.kind, cs)
     }
 }
