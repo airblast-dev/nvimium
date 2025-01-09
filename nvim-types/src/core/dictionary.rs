@@ -2,22 +2,30 @@ use std::ops::{Deref, DerefMut};
 
 use crate::{kvec::KVec, object::Object, string::String};
 
+use super::string::ThinString;
+
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub struct KeyValuePair {
-    key: String,
-    object: Object,
+    pub key: ThinString<'static>,
+    pub object: Object,
 }
 
 impl From<(String, Object)> for KeyValuePair {
     fn from((key, object): (String, Object)) -> Self {
-        Self { key, object }
+        Self {
+            key: key.leak(),
+            object,
+        }
     }
 }
 
 impl From<(Object, String)> for KeyValuePair {
     fn from((object, key): (Object, String)) -> Self {
-        Self { key, object }
+        Self {
+            key: key.leak(),
+            object,
+        }
     }
 }
 
@@ -41,7 +49,7 @@ impl DerefMut for Dictionary {
 impl Dictionary {
     pub fn get<K>(&self, key: K) -> Option<&Object>
     where
-        String: PartialEq<K>,
+        for<'a> ThinString<'a>: PartialEq<K>,
     {
         let index = self.find_by_key(&key)?;
         unsafe { Some(&self.0.as_slice().get_unchecked(index).object) }
@@ -49,7 +57,7 @@ impl Dictionary {
 
     pub fn remove<K>(&mut self, key: K) -> Option<KeyValuePair>
     where
-        String: PartialEq<K>,
+        for<'a> ThinString<'a>: PartialEq<K>,
     {
         let index = self.find_by_key(&key)?;
         Some(self.0.swap_remove(index))
@@ -57,7 +65,8 @@ impl Dictionary {
 
     pub fn insert<K>(&mut self, key: K, mut object: Object) -> Option<Object>
     where
-        String: PartialEq<K> + From<K>,
+        for<'a> ThinString<'a>: PartialEq<K>,
+        String: From<K>,
     {
         let index = self.find_by_key(&key);
         match index {
@@ -69,7 +78,7 @@ impl Dictionary {
             }
             None => {
                 self.0.push(KeyValuePair {
-                    key: String::from(key),
+                    key: String::from(key).leak(),
                     object,
                 });
                 None
@@ -82,11 +91,11 @@ impl Dictionary {
     /// The returned index is guaranteed to be the index to the key value pair.
     fn find_by_key<K>(&self, key: &K) -> Option<usize>
     where
-        String: PartialEq<K>,
+        for<'a> ThinString<'a>: PartialEq<K>,
     {
         self.0
             .iter()
-            .position(|KeyValuePair { key: k, .. }| *k == *key)
+            .position(|KeyValuePair { key: k, .. }| k == key)
     }
 }
 
