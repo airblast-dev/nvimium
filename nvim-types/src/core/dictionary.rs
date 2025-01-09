@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use crate::{kvec::KVec, object::Object, string::String};
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct KeyValuePair {
     key: String,
     object: Object,
@@ -22,6 +22,7 @@ impl From<(Object, String)> for KeyValuePair {
 }
 
 #[repr(transparent)]
+#[derive(Debug)]
 pub struct Dictionary(KVec<KeyValuePair>);
 
 impl Deref for Dictionary {
