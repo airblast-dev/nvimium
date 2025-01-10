@@ -592,6 +592,22 @@ pub enum ThinStringError {
     Empty,
 }
 
+#[derive(Debug)]
+struct OwnedThinString(ThinString<'static>);
+
+impl OwnedThinString {
+    fn as_thinstr<'a>(&'a self) -> ThinString<'a> {
+        ThinString {
+            __p: PhantomData::<&'a u8>,
+            ..self.0
+        }
+    }
+}
+
+impl Drop for OwnedThinString {
+    fn drop(&mut self) {
+        unsafe { libc::free(self.0.data as *mut libc::c_void) }
+    }
 }
 
 /// A trait to allow various strings to be passed around
@@ -622,6 +638,12 @@ unsafe impl AsThinString for String {
 unsafe impl AsThinString for ThinString<'_> {
     fn as_thinstr(&self) -> ThinString<'_> {
         *self
+    }
+}
+
+unsafe impl AsThinString for OwnedThinString {
+    fn as_thinstr(&self) -> ThinString<'_> {
+        self.as_thinstr()
     }
 }
 
