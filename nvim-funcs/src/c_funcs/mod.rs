@@ -18,7 +18,7 @@ extern "C" {
         map_mode: KeyMapMode,
         lhs: ThinString<'a>,
         error: ThinString<'a>,
-        err: *const Error,
+        err: *mut Error,
     );
     pub fn nvim_del_mark<'a>(name: ThinString<'a>, err: *const Error);
     pub fn nvim_del_var<'a>(var_name: ThinString<'a>, err: *const Error);
