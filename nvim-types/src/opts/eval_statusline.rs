@@ -1,4 +1,4 @@
-use macros::{fast_default, masked_builder};
+use macros::masked_builder;
 
 use crate::{string::ThinString, window::Window, Boolean, Integer};
 
@@ -15,4 +15,3 @@ masked_builder!(
         statuscol_lnum: Integer,
     }
 );
-
