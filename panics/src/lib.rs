@@ -19,7 +19,9 @@ extern "C" {
 pub fn alloc_failed() -> ! {
     const E_OUTOFMEM: *const libc::c_char = c"E41: Out of memory!".as_ptr();
 
-    unsafe { preserve_exit(E_OUTOFMEM) }
+    // TODO: add this back in once testing stuff are ironed out
+    //unsafe { preserve_exit(E_OUTOFMEM) }
+    panic!("unable to allocate memory")
 }
 
 #[cold]
