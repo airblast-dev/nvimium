@@ -36,7 +36,7 @@
 
 use std::{
     borrow::Borrow, ffi::CStr, fmt::Debug, hash::Hash, marker::PhantomData, num::NonZeroUsize,
-    ops::Deref, ptr::NonNull,
+    ops::Deref,
 };
 
 use panics::{alloc_failed, not_null_terminated};
@@ -104,6 +104,11 @@ impl String {
     #[inline(always)]
     pub fn len(&self) -> usize {
         self.len
+    }
+
+    #[inline(always)]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// Set the current length of the [`String`]
