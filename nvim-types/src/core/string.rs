@@ -297,6 +297,13 @@ impl<B: AsRef<[u8]>> From<B> for String {
     }
 }
 
+impl<'a> From<ThinString<'a>> for String {
+    fn from(value: ThinString<'a>) -> Self {
+        let th = value.as_thinstr();
+        Self::from(th.as_slice())
+    }
+}
+
 impl<'a> Extend<&'a [u8]> for String {
     fn extend<T: IntoIterator<Item = &'a [u8]>>(&mut self, iter: T) {
         let mut iter = iter.into_iter();
@@ -333,42 +340,6 @@ impl std::io::Write for String {
     }
 }
 
-impl PartialEq for String {
-    fn eq(&self, other: &Self) -> bool {
-        self.as_thinstr() == other.as_thinstr()
-    }
-}
-
-impl<'a> PartialEq<ThinString<'a>> for String {
-    fn eq(&self, other: &ThinString<'a>) -> bool {
-        other.eq(self)
-    }
-}
-
-impl PartialEq<str> for String {
-    fn eq(&self, other: &str) -> bool {
-        self.as_slice() == other.as_bytes()
-    }
-}
-
-impl PartialEq<[u8]> for String {
-    fn eq(&self, other: &[u8]) -> bool {
-        self.as_slice() == other
-    }
-}
-
-impl PartialEq<CStr> for String {
-    fn eq(&self, other: &CStr) -> bool {
-        self.as_thinstr().eq(other)
-    }
-}
-
-impl<T: AsRef<[u8]>> PartialEq<T> for String {
-    fn eq(&self, other: &T) -> bool {
-        self.as_slice() == other.as_ref()
-    }
-}
-
 impl Hash for String {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         state.write(self.as_slice_with_null());
@@ -389,6 +360,42 @@ impl Debug for String {
     }
 }
 
+impl PartialEq for String {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_slice() == other.as_slice()
+    }
+}
+
+impl<'a> PartialEq<ThinString<'a>> for String {
+    fn eq(&self, other: &ThinString<'a>) -> bool {
+        self.as_thinstr() == *other
+    }
+}
+
+impl PartialEq<str> for String {
+    fn eq(&self, other: &str) -> bool {
+        self.as_slice() == other.as_bytes()
+    }
+}
+
+impl PartialEq<&str> for String {
+    fn eq(&self, other: &&str) -> bool {
+        self.as_slice() == other.as_bytes()
+    }
+}
+
+impl PartialEq<[u8]> for String {
+    fn eq(&self, other: &[u8]) -> bool {
+        self.as_slice() == other
+    }
+}
+
+impl PartialEq<&[u8]> for String {
+    fn eq(&self, other: &&[u8]) -> bool {
+        self.as_slice() == *other
+    }
+}
+
 const _: () = assert!(
     std::mem::size_of::<usize>() + std::mem::size_of::<ThinString>()
         == std::mem::size_of::<String>()
@@ -397,14 +404,6 @@ const _: () = assert!(
 impl Drop for String {
     fn drop(&mut self) {
         unsafe { libc::free(self.data as *mut libc::c_void) };
-    }
-}
-
-impl<'a> From<ThinString<'a>> for String {
-    fn from(value: ThinString<'a>) -> Self {
-        let mut s = Self::with_capacity(value.len());
-        s.push(value.as_slice());
-        s
     }
 }
 
@@ -501,57 +500,6 @@ impl<'a> ThinString<'a> {
     }
 }
 
-// TODO: use the trycompile crate
-// If modifying lifetimes of ThinString or related methods, make sure these doesnt compile
-//  fn borrow_check() {
-//      let s = String::new();
-//      let th = s.as_thinstr();
-//      drop(s);
-//      dbg!(th);
-//  }
-//  fn mut_check() {
-//      let mut s = String::new();
-//      let th = s.as_thinstr();
-//      s.reserve_exact(1);
-//      dbg!(th);
-//  }
-//  fn slice_check() {
-//      let mut s = String::new();
-//      let sl = s.as_thinstr().as_slice();
-//      s.reserve_exact(1);
-//      dbg!(sl);
-//  }
-
-impl PartialEq for ThinString<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.data == other.data || self.as_slice() == other.as_slice()
-    }
-}
-
-impl PartialEq<String> for ThinString<'_> {
-    fn eq(&self, other: &String) -> bool {
-        self.data == other.data || self.as_slice() == other.as_thinstr().as_slice()
-    }
-}
-
-impl<T: AsRef<[u8]>> PartialEq<T> for ThinString<'_> {
-    fn eq(&self, other: &T) -> bool {
-        self.as_slice() == other.as_ref()
-    }
-}
-
-impl PartialEq<[u8]> for ThinString<'_> {
-    fn eq(&self, other: &[u8]) -> bool {
-        self.as_slice() == other
-    }
-}
-
-impl PartialEq<CStr> for ThinString<'_> {
-    fn eq(&self, other: &CStr) -> bool {
-        self.as_slice_with_null() == other.to_bytes_with_nul()
-    }
-}
-
 impl Debug for ThinString<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let l = std::string::String::from_utf8_lossy(self.as_slice());
@@ -566,6 +514,30 @@ impl Debug for ThinString<'_> {
 impl Borrow<[u8]> for ThinString<'_> {
     fn borrow(&self) -> &[u8] {
         self.as_slice_with_null()
+    }
+}
+
+impl PartialEq for ThinString<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_slice() == other.as_slice()
+    }
+}
+
+impl PartialEq<String> for ThinString<'_> {
+    fn eq(&self, other: &String) -> bool {
+        *self == other.as_thinstr()
+    }
+}
+
+impl PartialEq<str> for ThinString<'_> {
+    fn eq(&self, other: &str) -> bool {
+        self.as_slice() == other.as_bytes()
+    }
+}
+
+impl PartialEq<&str> for ThinString<'_> {
+    fn eq(&self, other: &&str) -> bool {
+        self.as_slice() == other.as_bytes()
     }
 }
 
@@ -620,23 +592,89 @@ pub enum ThinStringError {
     Empty,
 }
 
-pub trait AsThinString {
-    fn as_thinstring(&self) -> ThinString<'_>;
 }
 
-impl AsThinString for String {
-    #[inline(always)]
-    fn as_thinstring(&self) -> ThinString<'_> {
+/// A trait to allow various strings to be passed around
+///
+/// You may want to implement this if you have a type that is from another FFI that can 
+/// be cheaply used to create a [`ThinString`]. 
+///
+/// All implementations of this trait in this library do not cause allocations. While all external
+/// implementations should not cause an allocation, this is not a safety requirment that needs to
+/// be upheld by the implementor.
+///
+/// # Safety
+/// Implementing requires the following variants to be upheld
+/// - The data that the pointer in [`ThinString`] must not be null.
+/// - The string that the pointer points to must be minimally a single null byte.
+/// - The length must be the length of the allocation without the null byte.
+/// - The lifetime on the return value must match the owners lifetime.
+pub unsafe trait AsThinString {
+    fn as_thinstr(&self) -> ThinString<'_>;
+}
+
+unsafe impl AsThinString for String {
+    fn as_thinstr(&self) -> ThinString<'_> {
         self.as_thinstr()
     }
 }
 
-impl AsThinString for ThinString<'_> {
-    #[inline(always)]
-    fn as_thinstring(&self) -> ThinString<'_> {
+unsafe impl AsThinString for ThinString<'_> {
+    fn as_thinstr(&self) -> ThinString<'_> {
         *self
     }
 }
+
+impl PartialEq<String> for str {
+    fn eq(&self, other: &String) -> bool {
+        self.as_bytes() == other.as_slice()
+    }
+}
+
+impl PartialEq<String> for &str {
+    fn eq(&self, other: &String) -> bool {
+        self.as_bytes() == other.as_slice()
+    }
+}
+
+impl PartialEq<String> for [u8] {
+    fn eq(&self, other: &String) -> bool {
+        self == other.as_slice()
+    }
+}
+
+impl PartialEq<String> for &[u8] {
+    fn eq(&self, other: &String) -> bool {
+        *self == other.as_slice()
+    }
+}
+
+// TODO: use the trycompile crate
+// If modifying lifetimes of ThinString or related methods, make sure these doesnt compile
+//  fn borrow_check() {
+//      let s = String::new();
+//      let th = s.as_thinstr();
+//      drop(s);
+//      dbg!(th);
+//  }
+//  fn mut_check() {
+//      let mut s = String::new();
+//      let th = s.as_thinstr();
+//      s.reserve_exact(1);
+//      dbg!(th);
+//  }
+//  fn slice_check() {
+//      let mut s = String::new();
+//      let sl = s.as_thinstr().as_slice();
+//      s.reserve_exact(1);
+//      dbg!(sl);
+//  }
+//  fn owned_thin_string() {
+//      let s = String::from("Hello");
+//      let mut ow = OwnedThinString(s.leak());
+//      let th = ow.as_thinstr();
+//      dbg!(th);
+//  }
 
 #[cfg(test)]
 mod string_alloc {
@@ -808,6 +846,9 @@ mod thinstr {
         assert_eq!(s2, s.as_thinstr());
 
         assert_eq!(s, "aasdas");
+        assert_eq!("aasdas", s);
+        assert_eq!(s, b"aasdas".as_slice());
+        assert_eq!(b"aasdas".as_slice(), s);
         // TODO: add more tests
     }
 
