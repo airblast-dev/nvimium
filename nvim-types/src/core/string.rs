@@ -35,7 +35,12 @@
 //! functions may still limit what kind of string can be passed.
 
 use std::{
-    borrow::Borrow, ffi::CStr, fmt::Debug, hash::Hash, marker::PhantomData, num::NonZeroUsize,
+    borrow::Borrow,
+    ffi::{CStr, CString},
+    fmt::Debug,
+    hash::Hash,
+    marker::PhantomData,
+    num::NonZeroUsize,
     ops::Deref,
 };
 
@@ -282,6 +287,7 @@ impl Clone for String {
         self.push(source.as_slice());
     }
 }
+
 impl Default for String {
     fn default() -> Self {
         Self::new()
@@ -410,7 +416,7 @@ impl Drop for String {
 /// A non-owned neovim string
 ///
 /// Compared to [`std`] types this can be though of as a &`[u8]`.
-/// A [`ThinString`] can be constructed by calling [`String::as_thinstr`], or [`OwnedThinString::as_thinstr`], 
+/// A [`ThinString`] can be constructed by calling [`String::as_thinstr`], or [`OwnedThinString::as_thinstr`],
 /// or one of its [`TryFrom`] implementations that accept any byte slice that is terminated with a null byte.
 ///
 /// Excluding const initialization, you will almost always want to use [`String`] instead to be
@@ -422,7 +428,6 @@ pub struct ThinString<'a> {
     len: libc::size_t,
     __p: PhantomData<&'a u8>,
 }
-
 
 impl<'a> ThinString<'a> {
     /// Initialize a new ThinString using a pointer and a length
@@ -464,7 +469,7 @@ impl<'a> ThinString<'a> {
         self.len
     }
 
-    /// Returns true if the string is empty 
+    /// Returns true if the string is empty
     #[inline(always)]
     pub const fn is_empty(&self) -> bool {
         self.len == 0
