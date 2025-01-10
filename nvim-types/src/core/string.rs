@@ -604,10 +604,10 @@ pub enum ThinStringError {
 }
 
 #[derive(Debug)]
-struct OwnedThinString(ThinString<'static>);
+pub struct OwnedThinString(ThinString<'static>);
 
 impl OwnedThinString {
-    fn as_thinstr<'a>(&'a self) -> ThinString<'a> {
+    pub fn as_thinstr<'a>(&'a self) -> ThinString<'a> {
         ThinString {
             __p: PhantomData::<&'a u8>,
             ..self.0
