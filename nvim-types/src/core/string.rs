@@ -407,6 +407,14 @@ impl Drop for String {
     }
 }
 
+/// A non-owned neovim string
+///
+/// Compared to [`std`] types this can be though of as a &`[u8]`.
+/// A [`ThinString`] can be constructed by calling [`String::as_thinstr`], or [`OwnedThinString::as_thinstr`], 
+/// or one of its [`TryFrom`] implementations that accept any byte slice that is terminated with a null byte.
+///
+/// Excluding const initialization, you will almost always want to use [`String`] instead to be
+/// able to modify the string.
 #[repr(C)]
 #[derive(Clone, Copy, Eq)]
 pub struct ThinString<'a> {
@@ -415,10 +423,7 @@ pub struct ThinString<'a> {
     __p: PhantomData<&'a u8>,
 }
 
-/// A non-owned string type
-///
-/// [`ThinString`] can be constructed by calling [`String::as_thinstr`], or one of its [`TryFrom`]
-/// implementations that accept any byte slice that is terminated with a null byte.
+
 impl<'a> ThinString<'a> {
     /// Initialize a new ThinString using a pointer and a length
     ///
@@ -459,18 +464,19 @@ impl<'a> ThinString<'a> {
         self.len
     }
 
+    /// Returns true if the string is empty 
+    #[inline(always)]
+    pub const fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     /// Returns a slice of the buffers bytes without a null byte
     #[inline(always)]
     pub const fn as_slice(&self) -> &'a [u8] {
         unsafe { std::slice::from_raw_parts(self.data as *mut u8, self.len) }
     }
 
-    #[inline(always)]
-    pub const fn is_empty(&self) -> bool {
-        self.len == 0
-    }
-
-    // Returns a slice of the buffers bytes without a null byte
+    // Returns a slice of the buffers bytes with a null byte
     #[inline(always)]
     pub const fn as_slice_with_null(&self) -> &'a [u8] {
         unsafe { std::slice::from_raw_parts(self.data as *mut u8, self.len + 1) }
