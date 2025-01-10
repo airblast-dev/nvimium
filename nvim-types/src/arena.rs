@@ -30,7 +30,7 @@ impl Arena {
 }
 
 #[repr(C)]
-struct ArenaMem<'a>(*mut Self, PhantomData<&'a u8>);
+pub struct ArenaMem<'a>(*mut Self, PhantomData<&'a u8>);
 
 impl ArenaMem<'_> {
     unsafe fn clone(&self) -> Self {
