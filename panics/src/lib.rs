@@ -2,9 +2,9 @@
 //
 // see [`alloc_failed`] for example usage
 extern "C" {
-    /// Neovim's custom abort 
+    /// Neovim's custom abort
     ///
-    /// Does some cleanup and logging before crashing. 
+    /// Does some cleanup and logging before crashing.
     /// Generally preferred over a segfault.
     ///
     /// # Safety
