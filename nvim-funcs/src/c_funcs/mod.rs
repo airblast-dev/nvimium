@@ -5,10 +5,12 @@ use nvim_types::{
     func_types::KeyMapMode,
     object::Object,
     opts::{echo::EchoOpts, eval_statusline::EvalStatusLineOpts},
-    string::{String, ThinString},
+    string::ThinString,
     Arena,
 };
 
+// Any of the functions can only take a [`ThinString`] or [`OwnedThinString`]. As the layout and
+// size of [`String`] is not the same.
 extern "C" {
     pub fn nvim_create_buf(listed: bool, scratch: bool);
     pub fn nvim_del_current_line();
