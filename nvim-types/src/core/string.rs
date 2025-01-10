@@ -623,12 +623,12 @@ impl Drop for OwnedThinString {
 
 /// A trait to allow various strings to be passed around
 ///
-/// You may want to implement this if you have a type that is from another FFI that can 
-/// be cheaply used to create a [`ThinString`]. 
+/// You may want to implement this if you have a type that is from another FFI that can
+/// be cheaply used to create a [`ThinString`].
 ///
 /// All implementations of this trait in this library do not cause allocations. While all external
-/// implementations should not cause an allocation, this is not a safety requirment that needs to
-/// be upheld by the implementor.
+/// implementations should not cause an allocation, it is not a safety requirment that needs to
+/// be upheld by the implementor. This is to serve as a cheap conversion trait where needed.
 ///
 /// # Safety
 /// Implementing requires the following variants to be upheld
@@ -636,6 +636,7 @@ impl Drop for OwnedThinString {
 /// - The string that the pointer points to must be minimally a single null byte.
 /// - The length must be the length of the allocation without the null byte.
 /// - The lifetime on the return value must match the owners lifetime.
+/// - The Self type must point to the same address as the returned [`ThinString`].
 pub unsafe trait AsThinString {
     fn as_thinstr(&self) -> ThinString<'_>;
 }
@@ -655,6 +656,28 @@ unsafe impl AsThinString for ThinString<'_> {
 unsafe impl AsThinString for OwnedThinString {
     fn as_thinstr(&self) -> ThinString<'_> {
         self.as_thinstr()
+    }
+}
+
+unsafe impl AsThinString for CStr {
+    fn as_thinstr(&self) -> ThinString<'_> {
+        let len = self.count_bytes();
+        ThinString {
+            len,
+            data: self.as_ptr() as *mut libc::c_char,
+            __p: PhantomData,
+        }
+    }
+}
+
+unsafe impl AsThinString for CString {
+    fn as_thinstr(&self) -> ThinString<'_> {
+        let len = self.count_bytes();
+        ThinString {
+            data: self.as_ptr() as *mut libc::c_char,
+            len,
+            __p: PhantomData,
+        }
     }
 }
 
