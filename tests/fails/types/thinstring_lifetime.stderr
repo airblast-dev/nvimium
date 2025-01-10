@@ -1,0 +1,69 @@
+error[E0601]: `main` function not found in crate `$CRATE`
+  --> tests/fails/types/thinstring_lifetime.rs:26:2
+   |
+26 | }
+   |  ^ consider adding a `main` function to `$DIR/tests/fails/types/thinstring_lifetime.rs`
+
+error[E0505]: cannot move out of `s` because it is borrowed
+ --> tests/fails/types/thinstring_lifetime.rs:5:10
+  |
+3 | fn string(s: String) {
+  |           - binding `s` declared here
+4 |     let th = s.as_thinstr();
+  |              - borrow of `s` occurs here
+5 |     drop(s);
+  |          ^ move out of `s` occurs here
+6 |     dbg!(th);
+  |          -- borrow later used here
+  |
+help: consider cloning the value if the performance cost is acceptable
+  |
+4 |     let th = s.clone().as_thinstr();
+  |               ++++++++
+
+error[E0505]: cannot move out of `ow` because it is borrowed
+  --> tests/fails/types/thinstring_lifetime.rs:11:10
+   |
+9  | fn owned(ow: OwnedThinString) {
+   |          -- binding `ow` declared here
+10 |     let th = ow.as_thinstr();
+   |              -- borrow of `ow` occurs here
+11 |     drop(ow);
+   |          ^^ move out of `ow` occurs here
+12 |     dbg!(th);
+   |          -- borrow later used here
+
+error[E0505]: cannot move out of `cs` because it is borrowed
+  --> tests/fails/types/thinstring_lifetime.rs:17:10
+   |
+15 | fn cstring(cs: std::ffi::CString) {
+   |            -- binding `cs` declared here
+16 |     let th = cs.as_thinstr();
+   |              -- borrow of `cs` occurs here
+17 |     drop(cs);
+   |          ^^ move out of `cs` occurs here
+18 |     dbg!(th);
+   |          -- borrow later used here
+   |
+help: consider cloning the value if the performance cost is acceptable
+   |
+16 |     let th = cs.clone().as_thinstr();
+   |                ++++++++
+
+error[E0505]: cannot move out of `cs` because it is borrowed
+  --> tests/fails/types/thinstring_lifetime.rs:24:10
+   |
+21 | fn cstr(cs: std::ffi::CString) {
+   |         -- binding `cs` declared here
+22 |     let cstr = cs.as_c_str();
+   |                -- borrow of `cs` occurs here
+23 |     let th = cstr.as_thinstr();
+24 |     drop(cs);
+   |          ^^ move out of `cs` occurs here
+25 |     dbg!(th);
+   |          -- borrow later used here
+   |
+help: consider cloning the value if the performance cost is acceptable
+   |
+22 |     let cstr = cs.clone().as_c_str();
+   |                  ++++++++

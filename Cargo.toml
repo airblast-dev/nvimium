@@ -16,5 +16,8 @@ nvim-types = { path = "./nvim-types/" }
 nvim-funcs = { path = "./nvim-funcs/" }
 macros = { path = "./macros/" }
 
+[dev-dependencies]
+trybuild = { version = "1.0.101" }
+
 [workspace]
 members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros"]
