@@ -1,3 +1,39 @@
+//! The module for neovim String types
+//!
+//! # Summary
+//! Three types of strings exist to allow expressing various borrow checking rules.
+//! For more in depth documentation, see their respective documentation page. The text bellow is to
+//! just give a general understanding of the types.
+//!
+//! # [`String`]
+//!
+//! This type is a growable, mutable, and owned string type.
+//! This is the main string that is used when dealing with strings where its length is defined during runtime.
+//! The methods implemented for the type are fairly similar to [`std::string::String`] so you are
+//! likely to be familiar with them.
+//!
+//! # [`ThinString`]
+//!
+//! A reference to an owned [`String`], [`OwnedThinString`] or compile time defined C string.
+//! This type can be though of as the &[`str`], or [`CStr`] of the library. Meaning it only lives long as its
+//! owner (or forever if initialized at compile time). Mutating a [`ThinString`] is not allowed
+//! (excluding unsafe code), and it is not possible to modify its length in any way. A
+//! [`ThinString`] is often returned by neovim when calling functions, the exact lifetime of it may
+//! differ from function to function.
+//!
+//! # [`OwnedThinString`]
+//!
+//! An owned [`ThinString`]. This type can be thought of as a [`Box<str>`] for most intents and
+//! purposes. Some strings returned from neovim are owned, but not with a known capacity. This
+//! means we are unable to modify its length. However mutating the bytes is now possible (but
+//! still unsafe) since the string is still owned.
+//!
+//! # Functions that take a String
+//!
+//! You will often not have worry about converting between these types when passing them to a
+//! function, as the functions will have trait bounds to convert things where needed. That said,
+//! functions may still limit what kind of string can be passed.
+
 use std::{
     borrow::Borrow, ffi::CStr, fmt::Debug, hash::Hash, marker::PhantomData, num::NonZeroUsize,
     ops::Deref, ptr::NonNull,
@@ -7,7 +43,7 @@ use panics::{alloc_failed, not_null_terminated};
 
 /// A String type passed to wrapper functions
 ///
-/// Compared to [`std`] types, [`String`] is like a [`Vec<u8>`] and a [`ThinString`] is like a `&str`.
+/// Compared to [`std`] types, [`String`] is like a null terminated [`Vec<u8>`].
 ///
 /// Neovim does not always check if a null byte is before the end of the string. Some functions
 /// work fine with null bytes in the middle of the string others do not. Generally pushing a null
