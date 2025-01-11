@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::{array::Array, dictionary::Dictionary, string::ThinString};
 
-use super::{Boolean, Float, Integer};
+use super::{buffer::Buffer, tab_page::TabPage, window::Window, Boolean, Float, Integer};
 
 // For layout rules see https://rust-lang.github.io/rfcs/2195-really-tagged-unions.html
 // Annoyingly isn't in any other official documentation :|
@@ -20,7 +20,9 @@ pub enum Object {
     Array(Array),
     Dict(Dictionary),
     LuaRef,
-    Buffer,
+    Buffer(Buffer),
+    Window(Window),
+    TabPage(TabPage),
 }
 
 impl Debug for Object {

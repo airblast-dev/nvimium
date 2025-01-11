@@ -2,4 +2,4 @@ use super::HandleT;
 
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Default)]
-pub struct Window(HandleT);
+pub struct TabPage(HandleT);
