@@ -603,6 +603,7 @@ pub enum ThinStringError {
     Empty,
 }
 
+#[repr(transparent)]
 #[derive(Debug)]
 pub struct OwnedThinString(ThinString<'static>);
 
