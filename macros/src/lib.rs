@@ -80,6 +80,7 @@ macro_rules! func_gen_masked {
         }
         $crate::func_gen_masked_inner!(2, $($inner: $inner_ty,)*);
     };
+    () => {}
 }
 
 #[doc(hidden)]

@@ -1,0 +1,11 @@
+use macros::{fast_default, masked_builder};
+
+use crate::window::Window;
+
+masked_builder!(
+    #[repr(C)]
+    #[derive(Debug, Clone, Copy)]
+    pub struct GetHlNsOpts {
+        winid: Window,
+    }
+);
