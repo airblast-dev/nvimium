@@ -18,7 +18,7 @@ use nvim_types::{
 // Any of the functions can only take a [`ThinString`] or [`OwnedThinString`]. As the layout and
 // size of [`String`] is not the same.
 extern "C" {
-    pub fn nvim_create_buf(listed: bool, scratch: bool);
+    pub fn nvim_create_buf(listed: Boolean, scratch: Boolean);
     pub fn nvim_del_current_line();
     pub fn nvim_del_keymap<'a>(
         map_mode: KeyMapMode,
