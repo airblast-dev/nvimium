@@ -494,6 +494,11 @@ impl<'a> ThinString<'a> {
     /// # Panics
     ///
     /// The bytes must always be terminated with a null byte (0 or "\0") even if empty.
+    ///
+    /// # Note
+    ///
+    /// It is recommended you store the return value in a const variable. When doing so a compile
+    /// time panic will be raised instead of a runtime one.
     #[inline]
     pub const fn from_null_terminated(b: &'a [u8]) -> ThinString<'a> {
         let last = b.last().copied();
