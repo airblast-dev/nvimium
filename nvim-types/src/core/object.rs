@@ -35,16 +35,16 @@ impl Debug for Object {
             Object::String(th) => write!(f, "{:?}", th),
             Object::Array(a) => write!(f, "{:?}", a),
             Object::Dict(d) => write!(f, "{:?}", d),
-            mut a => {
-                let ptr: *mut u32 = (&raw mut a).cast();
-                write!(f, "Unknown object: {:?}", unsafe { ptr.read() })
-            }
+            Object::LuaRef => todo!(),
+            Object::Buffer(buf) => write!(f, "{:?}", buf),
+            Object::Window(win) => write!(f, "{:?}", win),
+            Object::TabPage(tp) => write!(f, "{:?}", tp),
         }
     }
 }
 
 impl Clone for Object {
     fn clone(&self) -> Self {
-        todo!()
+        todo!("clone object")
     }
 }
