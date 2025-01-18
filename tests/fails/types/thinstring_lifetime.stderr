@@ -26,6 +26,11 @@ error[E0505]: cannot move out of `ow` because it is borrowed
    |              ^^ move out of `ow` occurs here
 13 |         dbg!(th);
    |              -- borrow later used here
+   |
+help: consider cloning the value if the performance cost is acceptable
+   |
+11 |         let th = ow.clone().as_thinstr();
+   |                    ++++++++
 
 error[E0505]: cannot move out of `cs` because it is borrowed
   --> tests/fails/types/thinstring_lifetime.rs:18:14

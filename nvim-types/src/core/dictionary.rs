@@ -2,19 +2,19 @@ use std::ops::{Deref, DerefMut};
 
 use crate::{kvec::KVec, object::Object, string::String};
 
-use super::string::ThinString;
+use super::string::{OwnedThinString, ThinString};
 
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub struct KeyValuePair {
-    pub key: ThinString<'static>,
+    pub key: OwnedThinString,
     pub object: Object,
 }
 
 impl From<(String, Object)> for KeyValuePair {
     fn from((key, object): (String, Object)) -> Self {
         Self {
-            key: key.leak(),
+            key: OwnedThinString::from(key.leak()),
             object,
         }
     }
@@ -23,7 +23,7 @@ impl From<(String, Object)> for KeyValuePair {
 impl From<(Object, String)> for KeyValuePair {
     fn from((object, key): (Object, String)) -> Self {
         Self {
-            key: key.leak(),
+            key: OwnedThinString::from(key.leak()),
             object,
         }
     }
@@ -66,7 +66,7 @@ impl Dictionary {
     pub fn insert<K>(&mut self, key: K, mut object: Object) -> Option<Object>
     where
         for<'a> ThinString<'a>: PartialEq<K>,
-        String: From<K>,
+        OwnedThinString: From<K>,
     {
         let index = self.find_by_key(&key);
         match index {
@@ -78,7 +78,7 @@ impl Dictionary {
             }
             None => {
                 self.0.push(KeyValuePair {
-                    key: String::from(key).leak(),
+                    key: OwnedThinString::from(key),
                     object,
                 });
                 None

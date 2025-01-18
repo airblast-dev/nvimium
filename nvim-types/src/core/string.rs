@@ -612,6 +612,36 @@ pub enum ThinStringError {
 #[derive(Debug)]
 pub struct OwnedThinString(ThinString<'static>);
 
+impl<T> PartialEq<T> for OwnedThinString
+where
+    for<'a> ThinString<'a>: PartialEq<T>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.as_thinstr() == *other
+    }
+}
+
+impl Clone for OwnedThinString {
+    fn clone(&self) -> Self {
+        Self::from(self.0)
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        if self.0.len() >= source.0.len() {
+            let dst = self.0.as_ptr() as *mut libc::c_void;
+            unsafe {
+                libc::memcpy(
+                    dst,
+                    source.0.as_ptr() as *mut libc::c_void,
+                    source.0.len() + 1,
+                )
+            };
+        } else {
+            *self = source.clone();
+        }
+    }
+}
+
 impl OwnedThinString {
     pub fn as_thinstr<'a>(&'a self) -> ThinString<'a> {
         ThinString {
