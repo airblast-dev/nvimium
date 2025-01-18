@@ -28,3 +28,9 @@ impl From<&[Object]> for Array {
         Self(KVec::from(value))
     }
 }
+
+impl Array {
+    pub(crate) fn into_kvec(self) -> KVec<Object> {
+        self.0
+    }
+}
