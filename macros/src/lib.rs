@@ -111,20 +111,30 @@ macro_rules! func_gen {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! tri {
-    ($stmt:stmt, Ok($ret:ident) => $ok:stmt, Err($err:ident) => $errst:stmt $(,)?) => {
+    // patterns are ordered by common use, with the full pattern as a seperate macro to avoid extra
+    // matches
+    (let mut $err:ident; $expr:expr $(,)?) => {
+        $crate::tri_full!($expr, Ok(_ret) => Ok(()), Err($err) => Err($err));
+    };
+    (let mut $err:ident; $expr:expr, Ok($ok:ident) => $okexpr:expr $(,)?) =>  {
+        $crate::tri_full!($stmt, Ok($ok) => $okexpr, Err($err) => Err($err));
+    };
+    ($( $tt:tt )+) => {
+        $crate::tri_full!($($tt)+)
+    }
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! tri_full {
+    ($expr:expr, Ok($ok:ident) => $okexpr:expr, Err($err:ident) => $errexpr:expr $(,)?) => {
         let mut $err = Error::none();
-        let $ret = { $stmt };
+        let $ok = $expr;
         if $err.has_errored() {
-            return {$errst};
+            return { $errexpr };
         }
 
-        $ok
-    };
-    ($err:ident, $stmt:stmt $(,)?) => {
-        tri!($stmt, Ok(__)=>return Ok(()), Err($err)=>Err($err));
-    };
-    ($err:ident, $stmt:stmt $(,)?, Ok($ok:ident)=>$okexpr:stmt) =>  {
-        tri!($stmt, Ok(__)=>return Ok(()), Err($err)=>Err($err));
+        return $okexpr
     };
 }
 

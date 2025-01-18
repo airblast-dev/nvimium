@@ -20,21 +20,21 @@ pub fn nvim_create_buf(listed: Boolean, scratch: Boolean) -> Option<Buffer> {
 
 pub fn nvim_del_current_line() -> Result<(), Error> {
     tri! {
-        err,
+        let mut err;
         unsafe {c_funcs::nvim_del_current_line(core::ptr::null_mut(), &mut err) },
     }
 }
 
 pub fn nvim_del_keymap(map_mode: KeyMapMode, lhs: ThinString<'_>) -> Result<(), Error> {
     tri! {
-        err,
+        let mut err;
         unsafe { c_funcs::nvim_del_keymap(LUA_INTERNAL_CALL, map_mode, lhs, &mut err) }
     }
 }
 
 pub fn nvim_del_mark(name: ThinString<'_>) -> Result<(), Error> {
     tri! {
-        err,
+        let mut err;
         unsafe {
             c_funcs::nvim_del_mark(name, &mut err)
         }
