@@ -503,7 +503,7 @@ fn range_bound_to_range<T, R: RangeBounds<usize>>(
 
 impl<T> Drop for KVec<T> {
     fn drop(&mut self) {
-        if Self::ZST && self.capacity() == 0 {
+        if Self::ZST {
             return;
         }
         let ptr = self.as_ptr();
