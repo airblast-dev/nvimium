@@ -372,7 +372,7 @@ impl<T> KVec<T> {
             let rem = ptr.read();
 
             // if false no need to swap values as it is the last value, since we store the value in
-            // "rem" its drop call will also be performed, making it self to set our new length
+            // "rem" its drop call will also be performed, making it safe to set our new length
             if len - 1 > index {
                 libc::memcpy(ptr.cast(), self.ptr.add(len - 1).cast(), Self::T_SIZE);
             }
