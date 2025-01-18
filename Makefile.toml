@@ -21,4 +21,4 @@ args = ["test", "--workspace", "--exclude", "nvim-types"]
 dependencies = ["install-miri"]
 toolchain = "nightly"
 command = "cargo"
-args = ["test", "--package", "nvim-types"]
+args = ["miri", "test", "--package", "nvim-types"]
