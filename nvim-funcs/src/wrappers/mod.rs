@@ -11,7 +11,7 @@ use crate::c_funcs;
 /// Returns [`Option::None`] if creating the buffer fails.
 pub fn nvim_create_buf(listed: Boolean, scratch: Boolean) -> Option<Buffer> {
     let buf = unsafe { c_funcs::nvim_create_buf(listed, scratch) };
-    if buf.0 != 0 {
+    if buf.as_int() != 0 {
         Some(buf)
     } else {
         None
