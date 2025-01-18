@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::iter::FusedIterator;
 use std::mem::{self, MaybeUninit};
 use std::num::NonZeroUsize;
 use std::ops::{Deref, DerefMut, RangeBounds};
@@ -377,6 +378,62 @@ impl<T> FromIterator<T> for KVec<T> {
         let mut kv = Self::new();
         kv.extend(iter);
         kv
+    }
+}
+
+pub struct Iter<T> {
+    start: *mut T,
+    start_pos: usize,
+    end_pos: usize,
+}
+
+impl<T> Iterator for Iter<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        if self.start_pos >= self.end_pos {
+            return None;
+        }
+
+        let item = unsafe { self.start.add(self.start_pos).read() };
+        self.start_pos += 1;
+
+        Some(item)
+    }
+}
+
+impl<T> DoubleEndedIterator for Iter<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.start_pos >= self.end_pos {
+            return None;
+        }
+
+        self.end_pos -= 1;
+        Some(unsafe { self.start.add(self.end_pos).read() })
+    }
+}
+
+impl<T> FusedIterator for Iter<T> {}
+
+impl<T> Drop for Iter<T> {
+    fn drop(&mut self) {
+        // construct a KVec to drop it
+        KVec::<T> {
+            len: 0,
+            ptr: self.start,
+            capacity: 0,
+        };
+
+        for offset in self.start_pos..self.end_pos {
+            unsafe { self.start.add(offset).drop_in_place(); }
+        }
+    }
+}
+
+impl<T> IntoIterator for KVec<T> {
+    type Item = T;
+    type IntoIter = Iter<T>;
+    fn into_iter(self) -> Self::IntoIter {
+        todo!()
     }
 }
 
