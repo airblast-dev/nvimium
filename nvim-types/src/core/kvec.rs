@@ -815,7 +815,7 @@ mod tests {
     }
 
     #[test]
-    fn into_iter_fw() {
+    fn into_iter() {
         let kv = KVec::from_iter(["1", "2", "3"].map(String::from));
         let mut kv_iter = kv.into_iter();
         assert_eq!(kv_iter.next().unwrap(), "1");
