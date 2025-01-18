@@ -19,7 +19,7 @@ impl<T> Default for KVec<T> {
         Self {
             len: 0,
             capacity: 0,
-            ptr: core::ptr::NonNull::dangling().as_ptr(),
+            ptr: core::ptr::null_mut(),
         }
     }
 }
@@ -42,7 +42,7 @@ impl<T> KVec<T> {
         Self {
             len: 0,
             capacity: 0,
-            ptr: NonNull::dangling().as_ptr(),
+            ptr: core::ptr::null_mut(),
         }
     }
 
@@ -76,8 +76,8 @@ impl<T> KVec<T> {
     #[inline]
     pub const fn spare_capacity_mut(&mut self) -> &mut [MaybeUninit<T>] {
         // we can't check null pointers consistently in const context
-        // since a null pointers length must always 0 this is the equivelant
-        if self.is_empty() {
+        // since a null pointers capacity must always 0 this is the equivelant
+        if self.capacity() == 0 {
             return &mut [];
         }
         self.slice_check();
@@ -148,8 +148,10 @@ impl<T> KVec<T> {
     /// This function is guaranteed to at least allocate for `capacity` elements.
     pub fn with_capacity(capacity: usize) -> Self {
         // We shouldn't be storing ZST's in any use case, but if we do, just return a dangling pointer.
-        let ptr = if Self::ZST || capacity == 0 {
+        let ptr = if Self::ZST {
             NonNull::dangling().as_ptr()
+        } else if capacity == 0 {
+            core::ptr::null_mut()
         } else {
             let Some(byte_cap) = capacity.checked_mul(Self::T_SIZE) else {
                 alloc_failed();
@@ -251,11 +253,7 @@ impl<T> KVec<T> {
             let Some(byte_capacity) = new_capacity.checked_mul(Self::T_SIZE) else {
                 alloc_failed();
             };
-            let ptr = if self.capacity == 0 {
-                unsafe { libc::malloc(byte_capacity) }
-            } else {
-                unsafe { libc::realloc(self.ptr as *mut libc::c_void, byte_capacity) }
-            };
+            let ptr = unsafe { libc::realloc(self.ptr as *mut libc::c_void, byte_capacity) };
             if ptr.is_null() {
                 alloc_failed();
             }
@@ -296,7 +294,10 @@ impl<T> KVec<T> {
     where
         T: Clone,
     {
+        dbg!(self.capacity());
         self.reserve_exact(s.len());
+        dbg!(self.capacity());
+        dbg!(self.spare_capacity_mut());
         if !Self::ZST {
             let spare = unsafe { self.spare_capacity_mut().get_unchecked_mut(..s.len()) };
             for i in 0..s.len() {
@@ -502,7 +503,7 @@ fn range_bound_to_range<T, R: RangeBounds<usize>>(
 
 impl<T> Drop for KVec<T> {
     fn drop(&mut self) {
-        if Self::ZST || self.capacity == 0 {
+        if Self::ZST && self.capacity() == 0 {
             return;
         }
         let ptr = self.as_ptr();
@@ -575,7 +576,7 @@ mod tests {
         assert_eq!(kv.as_ptr(), ptr);
 
         // should set the capacity to the next power of two
-        // the pointer should also change since at this stage it should be a dangling pointer
+        // the pointer should also change since at this stage it should be a non null pointer
         let ptr = kv.as_ptr();
         kv.reserve(10);
         assert_ne!(ptr, kv.as_ptr());
@@ -811,5 +812,15 @@ mod tests {
 
         assert!(kv.is_empty());
         assert_eq!(kv.capacity(), 0);
+    }
+
+    #[test]
+    fn into_iter_fw() {
+        let kv = KVec::from_iter(["1", "2", "3"].map(String::from));
+        let mut kv_iter = kv.into_iter();
+        assert_eq!(kv_iter.next().unwrap(), "1");
+        assert_eq!(kv_iter.next_back().unwrap(), "3");
+        assert_eq!(kv_iter.next_back().unwrap(), "2");
+        assert_eq!(kv_iter.next_back(), None);
     }
 }
