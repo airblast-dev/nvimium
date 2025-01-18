@@ -55,12 +55,12 @@ impl Dictionary {
         unsafe { Some(&self.0.as_slice().get_unchecked(index).object) }
     }
 
-    pub fn remove<K>(&mut self, key: K) -> Option<KeyValuePair>
+    pub fn remove<K>(&mut self, key: K) -> Option<Object>
     where
         for<'a> ThinString<'a>: PartialEq<K>,
     {
         let index = self.find_by_key(&key)?;
-        Some(self.0.swap_remove(index))
+        Some(self.0.swap_remove(index).object)
     }
 
     pub fn insert<K>(&mut self, key: K, mut object: Object) -> Option<Object>
