@@ -294,10 +294,7 @@ impl<T> KVec<T> {
     where
         T: Clone,
     {
-        dbg!(self.capacity());
         self.reserve_exact(s.len());
-        dbg!(self.capacity());
-        dbg!(self.spare_capacity_mut());
         if !Self::ZST {
             let spare = unsafe { self.spare_capacity_mut().get_unchecked_mut(..s.len()) };
             for i in 0..s.len() {
