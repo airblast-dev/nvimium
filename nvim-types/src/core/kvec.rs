@@ -48,7 +48,13 @@ impl<T> KVec<T> {
 
     #[inline]
     pub const fn as_slice(&self) -> &[T] {
+        // we can't check null pointers consistently in const context
+        // since a null pointers length must always 0 this is the equivelant
+        if self.is_empty() {
+            return &mut [];
+        }
         self.slice_check();
+
         // since self.ptr is non null, a slice is always valid since [`NonNull::dangling`] is
         // correctly aligned.
         unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
@@ -56,16 +62,26 @@ impl<T> KVec<T> {
 
     #[inline]
     pub const fn as_mut_slice(&mut self) -> &mut [T] {
+        // we can't check null pointers consistently in const context
+        // since a null pointers length must always 0 this is the equivelant
+        if self.is_empty() {
+            return &mut [];
+        }
         self.slice_check();
-        // since self.ptr is non null, a slice is always valid since [`NonNull::dangling`] is
-        // correctly aligned.
+
         unsafe { std::slice::from_raw_parts_mut(self.ptr, self.len) }
     }
 
     /// Returns the uninitialized but allocated space for `T`
     #[inline]
     pub const fn spare_capacity_mut(&mut self) -> &mut [MaybeUninit<T>] {
+        // we can't check null pointers consistently in const context
+        // since a null pointers length must always 0 this is the equivelant
+        if self.is_empty() {
+            return &mut [];
+        }
         self.slice_check();
+
         unsafe {
             std::slice::from_raw_parts_mut(
                 self.ptr.add(self.len).cast::<MaybeUninit<T>>(),
