@@ -18,16 +18,16 @@ use nvim_types::{
 // Any of the functions can only take a [`ThinString`] or [`OwnedThinString`]. As the layout and
 // size of [`String`] is not the same.
 extern "C" {
-    pub fn nvim_create_buf(listed: Boolean, scratch: Boolean);
-    pub fn nvim_del_current_line();
+    pub fn nvim_create_buf(listed: Boolean, scratch: Boolean) -> Buffer;
+    pub fn nvim_del_current_line(arena: *mut Arena, err: *mut Error);
     pub fn nvim_del_keymap<'a>(
+        chan: u64,
         map_mode: KeyMapMode,
         lhs: ThinString<'a>,
-        error: ThinString<'a>,
         err: *mut Error,
     );
-    pub fn nvim_del_mark<'a>(name: ThinString<'a>, err: *const Error);
-    pub fn nvim_del_var<'a>(var_name: ThinString<'a>, err: *const Error);
+    pub fn nvim_del_mark<'a>(name: ThinString<'a>, err: *mut Error);
+    pub fn nvim_del_var<'a>(var_name: ThinString<'a>, err: *mut Error);
     // Array<Array<[String; 2]>>
     pub fn nvim_echo<'a>(chunks: Array, history: bool, opts: *const EchoOpts);
     pub fn nvim_err_write<'a>(s: ThinString<'a>);
@@ -96,4 +96,11 @@ extern "C" {
     );
     pub fn nvim_list_bufs(arena: *mut Arena) -> Array;
     pub fn nvim_list_chans(arena: *mut Arena) -> Array;
+    pub fn nvim_list_runtime_paths(arena: *mut Arena, err: *mut Error) -> Array;
+    pub fn nvim_list_tabpages(arena: *mut Arena) -> Array;
+    pub fn nvim_list_uis(arena: *mut Arena) -> Array;
+    pub fn nvim_list_wins(arena: *mut Arena) -> Array;
+    pub fn nvim_load_context(dict: Dictionary, err: *mut Error) -> Object;
+    // TODO
+    pub fn nvim_open_term(buffer: Buffer);
 }

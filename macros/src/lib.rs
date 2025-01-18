@@ -108,6 +108,26 @@ macro_rules! func_gen {
     };
 }
 
+#[doc(hidden)]
+#[macro_export]
+macro_rules! tri {
+    ($stmt:stmt, Ok($ret:ident) => $ok:stmt, Err($err:ident) => $errst:stmt $(,)?) => {
+        let mut $err = Error::none();
+        let $ret = { $stmt };
+        if $err != Error::none() {
+            return {$errst};
+        }
+
+        $ok
+    };
+    ($err:ident, $stmt:stmt $(,)?) => {
+        tri!($stmt, Ok(__)=>return Ok(()), Err($err)=>Err($err));
+    };
+    ($err:ident, $stmt:stmt $(,)?, Ok($ok:ident)=>$okexpr:stmt) =>  {
+        tri!($stmt, Ok(__)=>return Ok(()), Err($err)=>Err($err));
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use std::borrow::Cow;
