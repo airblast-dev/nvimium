@@ -15,14 +15,18 @@ pub struct HighlightItem {
 
 impl EvalStatusLineDict {
     pub(crate) fn from_c_func_ret(mut d: Dictionary) -> Self {
-        let s = unsafe { d.remove("str").unwrap_unchecked().into_string_unchecked() };
+        let s = unsafe {
+            d.remove_skip_key_drop("str")
+                .unwrap_unchecked()
+                .into_string_unchecked()
+        };
         let width = unsafe {
-            d.remove("width")
+            d.remove_skip_key_drop("width")
                 .unwrap_unchecked()
                 .into_integer_unchecked()
         };
         let Some(highlights) = d
-            .remove("highlights")
+            .remove_skip_key_drop("highlights")
             .map(|ob| unsafe { Object::into_array_unchecked(ob).into_kvec() })
         else {
             return Self {
@@ -37,11 +41,15 @@ impl EvalStatusLineDict {
             .map(|ob| {
                 let mut d = unsafe { Object::into_dict_unchecked(ob) };
                 let start = unsafe {
-                    d.remove("start")
+                    d.remove_skip_key_drop("start")
                         .unwrap_unchecked()
                         .into_integer_unchecked()
                 };
-                let group = unsafe { d.remove("group").unwrap_unchecked().into_string_unchecked() };
+                let group = unsafe {
+                    d.remove_skip_key_drop("group")
+                        .unwrap_unchecked()
+                        .into_string_unchecked()
+                };
                 let hi = HighlightItem {
                     start,
                     // how long a group value may live is undefined, so we clone the value to an
