@@ -5,7 +5,7 @@ use std::{
 
 use super::string::{String, ThinString};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Error {
     kind: ErrorType,
@@ -23,7 +23,7 @@ impl Debug for Error {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i64)]
 enum ErrorType {
     None = -1,
