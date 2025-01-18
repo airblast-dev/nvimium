@@ -1,3 +1,5 @@
+use core::mem::MaybeUninit;
+
 use nvim_types::{
     array::Array,
     buffer::Buffer,
@@ -37,13 +39,13 @@ extern "C" {
         opts: *const EvalStatusLineOpts<'a>,
         arena: *mut Arena,
         err: *mut Error,
-    ) -> Dictionary;
+    ) -> MaybeUninit<Dictionary>;
     pub fn nvim_exec_lua<'a>(
         code: ThinString<'a>,
         args: Array,
         arena: *mut Arena,
         err: *mut Error,
-    ) -> Object;
+    ) -> MaybeUninit<Object>;
     // TODO: replace mode type with its own struct
     pub fn nvim_feedkeys<'a>(keys: ThinString<'a>, mode: ThinString<'a>, escape_ks: Boolean);
     pub fn nvim_get_api_info() -> Array;
@@ -52,11 +54,14 @@ extern "C" {
         chan: Integer,
         arena: *mut Arena,
         err: *mut Error,
-    ) -> Dictionary;
+    ) -> MaybeUninit<Dictionary>;
     pub fn nvim_get_color_by_name<'a>(name: ThinString<'a>) -> Integer;
-    pub fn nvim_get_color_map(arena: *mut Arena) -> Dictionary;
+    pub fn nvim_get_color_map(arena: *mut Arena) -> MaybeUninit<Dictionary>;
     pub fn nvim_get_current_buf() -> Buffer;
-    pub fn nvim_get_current_line(arena: *mut Arena, err: *mut Error) -> OwnedThinString;
+    pub fn nvim_get_current_line(
+        arena: *mut Arena,
+        err: *mut Error,
+    ) -> MaybeUninit<OwnedThinString>;
     pub fn nvim_get_current_tabpage() -> TabPage;
     pub fn nvim_get_current_win() -> Window;
     pub fn nvim_get_hl<'a>(
@@ -64,26 +69,38 @@ extern "C" {
         opts: GetHlOpts<'a>,
         array: *mut Arena,
         err: *mut Error,
-    ) -> Dictionary;
+    ) -> MaybeUninit<Dictionary>;
     pub fn nvim_get_hl_ns<'a>(opts: GetHlNsOpts, err: *mut Error) -> Integer;
-    pub fn nvim_get_keymap(mode: KeyMapMode) -> Array;
+    pub fn nvim_get_keymap(mode: KeyMapMode) -> MaybeUninit<Array>;
     pub fn nvim_get_mark<'a>(
         name: ThinString<'a>,
         opts: GetMarkOpts,
         arena: *mut Arena,
         err: *mut Error,
-    ) -> Array;
+    ) -> MaybeUninit<Array>;
     pub fn nvim_get_mode(arena: *mut Arena) -> Dictionary;
-    pub fn nvim_get_proc(pid: Integer, arena: *mut Arena, err: *mut Error) -> Object;
-    pub fn nvim_get_proc_children(pid: Integer, arena: *mut Arena, err: *mut Error) -> Array;
+    pub fn nvim_get_proc(pid: Integer, arena: *mut Arena, err: *mut Error) -> MaybeUninit<Object>;
+    pub fn nvim_get_proc_children(
+        pid: Integer,
+        arena: *mut Arena,
+        err: *mut Error,
+    ) -> MaybeUninit<Array>;
     pub fn nvim_get_runtime_file<'a>(
         name: ThinString<'a>,
         all: Boolean,
         arena: *mut Arena,
         err: *mut Error,
-    ) -> Array;
-    pub fn nvim_get_var<'a>(name: ThinString<'a>, arena: *mut Arena, err: *mut Error) -> Object;
-    pub fn nvim_get_vvar<'a>(name: ThinString<'a>, arena: *mut Arena, err: *mut Error) -> Object;
+    ) -> MaybeUninit<Array>;
+    pub fn nvim_get_var<'a>(
+        name: ThinString<'a>,
+        arena: *mut Arena,
+        err: *mut Error,
+    ) -> MaybeUninit<Object>;
+    pub fn nvim_get_vvar<'a>(
+        name: ThinString<'a>,
+        arena: *mut Arena,
+        err: *mut Error,
+    ) -> MaybeUninit<Object>;
     pub fn nvim_input<'a>(keys: ThinString<'a>) -> Integer;
     pub fn nvim_input_mouse<'a>(
         button: ThinString<'a>,
@@ -94,13 +111,13 @@ extern "C" {
         col: Integer,
         err: *mut Error,
     );
-    pub fn nvim_list_bufs(arena: *mut Arena) -> Array;
-    pub fn nvim_list_chans(arena: *mut Arena) -> Array;
-    pub fn nvim_list_runtime_paths(arena: *mut Arena, err: *mut Error) -> Array;
-    pub fn nvim_list_tabpages(arena: *mut Arena) -> Array;
-    pub fn nvim_list_uis(arena: *mut Arena) -> Array;
-    pub fn nvim_list_wins(arena: *mut Arena) -> Array;
-    pub fn nvim_load_context(dict: Dictionary, err: *mut Error) -> Object;
+    pub fn nvim_list_bufs(arena: *mut Arena) -> MaybeUninit<Array>;
+    pub fn nvim_list_chans(arena: *mut Arena) -> MaybeUninit<Array>;
+    pub fn nvim_list_runtime_paths(arena: *mut Arena, err: *mut Error) -> MaybeUninit<Array>;
+    pub fn nvim_list_tabpages(arena: *mut Arena) -> MaybeUninit<Array>;
+    pub fn nvim_list_uis(arena: *mut Arena) -> MaybeUninit<Array>;
+    pub fn nvim_list_wins(arena: *mut Arena) -> MaybeUninit<Array>;
+    pub fn nvim_load_context(dict: Dictionary, err: *mut Error) -> MaybeUninit<Object>;
     // TODO
     pub fn nvim_open_term(buffer: Buffer);
 }
