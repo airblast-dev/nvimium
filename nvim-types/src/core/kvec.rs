@@ -19,7 +19,7 @@ impl<T> Default for KVec<T> {
         Self {
             len: 0,
             capacity: 0,
-            ptr: core::ptr::null_mut(),
+            ptr: core::ptr::NonNull::dangling().as_ptr(),
         }
     }
 }
@@ -768,5 +768,25 @@ mod tests {
     fn remove_panics_empty() {
         let mut kv = KVec::from([].as_slice());
         kv.remove(0);
+    }
+
+    #[test]
+    fn is_empty() {
+        let mut kv = KVec::new();
+        assert!(kv.is_empty());
+
+        kv.push("hi".to_string());
+        assert!(!kv.is_empty());
+
+        kv.remove(0);
+        assert!(kv.is_empty());
+    }
+
+    #[test]
+    fn default() {
+        let kv = KVec::default();
+
+        assert!(kv.is_empty());
+        assert_eq!(kv.capacity(), 0);
     }
 }
