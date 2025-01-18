@@ -467,7 +467,14 @@ impl<T> IntoIterator for KVec<T> {
     type Item = T;
     type IntoIter = Iter<T>;
     fn into_iter(self) -> Self::IntoIter {
-        todo!()
+        let iter = Iter {
+            start_pos: 0,
+            end_pos: self.len(),
+            start: self.as_ptr(),
+        };
+        core::mem::forget(self);
+
+        iter
     }
 }
 
