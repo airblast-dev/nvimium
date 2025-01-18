@@ -2,19 +2,19 @@ use crate::{dictionary::Dictionary, kvec::KVec, object::Object, string::OwnedThi
 
 #[derive(Debug)]
 pub struct EvalStatusLineDict {
-    chars: OwnedThinString,
-    width: Integer,
-    highlights: Option<KVec<HighlightItem>>,
+    pub chars: OwnedThinString,
+    pub width: Integer,
+    pub highlights: Option<KVec<HighlightItem>>,
 }
 
 #[derive(Debug)]
 pub struct HighlightItem {
-    start: Integer,
-    group: OwnedThinString,
+    pub start: Integer,
+    pub group: OwnedThinString,
 }
 
 impl EvalStatusLineDict {
-    pub fn from_c_func_ret(mut d: Dictionary) -> Self {
+    pub(crate) fn from_c_func_ret(mut d: Dictionary) -> Self {
         let s = unsafe { d.remove("str").unwrap_unchecked().into_string_unchecked() };
         let width = unsafe {
             d.remove("width")
@@ -44,6 +44,8 @@ impl EvalStatusLineDict {
                 let group = unsafe { d.remove("group").unwrap_unchecked().into_string_unchecked() };
                 let hi = HighlightItem {
                     start,
+                    // how long a group value may live is undefined, so we clone the value to an
+                    // OwnedThinString to ensure the value can live as long as needed
                     group: OwnedThinString::from(group.as_thinstr()),
                 };
                 core::mem::forget(group);
