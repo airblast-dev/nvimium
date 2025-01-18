@@ -114,7 +114,7 @@ macro_rules! tri {
     ($stmt:stmt, Ok($ret:ident) => $ok:stmt, Err($err:ident) => $errst:stmt $(,)?) => {
         let mut $err = Error::none();
         let $ret = { $stmt };
-        if $err != Error::none() {
+        if $err.has_errored() {
             return {$errst};
         }
 

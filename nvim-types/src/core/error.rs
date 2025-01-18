@@ -55,6 +55,10 @@ impl Error {
         s.kind = ErrorType::Validation;
         s
     }
+
+    pub fn has_errored(&self) -> bool {
+        self.kind != ErrorType::None
+    }
 }
 
 impl Display for Error {
