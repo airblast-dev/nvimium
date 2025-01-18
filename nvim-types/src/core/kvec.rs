@@ -821,6 +821,19 @@ mod tests {
         assert_eq!(kv_iter.next().unwrap(), "1");
         assert_eq!(kv_iter.next_back().unwrap(), "3");
         assert_eq!(kv_iter.next_back().unwrap(), "2");
+        assert_eq!(kv_iter.next(), None);
+        assert_eq!(kv_iter.next_back(), None);
+        assert_eq!(kv_iter.next(), None);
+        assert_eq!(kv_iter.next_back(), None);
+    }
+
+    #[test]
+    fn into_iter_empty() {
+        let kv = KVec::from_iter([] as [String; 0]);
+        let mut kv_iter = kv.into_iter();
+        assert_eq!(kv_iter.next(), None);
+        assert_eq!(kv_iter.next_back(), None);
+        assert_eq!(kv_iter.next(), None);
         assert_eq!(kv_iter.next_back(), None);
     }
 }
