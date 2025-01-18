@@ -335,6 +335,12 @@ impl<T> KVec<T> {
             let ptr = self.ptr.add(index);
             let rem = ptr.read();
             core::ptr::copy(ptr.add(1), ptr, len - index - 1);
+            // TODO: perhaps add this back once miri supports it
+            //  libc::memmove(
+            //      ptr.cast(),
+            //      ptr.add(1).cast(),
+            //      (len - index - 1) * Self::T_SIZE,
+            //  );
 
             self.set_len(len - 1);
             rem
@@ -368,7 +374,11 @@ impl<T> KVec<T> {
             let ptr = self.ptr.add(index);
             let rem = ptr.read();
 
-            self.ptr.add(len - 1).copy_to(ptr, 1);
+            // if false no need to swap values as it is the last value, since we store the value in
+            // "rem" its drop call will also be performed, making it self to set our new length
+            if len - 1 > index {
+                libc::memcpy(ptr.cast(), self.ptr.add(len - 1).cast(), Self::T_SIZE);
+            }
             self.set_len(len - 1);
             rem
         }
