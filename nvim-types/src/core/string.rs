@@ -621,6 +621,13 @@ impl OwnedThinString {
     }
 }
 
+impl<'a> From<ThinString<'a>> for OwnedThinString {
+    fn from(th: ThinString<'a>) -> Self {
+        let ptr = unsafe { libc::strdup(th.as_ptr() as *const i8) };
+        Self(unsafe { ThinString::new(th.len(), ptr) })
+    }
+}
+
 impl Drop for OwnedThinString {
     fn drop(&mut self) {
         unsafe { libc::free(self.0.data as *mut libc::c_void) }
