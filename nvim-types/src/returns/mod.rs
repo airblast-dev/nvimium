@@ -1,1 +1,1 @@
-mod eval_statusline;
+pub mod eval_statusline;
