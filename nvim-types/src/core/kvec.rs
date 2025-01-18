@@ -14,6 +14,16 @@ pub struct KVec<T> {
     pub(super) ptr: *mut T,
 }
 
+impl<T> Default for KVec<T> {
+    fn default() -> Self {
+        Self {
+            len: 0,
+            capacity: 0,
+            ptr: core::ptr::null_mut(),
+        }
+    }
+}
+
 impl<T: Debug> Debug for KVec<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self.as_slice())
@@ -87,6 +97,12 @@ impl<T> KVec<T> {
     #[inline(always)]
     pub const fn len(&self) -> usize {
         self.len
+    }
+
+    /// Returns true if the buffer is empty
+    #[inline(always)]
+    pub const fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// Set the length of the [`KVec`]
@@ -424,7 +440,9 @@ impl<T> Drop for Iter<T> {
         };
 
         for offset in self.start_pos..self.end_pos {
-            unsafe { self.start.add(offset).drop_in_place(); }
+            unsafe {
+                self.start.add(offset).drop_in_place();
+            }
         }
     }
 }
