@@ -43,7 +43,7 @@ extern "C" {
     ) -> MaybeUninit<Dictionary>;
     pub fn nvim_exec_lua<'a>(
         code: ThinString<'a>,
-        args: Array,
+        args: ManuallyDrop<Array>,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
