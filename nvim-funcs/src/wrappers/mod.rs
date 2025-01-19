@@ -1,7 +1,16 @@
+use std::mem::{ManuallyDrop, MaybeUninit};
+
 use macros::tri;
 use nvim_types::{
-    buffer::Buffer, call_site::LUA_INTERNAL_CALL, error::Error, func_types::KeyMapMode,
-    string::ThinString, Boolean,
+    array::Array,
+    buffer::Buffer,
+    call_site::LUA_INTERNAL_CALL,
+    error::Error,
+    func_types::KeyMapMode,
+    opts::{echo::EchoOpts, eval_statusline::EvalStatusLineOpts},
+    returns::eval_statusline::EvalStatusLineDict,
+    string::{AsThinString, ThinString},
+    Arena, Boolean,
 };
 
 use crate::c_funcs;
@@ -25,18 +34,63 @@ pub fn nvim_del_current_line() -> Result<(), Error> {
     }
 }
 
-pub fn nvim_del_keymap(map_mode: KeyMapMode, lhs: ThinString<'_>) -> Result<(), Error> {
+pub fn nvim_del_keymap<S: AsThinString>(map_mode: KeyMapMode, lhs: S) -> Result<(), Error> {
     tri! {
         let mut err;
-        unsafe { c_funcs::nvim_del_keymap(LUA_INTERNAL_CALL, map_mode, lhs, &mut err) }
+        unsafe { c_funcs::nvim_del_keymap(LUA_INTERNAL_CALL, map_mode, lhs.as_thinstr(), &mut err) }
     }
 }
 
-pub fn nvim_del_mark(name: ThinString<'_>) -> Result<(), Error> {
+pub fn nvim_del_mark<S: AsThinString>(name: S) -> Result<(), Error> {
     tri! {
         let mut err;
         unsafe {
-            c_funcs::nvim_del_mark(name, &mut err)
+            c_funcs::nvim_del_mark(name.as_thinstr(), &mut err)
+        }
+    }
+}
+
+pub fn nvim_del_var<S: AsThinString>(var: S) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe {
+            c_funcs::nvim_del_var(var.as_thinstr(), &mut err);
+        }
+    }
+}
+
+pub fn nvim_echo<S: AsThinString>(
+    chunks: &Array,
+    history: Boolean,
+    opts: &EchoOpts,
+) -> Result<(), Error> {
+    let chunks = chunks as *const Array;
+    let chunks: ManuallyDrop<Array> = unsafe { chunks.cast::<ManuallyDrop<Array>>().read() };
+    tri! {
+        let mut err;
+        unsafe {
+            c_funcs::nvim_echo(chunks, history, opts);
+        }
+    }
+}
+
+pub fn nvim_err_write<S: AsThinString>(s: S) {
+    unsafe { c_funcs::nvim_err_write(s.as_thinstr()) };
+}
+
+pub fn nvim_err_writeln<S: AsThinString>(s: S) {
+    unsafe { c_funcs::nvim_err_writeln(s.as_thinstr()) };
+}
+pub fn nvim_eval_statusline<'a, S: AsThinString>(
+    s: ThinString<'a>,
+    opts: &EvalStatusLineOpts<'a>,
+) -> Result<EvalStatusLineDict, Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_eval_statusline(s.as_thinstr(),opts,core::ptr::null_mut(), &mut err) },
+        Ok(ret) => {
+            let ret = unsafe {ret.assume_init()};
+            Ok(EvalStatusLineDict::from_c_func_ret(ret))
         }
     }
 }

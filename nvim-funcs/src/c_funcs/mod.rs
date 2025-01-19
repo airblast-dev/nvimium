@@ -1,4 +1,5 @@
 use core::mem::MaybeUninit;
+use std::mem::ManuallyDrop;
 
 use nvim_types::{
     array::Array,
@@ -31,7 +32,7 @@ extern "C" {
     pub fn nvim_del_mark<'a>(name: ThinString<'a>, err: *mut Error);
     pub fn nvim_del_var<'a>(var_name: ThinString<'a>, err: *mut Error);
     // Array<Array<[String; 2]>>
-    pub fn nvim_echo<'a>(chunks: Array, history: bool, opts: *const EchoOpts);
+    pub fn nvim_echo<'a>(chunks: ManuallyDrop<Array>, history: bool, opts: *const EchoOpts);
     pub fn nvim_err_write<'a>(s: ThinString<'a>);
     pub fn nvim_err_writeln<'a>(s: ThinString<'a>);
     pub fn nvim_eval_statusline<'a>(
