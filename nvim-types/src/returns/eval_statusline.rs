@@ -14,7 +14,7 @@ pub struct HighlightItem {
 }
 
 impl EvalStatusLineDict {
-    pub(crate) fn from_c_func_ret(mut d: Dictionary) -> Self {
+    pub fn from_c_func_ret(mut d: Dictionary) -> Self {
         let s = unsafe {
             d.remove_skip_key_drop("str")
                 .unwrap_unchecked()
