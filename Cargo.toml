@@ -21,3 +21,11 @@ trybuild = { version = "1.0.101" }
 
 [workspace]
 members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros"]
+
+[profile.dev]
+incremental = true
+
+[profile.release]
+strip = "debuginfo"
+lto = true
+codegen-units = 1
