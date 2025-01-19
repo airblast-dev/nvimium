@@ -114,10 +114,10 @@ macro_rules! tri {
     // patterns are ordered by common use, with the full pattern as a seperate macro to avoid extra
     // matches
     (let mut $err:ident; $expr:expr $(,)?) => {
-        $crate::tri_full!($expr, Ok(_ret) => Ok(()), Err($err) => Err($err));
+        $crate::tri_full!($expr, Ok(_ret) => Ok(_ret), Err($err) => Err($err));
     };
     (let mut $err:ident; $expr:expr, Ok($ok:ident) => $okexpr:expr $(,)?) =>  {
-        $crate::tri_full!($stmt, Ok($ok) => $okexpr, Err($err) => Err($err));
+        $crate::tri_full!($expr, Ok($ok) => $okexpr, Err($err) => Err($err));
     };
     ($( $tt:tt )+) => {
         $crate::tri_full!($($tt)+)
