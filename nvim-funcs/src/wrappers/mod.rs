@@ -110,3 +110,9 @@ pub fn nvim_exec_lua<S: AsThinString>(code: S, args: &Array) -> Result<Object, E
         }
     }
 }
+
+pub fn nvim_feedkeys<'a>(keys: ThinString<'a>, mode: ThinString<'a>, escape_ks: Boolean) {
+    unsafe {
+        c_funcs::nvim_feedkeys(keys, mode, escape_ks);
+    }
+}
