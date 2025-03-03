@@ -658,6 +658,12 @@ impl<'a> From<ThinString<'a>> for OwnedThinString {
     }
 }
 
+impl From<String> for  OwnedThinString {
+    fn from(value: String) -> Self {
+        Self(value.leak())
+    }
+}
+
 impl Drop for OwnedThinString {
     fn drop(&mut self) {
         unsafe { libc::free(self.0.data as *mut libc::c_void) }
@@ -775,7 +781,7 @@ impl PartialEq<String> for &[u8] {
 //      dbg!(th);
 //  }
 
-#[cfg(test)]
+#[cfg(all(test, miri))]
 mod string_alloc {
     use super::String;
 
@@ -883,7 +889,7 @@ mod string_alloc {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, miri))]
 mod string_fmt {
     use crate::string::{String, ThinString};
 
@@ -912,7 +918,7 @@ mod string_fmt {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, miri))]
 mod thinstr {
     use super::{String, ThinString, ThinStringError};
 
@@ -1011,5 +1017,17 @@ mod thinstr {
     #[should_panic]
     fn from_null_terminated_no_null() {
         let _th = ThinString::from_null_terminated("Hello".as_bytes());
+    }
+}
+
+#[cfg(test)]
+mod owned_thin_string {
+    use super::{OwnedThinString, String};
+
+    #[test]
+    fn from_string() {
+        let s = String::from("Hello");
+        let os = OwnedThinString::from(s);
+        assert_eq!(os, "Hello");
     }
 }

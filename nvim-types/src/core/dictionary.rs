@@ -14,7 +14,7 @@ pub struct KeyValuePair {
 impl From<(String, Object)> for KeyValuePair {
     fn from((key, object): (String, Object)) -> Self {
         Self {
-            key: OwnedThinString::from(key.leak()),
+            key: OwnedThinString::from(key),
             object,
         }
     }
@@ -23,7 +23,7 @@ impl From<(String, Object)> for KeyValuePair {
 impl From<(Object, String)> for KeyValuePair {
     fn from((object, key): (Object, String)) -> Self {
         Self {
-            key: OwnedThinString::from(key.leak()),
+            key: OwnedThinString::from(key),
             object,
         }
     }
