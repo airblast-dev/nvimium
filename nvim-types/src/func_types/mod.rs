@@ -1,3 +1,5 @@
+pub mod feedkeys;
+
 use crate::string::ThinString;
 
 macro_rules! fast_th {

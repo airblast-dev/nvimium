@@ -47,7 +47,6 @@ extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
-    // TODO: replace mode type with its own struct
     pub fn nvim_feedkeys<'a>(keys: ThinString<'a>, mode: ThinString<'a>, escape_ks: Boolean);
     pub fn nvim_get_api_info() -> Array;
     pub fn nvim_get_chan_info(

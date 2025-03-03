@@ -7,3 +7,4 @@ edition = "2021"
 libc = { workspace = true }
 panics = { workspace = true }
 macros = { workspace = true }
+bytemuck = { workspace = true }

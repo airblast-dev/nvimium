@@ -6,12 +6,12 @@ use nvim_types::{
     buffer::Buffer,
     call_site::LUA_INTERNAL_CALL,
     error::Error,
-    func_types::KeyMapMode,
+    func_types::{feedkeys::FeedKeysMode, KeyMapMode},
     object::Object,
     opts::{echo::EchoOpts, eval_statusline::EvalStatusLineOpts},
     returns::eval_statusline::EvalStatusLineDict,
     string::{AsThinString, ThinString},
-    Arena, Boolean,
+    Boolean,
 };
 
 use crate::c_funcs;
@@ -111,8 +111,8 @@ pub fn nvim_exec_lua<S: AsThinString>(code: S, args: &Array) -> Result<Object, E
     }
 }
 
-pub fn nvim_feedkeys<'a>(keys: ThinString<'a>, mode: ThinString<'a>, escape_ks: Boolean) {
+pub fn nvim_feedkeys(keys: ThinString, mode: &FeedKeysMode, escape_ks: Boolean) {
     unsafe {
-        c_funcs::nvim_feedkeys(keys, mode, escape_ks);
+        c_funcs::nvim_feedkeys(keys, mode.as_thinstr(), escape_ks);
     }
 }

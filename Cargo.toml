@@ -11,6 +11,7 @@ plugin = { path = "./plugin" }
 
 [workspace.dependencies]
 libc = { version = "0.2.169", default-features = false }
+bytemuck = { version = "1.22.0", features = ["must_cast"] }
 panics = { path = "./panics" }
 nvim-types = { path = "./nvim-types/" }
 nvim-funcs = { path = "./nvim-funcs/" }
