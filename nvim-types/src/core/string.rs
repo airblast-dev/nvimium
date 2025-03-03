@@ -36,7 +36,7 @@
 
 use std::{
     borrow::Borrow,
-    ffi::{CStr, CString},
+    ffi::{c_char, c_void, CStr, CString},
     fmt::Debug,
     hash::Hash,
     marker::PhantomData,
@@ -44,6 +44,7 @@ use std::{
     ops::Deref,
 };
 
+use libc::size_t;
 use panics::{alloc_failed, not_null_terminated};
 
 /// A String type passed to wrapper functions
@@ -80,8 +81,8 @@ use panics::{alloc_failed, not_null_terminated};
 pub struct String {
     // TODO: check feasability of overallocating some bytes to store capacity in allocation
     // This might allow us to introduce some optimizations in the API.
-    data: *mut libc::c_char,
-    len: libc::size_t,
+    data: *mut c_char,
+    len: size_t,
 
     // when passing to neovim, the rest of the fields must be trimmed out
     capacity: NonZeroUsize,
@@ -165,7 +166,7 @@ impl String {
         if ptr.is_null() {
             alloc_failed();
         }
-        let ptr = ptr as *mut libc::c_char;
+        let ptr = ptr as *mut c_char;
         unsafe { ptr.write(0) };
         Self {
             len: 0,
@@ -219,11 +220,11 @@ impl String {
     }
 
     fn realloc(&mut self, new_capacity: NonZeroUsize) {
-        let ptr = unsafe { libc::realloc(self.data as *mut libc::c_void, new_capacity.get()) };
+        let ptr = unsafe { libc::realloc(self.data as *mut c_void, new_capacity.get()) };
         if ptr.is_null() {
             alloc_failed();
         }
-        self.data = ptr as *mut libc::c_char;
+        self.data = ptr as *mut c_char;
         self.capacity = new_capacity;
     }
 
@@ -260,8 +261,8 @@ impl String {
         // preferred to use libc::memcpy for better binary size
         unsafe {
             libc::memcpy(
-                self.data.add(self.len()) as *mut libc::c_void,
-                slice.as_ptr() as *mut libc::c_void,
+                self.data.add(self.len()) as *mut c_void,
+                slice.as_ptr() as *const c_void,
                 slice.len(),
             );
         }
@@ -409,7 +410,7 @@ const _: () = assert!(
 
 impl Drop for String {
     fn drop(&mut self) {
-        unsafe { libc::free(self.data as *mut libc::c_void) };
+        unsafe { libc::free(self.data as *mut c_void) };
     }
 }
 
@@ -424,8 +425,8 @@ impl Drop for String {
 #[repr(C)]
 #[derive(Clone, Copy, Eq)]
 pub struct ThinString<'a> {
-    data: *mut libc::c_char,
-    len: libc::size_t,
+    data: *const c_char,
+    len: size_t,
     __p: PhantomData<&'a u8>,
 }
 
@@ -439,7 +440,7 @@ impl<'a> ThinString<'a> {
     ///
     /// See [`String::as_thinstr`] for a function that makes use of this.
     #[inline(always)]
-    const unsafe fn new<'b>(len: usize, data: *mut libc::c_char) -> ThinString<'a>
+    const unsafe fn new<'b>(len: usize, data: *mut c_char) -> ThinString<'a>
     where
         'a: 'b,
     {
@@ -460,7 +461,7 @@ impl<'a> ThinString<'a> {
     /// returned pointer can be cast to a *mut but it should never be mutated.
     #[inline(always)]
     pub const fn as_ptr(&self) -> *const u8 {
-        self.data.cast::<u8>() as *const u8
+        self.data.cast::<u8>()
     }
 
     /// Returns the length of the string excluding the null byte
@@ -478,13 +479,21 @@ impl<'a> ThinString<'a> {
     /// Returns a slice of the buffers bytes without a null byte
     #[inline(always)]
     pub const fn as_slice(&self) -> &'a [u8] {
-        unsafe { std::slice::from_raw_parts(self.data as *mut u8, self.len) }
+        let ptr = self.as_ptr();
+        if ptr.is_null() {
+            return &[];
+        }
+        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len) }
     }
 
     // Returns a slice of the buffers bytes with a null byte
     #[inline(always)]
     pub const fn as_slice_with_null(&self) -> &'a [u8] {
-        unsafe { std::slice::from_raw_parts(self.data as *mut u8, self.len + 1) }
+        let ptr = self.as_ptr();
+        if ptr.is_null() {
+            return &[0];
+        }
+        unsafe { std::slice::from_raw_parts(ptr, self.len + 1) }
     }
 
     /// Initialize a [`ThinString`] from raw bytes
@@ -510,7 +519,7 @@ impl<'a> ThinString<'a> {
         Self {
             len: b.len() - 1,
             // SAFETY: slice pointers are always NonNull to optimize for use in enums.
-            data: b.as_ptr() as *mut libc::c_char,
+            data: b.as_ptr() as *mut c_char,
             __p: PhantomData::<&'a u8>,
         }
     }
@@ -560,7 +569,7 @@ impl PartialEq<&str> for ThinString<'_> {
 impl Default for ThinString<'static> {
     fn default() -> Self {
         Self {
-            data: c"".as_ptr() as *mut libc::c_char,
+            data: c"".as_ptr() as *const c_char,
             len: 0,
             __p: PhantomData,
         }
@@ -571,7 +580,7 @@ impl<'a> From<&'a CStr> for ThinString<'a> {
     fn from(value: &'a CStr) -> Self {
         Self {
             len: value.count_bytes(),
-            data: value.as_ptr() as *mut libc::c_char,
+            data: value.as_ptr() as *const c_char,
             __p: PhantomData,
         }
     }
@@ -596,7 +605,7 @@ impl<'a> TryFrom<&'a [u8]> for ThinString<'a> {
 
         Ok(Self {
             len: value.len() - 1,
-            data: value.as_ptr() as *mut libc::c_char,
+            data: value.as_ptr() as *const c_char,
             __p: PhantomData,
         })
     }
@@ -627,15 +636,11 @@ impl Clone for OwnedThinString {
     }
 
     fn clone_from(&mut self, source: &Self) {
+        let src = source.as_thinstr().as_slice().as_ptr() as *const c_void;
         if self.0.len() >= source.0.len() {
-            let dst = self.0.as_ptr() as *mut libc::c_void;
-            unsafe {
-                libc::memcpy(
-                    dst,
-                    source.0.as_ptr() as *mut libc::c_void,
-                    source.0.len() + 1,
-                )
-            };
+            let dst = self.0.as_ptr() as *mut c_void;
+            unsafe { libc::memcpy(dst, src, source.0.len() + 1) };
+            self.0.len = source.0.len();
         } else {
             *self = source.clone();
         }
@@ -653,12 +658,16 @@ impl OwnedThinString {
 
 impl<'a> From<ThinString<'a>> for OwnedThinString {
     fn from(th: ThinString<'a>) -> Self {
-        let ptr = unsafe { libc::strdup(th.as_ptr() as *const i8) };
+        let source = th.as_slice().as_ptr() as *const c_char;
+        let ptr = unsafe { libc::strdup(source) };
+        if ptr.is_null() {
+            alloc_failed()
+        }
         Self(unsafe { ThinString::new(th.len(), ptr) })
     }
 }
 
-impl From<String> for  OwnedThinString {
+impl From<String> for OwnedThinString {
     fn from(value: String) -> Self {
         Self(value.leak())
     }
@@ -666,7 +675,7 @@ impl From<String> for  OwnedThinString {
 
 impl Drop for OwnedThinString {
     fn drop(&mut self) {
-        unsafe { libc::free(self.0.data as *mut libc::c_void) }
+        unsafe { libc::free(self.0.data as *mut c_void) }
     }
 }
 
@@ -681,7 +690,7 @@ impl Drop for OwnedThinString {
 ///
 /// # Safety
 /// Implementing requires the following variants to be upheld
-/// - The data that the pointer in [`ThinString`] must not be null.
+/// - The pointer in [`ThinString`] must not be null.
 /// - The string that the pointer points to must be minimally a single null byte.
 /// - The length must be the length of the allocation without the null byte.
 /// - The lifetime on the return value must match the owners lifetime.
@@ -713,7 +722,7 @@ unsafe impl AsThinString for CStr {
         let len = self.count_bytes();
         ThinString {
             len,
-            data: self.as_ptr() as *mut libc::c_char,
+            data: self.as_ptr() as *const c_char,
             __p: PhantomData,
         }
     }
@@ -723,7 +732,7 @@ unsafe impl AsThinString for CString {
     fn as_thinstr(&self) -> ThinString<'_> {
         let len = self.count_bytes();
         ThinString {
-            data: self.as_ptr() as *mut libc::c_char,
+            data: self.as_ptr() as *mut c_char,
             len,
             __p: PhantomData,
         }
