@@ -1,4 +1,5 @@
 pub mod array;
+pub mod borrowed;
 pub mod buffer;
 pub mod call_site;
 pub mod dictionary;

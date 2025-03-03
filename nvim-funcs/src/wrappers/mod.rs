@@ -65,15 +65,10 @@ pub fn nvim_echo<S: AsThinString>(
     history: Boolean,
     opts: &EchoOpts,
 ) -> Result<(), Error> {
-    let chunks: ManuallyDrop<Array> = unsafe {
-        (chunks as *const Array)
-            .cast::<ManuallyDrop<Array>>()
-            .read()
-    };
     tri! {
         let mut err;
         unsafe {
-            c_funcs::nvim_echo(chunks, history, opts);
+            c_funcs::nvim_echo(chunks.into(), history, opts);
         }
     }
 }
@@ -91,20 +86,18 @@ pub fn nvim_eval_statusline<'a, S: AsThinString>(
 ) -> Result<EvalStatusLineDict, Error> {
     tri! {
         let mut err;
-        unsafe { c_funcs::nvim_eval_statusline(s.as_thinstr(),opts,core::ptr::null_mut(), &mut err) },
+        unsafe { c_funcs::nvim_eval_statusline(s.as_thinstr(), opts, core::ptr::null_mut(), &mut err) },
         Ok(ret) => {
-            let ret = unsafe {ret.assume_init()};
+            let ret = unsafe { ret.assume_init() };
             Ok(EvalStatusLineDict::from_c_func_ret(ret))
         }
     }
 }
 
 pub fn nvim_exec_lua<S: AsThinString>(code: S, args: &Array) -> Result<Object, Error> {
-    let args: ManuallyDrop<Array> =
-        unsafe { (args as *const Array).cast::<ManuallyDrop<Array>>().read() };
     tri! {
         let mut err;
-        unsafe { c_funcs::nvim_exec_lua(code.as_thinstr(), args, core::ptr::null_mut(), &mut err) },
+        unsafe { c_funcs::nvim_exec_lua(code.as_thinstr(), args.into(), core::ptr::null_mut(), &mut err) },
         Ok(ret) => {
             Ok(unsafe{ret.assume_init()})
         }

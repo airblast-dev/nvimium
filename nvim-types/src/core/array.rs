@@ -2,6 +2,8 @@ use std::ops::{Deref, DerefMut};
 
 use crate::{kvec::KVec, object::Object};
 
+use super::borrowed::Borrowed;
+
 /// A [`KVec`] of [`Object`]s
 ///
 /// The implementation intentionally does not provide methods on [`Array`] itself and delegates the
@@ -32,5 +34,11 @@ impl From<&[Object]> for Array {
 impl Array {
     pub(crate) fn into_kvec(self) -> KVec<Object> {
         self.0
+    }
+}
+
+impl <'a> From<&'a Array> for Borrowed<'a, Array> {
+    fn from(value: &'a Array) -> Self {
+        Borrowed::new(value)
     }
 }

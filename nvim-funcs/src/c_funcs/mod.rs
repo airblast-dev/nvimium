@@ -2,20 +2,10 @@ use core::mem::MaybeUninit;
 use std::mem::ManuallyDrop;
 
 use nvim_types::{
-    array::Array,
-    buffer::Buffer,
-    dictionary::Dictionary,
-    error::Error,
-    func_types::KeyMapMode,
-    object::Object,
-    opts::{
+    array::Array, borrowed::Borrowed, buffer::Buffer, dictionary::Dictionary, error::Error, func_types::KeyMapMode, object::Object, opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
         get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts,
-    },
-    string::{OwnedThinString, ThinString},
-    tab_page::TabPage,
-    window::Window,
-    Arena, Boolean, Integer,
+    }, string::{OwnedThinString, ThinString}, tab_page::TabPage, window::Window, Arena, Boolean, Integer
 };
 
 // Any of the functions can only take a [`ThinString`] or [`OwnedThinString`]. As the layout and
@@ -32,7 +22,7 @@ extern "C" {
     pub fn nvim_del_mark<'a>(name: ThinString<'a>, err: *mut Error);
     pub fn nvim_del_var<'a>(var_name: ThinString<'a>, err: *mut Error);
     // Array<Array<[String; 2]>>
-    pub fn nvim_echo<'a>(chunks: ManuallyDrop<Array>, history: bool, opts: *const EchoOpts);
+    pub fn nvim_echo<'a>(chunks: Borrowed<'a, Array>, history: bool, opts: *const EchoOpts);
     pub fn nvim_err_write<'a>(s: ThinString<'a>);
     pub fn nvim_err_writeln<'a>(s: ThinString<'a>);
     pub fn nvim_eval_statusline<'a>(
@@ -43,7 +33,7 @@ extern "C" {
     ) -> MaybeUninit<Dictionary>;
     pub fn nvim_exec_lua<'a>(
         code: ThinString<'a>,
-        args: ManuallyDrop<Array>,
+        args: Borrowed<'a, Array>,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
@@ -117,7 +107,7 @@ extern "C" {
     pub fn nvim_list_tabpages(arena: *mut Arena) -> MaybeUninit<Array>;
     pub fn nvim_list_uis(arena: *mut Arena) -> MaybeUninit<Array>;
     pub fn nvim_list_wins(arena: *mut Arena) -> MaybeUninit<Array>;
-    pub fn nvim_load_context(dict: Dictionary, err: *mut Error) -> MaybeUninit<Object>;
+    pub fn nvim_load_context<'a>(dict: Borrowed<'a, Dictionary>, err: *mut Error) -> MaybeUninit<Object>;
     // TODO
     pub fn nvim_open_term(buffer: Buffer);
 }
