@@ -159,7 +159,7 @@ impl<T> KVec<T> {
 
             // When the requested size is 0, malloc may return NULL or a dangling pointer.
             // To always have a non null pointer we check the capacity above.
-            debug_assert_ne!(byte_cap, 0);
+            assert_ne!(byte_cap, 0);
 
             let ptr = unsafe { libc::malloc(byte_cap) };
             if ptr.is_null() {
@@ -222,7 +222,7 @@ impl<T> KVec<T> {
     /// The remaining capacity in [`KVec`]
     #[inline(always)]
     fn remaining_capacity(&self) -> usize {
-        debug_assert!(self.capacity() >= self.len());
+        assert!(self.capacity() >= self.len());
         self.capacity() - self.len()
     }
 
@@ -239,7 +239,7 @@ impl<T> KVec<T> {
         }
         // SAFETY: additional is always bigger than remaining which is checked above
         let new_capacity = self.capacity + additional - remaining;
-        debug_assert_ne!(new_capacity, 0);
+        assert_ne!(new_capacity, 0);
         unsafe { Some(NonZeroUsize::new_unchecked(new_capacity)) }
     }
 
