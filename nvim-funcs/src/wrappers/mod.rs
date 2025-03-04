@@ -13,6 +13,10 @@ use nvim_types::{
     Boolean,
 };
 
+// TODO: many of the functions exposed use static mutability internally
+// calling many of these functions are unsound so add a check to ensure that functions that mutate
+// static variables dont get called outside of neovim events
+
 use crate::c_funcs;
 
 /// Create a new buffer
