@@ -382,6 +382,26 @@ impl<T> KVec<T> {
     }
 }
 
+impl<T: Clone> Clone for KVec<T> {
+    fn clone(&self) -> Self {
+        let mut new = KVec::with_capacity(self.len());
+        new.extend_from_slice(self.as_slice());
+        new
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        let ptr = self.as_ptr();
+        if !ptr.is_null() {
+            unsafe {
+                core::ptr::slice_from_raw_parts_mut(self.as_ptr(), self.len()).drop_in_place();
+                self.set_len(0);
+            }
+        }
+
+        self.extend_from_slice(source.as_slice());
+    }
+}
+
 impl<T> Deref for KVec<T> {
     type Target = [T];
     fn deref(&self) -> &Self::Target {
@@ -418,6 +438,25 @@ impl<T> FromIterator<T> for KVec<T> {
         let mut kv = Self::new();
         kv.extend(iter);
         kv
+    }
+}
+
+impl<T: Eq> Eq for KVec<T> {}
+impl<Item: PartialEq> PartialEq for KVec<Item> {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_slice() == other.as_slice()
+    }
+}
+
+impl<Item: PartialEq> PartialEq<[Item]> for KVec<Item> {
+    fn eq(&self, other: &[Item]) -> bool {
+        self.as_slice() == other
+    }
+}
+
+impl<Item: PartialEq> PartialEq<KVec<Item>> for [Item] {
+    fn eq(&self, other: &KVec<Item>) -> bool {
+        other.as_slice() == self
     }
 }
 
@@ -539,6 +578,26 @@ mod tests {
         let kv = KVec::new();
         assert_eq!(kv.len(), 0);
         assert_eq!(kv.capacity(), 0);
+    }
+
+    #[test]
+    fn clone() {
+        let v = KVec::from_iter([1, 2, 3_u8].map(|b| b.to_string()));
+        let a = v.clone();
+        assert_eq!(v, a);
+
+        let mut v = KVec::default();
+        v.clone_from(&a);
+        assert_eq!(v, a);
+
+        let v = KVec::default();
+        let a = v.clone();
+        assert_eq!(v, a);
+
+        let v = KVec::default();
+        let mut a = KVec::default();
+        a.clone_from(&v);
+        assert_eq!(v, a);
     }
 
     #[test]
