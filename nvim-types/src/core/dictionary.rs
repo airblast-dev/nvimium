@@ -30,7 +30,7 @@ impl From<(Object, String)> for KeyValuePair {
 }
 
 #[repr(transparent)]
-#[derive(Default, Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct Dictionary(KVec<KeyValuePair>);
 
 impl Deref for Dictionary {
