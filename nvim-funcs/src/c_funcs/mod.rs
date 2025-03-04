@@ -8,7 +8,8 @@ use nvim_types::{
     func_types::keymap_mode::KeyMapMode,
     object::Object,
     opts::{
-        echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts, get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts
+        echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
+        get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts,
     },
     string::{OwnedThinString, ThinString},
     tab_page::TabPage,
@@ -70,13 +71,15 @@ extern "C" {
     ) -> MaybeUninit<OwnedThinString>;
     pub fn nvim_get_current_tabpage() -> TabPage;
     pub fn nvim_get_current_win() -> Window;
+    // TODO: replace with custom struct or clone and partially free the returned values stored in
+    // the dictionary have lifetimes that are known at runtime
     pub fn nvim_get_hl<'a>(
         ns_id: Integer,
-        opts: GetHlOpts<'a>,
+        opts: *const GetHlOpts<'a>,
         array: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Dictionary>;
-    pub fn nvim_get_hl_ns<'a>(opts: GetHlNsOpts, err: *mut Error) -> Integer;
+    pub fn nvim_get_hl_ns<'a>(opts: *const GetHlNsOpts, err: *mut Error) -> Integer;
     pub fn nvim_get_keymap(mode: KeyMapMode) -> MaybeUninit<Array>;
     pub fn nvim_get_mark<'a>(
         name: ThinString<'a>,
