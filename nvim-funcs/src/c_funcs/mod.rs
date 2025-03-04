@@ -1,4 +1,5 @@
 use core::mem::MaybeUninit;
+use std::mem::ManuallyDrop;
 use nvim_types::{
     array::Array,
     borrowed::Borrowed,
@@ -61,9 +62,9 @@ extern "C" {
         err: *mut Error,
     ) -> MaybeUninit<Dictionary>;
     pub fn nvim_get_color_by_name<'a>(name: ThinString<'a>) -> Integer;
-    // TODO: replace with custom ColorMap struct as dropping a dictionary will cause an attempt to
-    // free the color names
-    pub fn nvim_get_color_map(arena: *mut Arena) -> MaybeUninit<Dictionary>;
+    // the color names returned are not owned, to avoid freeing a const value deal with the
+    // deallocation of the Dictionary manually
+    pub fn nvim_get_color_map(arena: *mut Arena) -> MaybeUninit<ManuallyDrop<Dictionary>>;
     pub fn nvim_get_current_buf() -> Buffer;
     pub fn nvim_get_current_line(
         arena: *mut Arena,
