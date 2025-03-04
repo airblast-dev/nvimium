@@ -30,7 +30,7 @@ impl From<(Object, String)> for KeyValuePair {
 }
 
 #[repr(transparent)]
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct Dictionary(KVec<KeyValuePair>);
 
 impl Deref for Dictionary {
@@ -49,7 +49,7 @@ impl DerefMut for Dictionary {
 impl Dictionary {
     pub fn get<K>(&self, key: K) -> Option<&Object>
     where
-        for<'a> ThinString<'a>: PartialEq<K>,
+        K: PartialEq<OwnedThinString>,
     {
         let index = self.find_by_key(&key)?;
         unsafe { Some(&self.0.as_slice().get_unchecked(index).object) }
@@ -57,7 +57,7 @@ impl Dictionary {
 
     pub fn remove<K>(&mut self, key: K) -> Option<KeyValuePair>
     where
-        for<'a> ThinString<'a>: PartialEq<K>,
+        K: PartialEq<OwnedThinString>,
     {
         let index = self.find_by_key(&key)?;
         Some(self.0.swap_remove(index))
@@ -65,7 +65,7 @@ impl Dictionary {
 
     pub fn remove_skip_key_drop<K>(&mut self, key: K) -> Option<Object>
     where
-        for<'a> ThinString<'a>: PartialEq<K>,
+        K: PartialEq<OwnedThinString>,
     {
         let index = self.find_by_key(&key)?;
 
@@ -76,7 +76,7 @@ impl Dictionary {
 
     pub fn insert<K>(&mut self, key: K, mut object: Object) -> Option<Object>
     where
-        for<'a> ThinString<'a>: PartialEq<K>,
+        K: PartialEq<OwnedThinString>,
         OwnedThinString: From<K>,
     {
         let index = self.find_by_key(&key);
@@ -102,11 +102,11 @@ impl Dictionary {
     /// The returned index is guaranteed to be the index to the key value pair.
     fn find_by_key<K>(&self, key: &K) -> Option<usize>
     where
-        for<'a> ThinString<'a>: PartialEq<K>,
+        K: PartialEq<OwnedThinString>,
     {
         self.0
             .iter()
-            .position(|KeyValuePair { key: k, .. }| k == key)
+            .position(|KeyValuePair { key: k, .. }| key == k)
     }
 }
 

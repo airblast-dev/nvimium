@@ -403,6 +403,36 @@ impl PartialEq<&[u8]> for String {
     }
 }
 
+impl PartialEq<String> for str {
+    fn eq(&self, other: &String) -> bool {
+        self.as_bytes() == other.as_slice()
+    }
+}
+
+impl PartialEq<String> for &str {
+    fn eq(&self, other: &String) -> bool {
+        self.as_bytes() == other.as_slice()
+    }
+}
+
+impl PartialEq<String> for [u8] {
+    fn eq(&self, other: &String) -> bool {
+        self == other.as_slice()
+    }
+}
+
+impl PartialEq<String> for &[u8] {
+    fn eq(&self, other: &String) -> bool {
+        *self == other.as_slice()
+    }
+}
+
+impl PartialEq<OwnedThinString> for String {
+    fn eq(&self, other: &OwnedThinString) -> bool {
+        self.as_thinstr() == other.as_thinstr()
+    }
+}
+
 const _: () = assert!(
     std::mem::size_of::<usize>() + std::mem::size_of::<ThinString>()
         == std::mem::size_of::<String>()
@@ -536,7 +566,7 @@ impl Debug for ThinString<'_> {
     }
 }
 
-impl Borrow<[u8]> for ThinString<'_> {
+impl<'a> Borrow<[u8]> for ThinString<'a> {
     fn borrow(&self) -> &[u8] {
         self.as_slice_with_null()
     }
@@ -563,6 +593,36 @@ impl PartialEq<str> for ThinString<'_> {
 impl PartialEq<&str> for ThinString<'_> {
     fn eq(&self, other: &&str) -> bool {
         self.as_slice() == other.as_bytes()
+    }
+}
+
+impl<'a> PartialEq<ThinString<'a>> for str {
+    fn eq(&self, other: &ThinString<'a>) -> bool {
+        self.as_bytes() == other.as_slice()
+    }
+}
+
+impl<'a> PartialEq<ThinString<'a>> for &str {
+    fn eq(&self, other: &ThinString<'a>) -> bool {
+        self.as_bytes() == other.as_slice()
+    }
+}
+
+impl<'a> PartialEq<ThinString<'a>> for [u8] {
+    fn eq(&self, other: &ThinString<'a>) -> bool {
+        self == other.as_slice()
+    }
+}
+
+impl<'a> PartialEq<ThinString<'a>> for &[u8] {
+    fn eq(&self, other: &ThinString<'a>) -> bool {
+        *self == other.as_slice()
+    }
+}
+
+impl PartialEq<OwnedThinString> for ThinString<'_> {
+    fn eq(&self, other: &OwnedThinString) -> bool {
+        *self == other.as_thinstr()
     }
 }
 
@@ -621,15 +681,6 @@ pub enum ThinStringError {
 #[derive(Debug)]
 pub struct OwnedThinString(ThinString<'static>);
 
-impl<T> PartialEq<T> for OwnedThinString
-where
-    for<'a> ThinString<'a>: PartialEq<T>,
-{
-    fn eq(&self, other: &T) -> bool {
-        self.as_thinstr() == *other
-    }
-}
-
 impl Clone for OwnedThinString {
     fn clone(&self) -> Self {
         Self::from(self.0)
@@ -670,6 +721,60 @@ impl<'a> From<ThinString<'a>> for OwnedThinString {
 impl From<String> for OwnedThinString {
     fn from(value: String) -> Self {
         Self(value.leak())
+    }
+}
+
+impl PartialEq for OwnedThinString {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_thinstr() == other.as_thinstr()
+    }
+}
+
+impl PartialEq<str> for OwnedThinString {
+    fn eq(&self, other: &str) -> bool {
+        self.0.as_slice() == other.as_bytes()
+    }
+}
+
+impl PartialEq<&str> for OwnedThinString {
+    fn eq(&self, other: &&str) -> bool {
+        self.0.as_slice() == other.as_bytes()
+    }
+}
+
+impl<'a> PartialEq<OwnedThinString> for str {
+    fn eq(&self, other: &OwnedThinString) -> bool {
+        self.as_bytes() == other.0.as_slice()
+    }
+}
+
+impl<'a> PartialEq<OwnedThinString> for &str {
+    fn eq(&self, other: &OwnedThinString) -> bool {
+        self.as_bytes() == other.0.as_slice()
+    }
+}
+
+impl<'a> PartialEq<OwnedThinString> for [u8] {
+    fn eq(&self, other: &OwnedThinString) -> bool {
+        self == other.0.as_slice()
+    }
+}
+
+impl<'a> PartialEq<OwnedThinString> for &[u8] {
+    fn eq(&self, other: &OwnedThinString) -> bool {
+        *self == other.0.as_slice()
+    }
+}
+
+impl<'a> PartialEq<ThinString<'a>> for OwnedThinString {
+    fn eq(&self, other: &ThinString<'a>) -> bool {
+        self.as_thinstr() == *other
+    }
+}
+
+impl PartialEq<String> for OwnedThinString {
+    fn eq(&self, other: &String) -> bool {
+        self.as_thinstr() == other.as_thinstr()
     }
 }
 
@@ -736,30 +841,6 @@ unsafe impl AsThinString for CString {
             len,
             __p: PhantomData,
         }
-    }
-}
-
-impl PartialEq<String> for str {
-    fn eq(&self, other: &String) -> bool {
-        self.as_bytes() == other.as_slice()
-    }
-}
-
-impl PartialEq<String> for &str {
-    fn eq(&self, other: &String) -> bool {
-        self.as_bytes() == other.as_slice()
-    }
-}
-
-impl PartialEq<String> for [u8] {
-    fn eq(&self, other: &String) -> bool {
-        self == other.as_slice()
-    }
-}
-
-impl PartialEq<String> for &[u8] {
-    fn eq(&self, other: &String) -> bool {
-        *self == other.as_slice()
     }
 }
 
