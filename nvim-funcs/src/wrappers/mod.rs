@@ -1,6 +1,7 @@
 use macros::tri;
 use nvim_types::{
     array::Array,
+    borrowed::Borrowed,
     buffer::Buffer,
     call_site::LUA_INTERNAL_CALL,
     error::Error,
@@ -104,4 +105,8 @@ pub fn nvim_feedkeys(keys: ThinString, mode: &FeedKeysMode, escape_ks: Boolean) 
     unsafe {
         c_funcs::nvim_feedkeys(keys, mode.as_thinstr(), escape_ks);
     }
+}
+
+pub fn nvim_get_api_info() -> Borrowed<'static, Array> {
+    unsafe { c_funcs::nvim_get_api_info() }
 }
