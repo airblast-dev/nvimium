@@ -51,24 +51,6 @@ macro_rules! masked_builder {
     };
 }
 
-/// Creates a default impl using [`core::mem::zeroed`]
-///
-/// Since many types passed to neovim use a mask to indicate if it has a field, we can just zero
-/// initialize them rather than to call default implementations.
-///
-/// Currently this safe for all neovim primitive types. Still marked as unsafe in case that
-/// changes.
-#[macro_export]
-macro_rules! fast_default {
-    (unsafe $ident:ident$(< $( $gen:tt ),* >)?) => {
-        impl ::core::default::Default for $ident $(<$($gen),*>)? {
-            fn default() -> Self {
-                unsafe { ::core::mem::zeroed() }
-            }
-        }
-    };
-}
-
 #[doc(hidden)]
 #[macro_export]
 macro_rules! func_gen_masked {

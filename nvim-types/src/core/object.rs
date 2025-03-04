@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::{array::Array, dictionary::Dictionary, string::ThinString};
+use crate::{array::Array, dictionary::Dictionary};
 
 use super::{
     buffer::Buffer, string::OwnedThinString, tab_page::TabPage, window::Window, Boolean, Float,

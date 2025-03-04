@@ -1,4 +1,4 @@
-use macros::{builder, fast_default};
+use macros::builder;
 
 use crate::Boolean;
 
@@ -9,5 +9,3 @@ builder!(
         pub verbose: Boolean,
     }
 );
-
-fast_default!(unsafe EchoOpts);

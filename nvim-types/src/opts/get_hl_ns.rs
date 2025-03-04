@@ -1,4 +1,4 @@
-use macros::{fast_default, masked_builder};
+use macros::masked_builder;
 
 use crate::window::Window;
 

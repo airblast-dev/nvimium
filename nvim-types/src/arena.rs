@@ -15,18 +15,6 @@ impl Arena {
         pos: 0,
         size: 0,
     };
-
-    fn new() -> Self {
-        Self::EMPTY
-    }
-
-    pub unsafe fn alloc(&mut self, size: libc::size_t, align: bool) -> *mut libc::c_char {
-        unsafe { arena_alloc(self as *mut Arena, size, align) }
-    }
-
-    pub unsafe fn finish(&mut self) -> ArenaMem {
-        unsafe { arena_finish(self as *mut Arena) }
-    }
 }
 
 #[repr(C)]
@@ -47,7 +35,5 @@ impl Drop for ArenaMem<'_> {
 // TODO: use arena to optimize performance
 // This is somewhat low priority but will be useful for large allocations
 extern "C" {
-    fn arena_alloc(arena: *mut Arena, size: libc::size_t, align: bool) -> *mut libc::c_char;
-    fn arena_finish<'a>(arena: *mut Arena) -> ArenaMem<'a>;
     fn arena_mem_free(arena_mem: ArenaMem);
 }

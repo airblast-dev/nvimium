@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use crate::{kvec::KVec, object::Object, string::String};
 
-use super::string::{OwnedThinString, ThinString};
+use super::{borrowed::Borrowed, string::OwnedThinString};
 
 #[repr(C)]
 #[derive(Clone, Debug)]
@@ -127,11 +127,14 @@ where
 
 const _: () = assert!(24 == std::mem::size_of::<Dictionary>());
 
+impl<'a> From<&'a Dictionary> for Borrowed<'a, Dictionary> {
+    fn from(value: &'a Dictionary) -> Self {
+        Borrowed::new(value)
+    }
+}
+
 #[cfg(test)]
 mod dict {
-    use crate::object::Object;
-
-    use super::Dictionary;
 
     #[test]
     fn get() {}

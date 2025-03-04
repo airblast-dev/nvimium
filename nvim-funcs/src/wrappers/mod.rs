@@ -1,5 +1,3 @@
-use std::mem::{ManuallyDrop, MaybeUninit};
-
 use macros::tri;
 use nvim_types::{
     array::Array,
@@ -19,13 +17,11 @@ use crate::c_funcs;
 /// Create a new buffer
 ///
 /// Returns [`Option::None`] if creating the buffer fails.
-pub fn nvim_create_buf(listed: Boolean, scratch: Boolean) -> Option<Buffer> {
-    let buf = unsafe { c_funcs::nvim_create_buf(listed, scratch) };
-    if buf.as_int() != 0 {
-        Some(buf)
-    } else {
-        None
-    }
+pub fn nvim_create_buf(listed: Boolean, scratch: Boolean) -> Result<Buffer, Error> {
+    tri! {
+            let mut err;
+    unsafe { c_funcs::nvim_create_buf(listed, scratch, &mut err) }
+        }
 }
 
 pub fn nvim_del_current_line() -> Result<(), Error> {
@@ -42,7 +38,7 @@ pub fn nvim_del_keymap<S: AsThinString>(map_mode: KeyMapMode, lhs: S) -> Result<
     }
 }
 
-pub fn nvim_del_mark<S: AsThinString>(name: S) -> Result<(), Error> {
+pub fn nvim_del_mark<S: AsThinString>(name: S) -> Result<Boolean, Error> {
     tri! {
         let mut err;
         unsafe {
@@ -60,15 +56,15 @@ pub fn nvim_del_var<S: AsThinString>(var: S) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_echo<S: AsThinString>(
-    chunks: &Array,
+pub fn nvim_echo<'a, S: AsThinString>(
+    chunks: &'a Array,
     history: Boolean,
-    opts: &EchoOpts,
+    opts: &'a EchoOpts,
 ) -> Result<(), Error> {
     tri! {
         let mut err;
         unsafe {
-            c_funcs::nvim_echo(chunks.into(), history, opts);
+            c_funcs::nvim_echo(chunks.into(), history, opts, &mut err);
         }
     }
 }
