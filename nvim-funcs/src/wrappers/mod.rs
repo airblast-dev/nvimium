@@ -4,7 +4,7 @@ use nvim_types::{
     buffer::Buffer,
     call_site::LUA_INTERNAL_CALL,
     error::Error,
-    func_types::{feedkeys::FeedKeysMode, KeyMapMode},
+    func_types::{feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
     object::Object,
     opts::{echo::EchoOpts, eval_statusline::EvalStatusLineOpts},
     returns::eval_statusline::EvalStatusLineDict,

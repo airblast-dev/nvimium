@@ -5,7 +5,7 @@ use nvim_types::{
     buffer::Buffer,
     dictionary::Dictionary,
     error::Error,
-    func_types::KeyMapMode,
+    func_types::keymap_mode::KeyMapMode,
     object::Object,
     opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts, get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts
