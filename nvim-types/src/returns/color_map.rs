@@ -79,7 +79,7 @@ impl ColorMap {
             .expect("uninitialized ColorMap, this is most likely an internal bug inside nvimium");
         // validate that name is something we can compare against
         // else return None early
-        ThinString::from_null_terminated(b"").partial_cmp(&name)?;
+        ThinString::from_null_terminated(c"".to_bytes_with_nul()).partial_cmp(&name)?;
         let idx = map
             .binary_search_by(|(s1, _)| {
                 // cannot panic validated above
@@ -110,8 +110,10 @@ mod tests {
             dict.insert(name, val);
         }
 
-        {
-            let _c_map = ColorMap::from_c_func_ret(&mut dict);
-        }
+        let c_map = ColorMap::from_c_func_ret(&mut dict);
+        drop(dict);
+        assert_eq!(Some([255, 0, 0]), c_map.get_with_name(String::from("red")));
+        assert_eq!(Some([0, 255, 0]), c_map.get_with_name(String::from("green")));
+        assert_eq!(Some([0, 0, 255]), c_map.get_with_name(String::from("blue")));
     }
 }
