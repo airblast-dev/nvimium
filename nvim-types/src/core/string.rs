@@ -433,6 +433,9 @@ impl PartialEq<OwnedThinString> for String {
     }
 }
 
+unsafe impl Sync for String {}
+unsafe impl Send for String {}
+
 const _: () = assert!(
     std::mem::size_of::<usize>() + std::mem::size_of::<ThinString>()
         == std::mem::size_of::<String>()
@@ -671,6 +674,9 @@ impl<'a> TryFrom<&'a [u8]> for ThinString<'a> {
     }
 }
 
+unsafe impl Sync for ThinString<'_> {}
+unsafe impl Send for ThinString<'_> {}
+
 #[derive(Clone, Copy, Debug)]
 pub enum ThinStringError {
     NotNullTerminated,
@@ -777,6 +783,9 @@ impl PartialEq<String> for OwnedThinString {
         self.as_thinstr() == other.as_thinstr()
     }
 }
+
+unsafe impl Sync for OwnedThinString {}
+unsafe impl Send for OwnedThinString {}
 
 impl Drop for OwnedThinString {
     fn drop(&mut self) {

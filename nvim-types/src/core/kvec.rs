@@ -7,6 +7,9 @@ use std::ptr::NonNull;
 
 use panics::{alloc_failed, slice_error};
 
+unsafe impl<T> Sync for KVec<T> where T: Sync {}
+unsafe impl<T> Send for KVec<T> where T: Send {}
+
 #[repr(C)]
 pub struct KVec<T> {
     pub(super) len: usize,
