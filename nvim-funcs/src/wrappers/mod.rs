@@ -9,7 +9,7 @@ use nvim_types::{
     object::Object,
     opts::{echo::EchoOpts, eval_statusline::EvalStatusLineOpts},
     returns::{channel_info::ChannelInfo, eval_statusline::EvalStatusLineDict},
-    string::{AsThinString, ThinString},
+    string::AsThinString,
     Boolean, Integer,
 };
 
@@ -81,9 +81,9 @@ pub fn nvim_err_write<S: AsThinString>(s: S) {
 pub fn nvim_err_writeln<S: AsThinString>(s: S) {
     unsafe { c_funcs::nvim_err_writeln(s.as_thinstr()) };
 }
-pub fn nvim_eval_statusline<'a, S: AsThinString>(
-    s: ThinString<'a>,
-    opts: &EvalStatusLineOpts<'a>,
+pub fn nvim_eval_statusline<S: AsThinString>(
+    s: S,
+    opts: &EvalStatusLineOpts,
 ) -> Result<EvalStatusLineDict, Error> {
     tri! {
         let mut err;
@@ -105,9 +105,9 @@ pub fn nvim_exec_lua<S: AsThinString>(code: S, args: &Array) -> Result<Object, E
     }
 }
 
-pub fn nvim_feedkeys(keys: ThinString, mode: &FeedKeysMode, escape_ks: Boolean) {
+pub fn nvim_feedkeys<S: AsThinString>(keys: S, mode: &FeedKeysMode, escape_ks: Boolean) {
     unsafe {
-        c_funcs::nvim_feedkeys(keys, mode.as_thinstr(), escape_ks);
+        c_funcs::nvim_feedkeys(keys.as_thinstr(), mode.as_thinstr(), escape_ks);
     }
 }
 
@@ -123,7 +123,7 @@ pub fn nvim_get_chan_info(channel_id: u64, chan: Integer) -> Result<ChannelInfo,
     }
 }
 
-pub fn nvim_get_color_by_name(name: ThinString) -> Option<Integer> {
-    let i = unsafe { c_funcs::nvim_get_color_by_name(name) };
+pub fn nvim_get_color_by_name<S: AsThinString>(name: S) -> Option<Integer> {
+    let i = unsafe { c_funcs::nvim_get_color_by_name(name.as_thinstr()) };
     Some(i).filter(|i| *i != -1)
 }
