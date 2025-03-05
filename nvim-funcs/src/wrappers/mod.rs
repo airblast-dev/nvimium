@@ -8,9 +8,9 @@ use nvim_types::{
     func_types::{feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
     object::Object,
     opts::{echo::EchoOpts, eval_statusline::EvalStatusLineOpts},
-    returns::eval_statusline::EvalStatusLineDict,
+    returns::{channel_info::ChannelInfo, eval_statusline::EvalStatusLineDict},
     string::{AsThinString, ThinString},
-    Boolean,
+    Boolean, Integer,
 };
 
 // TODO: many of the functions exposed use static mutability internally
@@ -113,4 +113,17 @@ pub fn nvim_feedkeys(keys: ThinString, mode: &FeedKeysMode, escape_ks: Boolean) 
 
 pub fn nvim_get_api_info() -> Borrowed<'static, Array> {
     unsafe { c_funcs::nvim_get_api_info() }
+}
+
+pub fn nvim_get_chan_info(channel_id: u64, chan: Integer) -> Result<ChannelInfo, Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_get_chan_info(channel_id, chan, core::ptr::null_mut(), &mut err) },
+        Ok(ret) => Ok(unsafe { ChannelInfo::from_c_func_ret(&ret.assume_init()) })
+    }
+}
+
+pub fn nvim_get_color_by_name(name: ThinString) -> Option<Integer> {
+    let i = unsafe { c_funcs::nvim_get_color_by_name(name) };
+    Some(i).filter(|i| *i != -1)
 }

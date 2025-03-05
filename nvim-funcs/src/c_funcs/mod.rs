@@ -1,5 +1,4 @@
 use core::mem::MaybeUninit;
-use std::mem::ManuallyDrop;
 use nvim_types::{
     array::Array,
     borrowed::Borrowed,
@@ -17,6 +16,7 @@ use nvim_types::{
     window::Window,
     Arena, Boolean, Integer,
 };
+use std::mem::ManuallyDrop;
 
 // Any of the functions can only take a [`ThinString`] or [`OwnedThinString`]. As the layout and
 // size of [`String`] is not the same.
@@ -60,7 +60,7 @@ extern "C" {
         chan: Integer,
         arena: *mut Arena,
         err: *mut Error,
-    ) -> MaybeUninit<Dictionary>;
+    ) -> MaybeUninit<ManuallyDrop<Dictionary>>;
     pub fn nvim_get_color_by_name<'a>(name: ThinString<'a>) -> Integer;
     // the color names returned are not owned, to avoid freeing a const value deal with the
     // deallocation of the Dictionary manually
