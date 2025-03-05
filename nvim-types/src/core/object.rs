@@ -11,7 +11,7 @@ use super::{
 // Annoyingly isn't in any other official documentation :|
 //
 // For the enum values see src/nvim/api/private/defs.h 0.10.0 l:93
-#[derive(Default)]
+#[derive(Clone, Default)]
 #[repr(C, u32)]
 pub enum Object {
     #[default]
@@ -114,11 +114,5 @@ impl Debug for Object {
             Object::Window(win) => write!(f, "{:?}", win),
             Object::TabPage(tp) => write!(f, "{:?}", tp),
         }
-    }
-}
-
-impl Clone for Object {
-    fn clone(&self) -> Self {
-        todo!("clone object")
     }
 }
