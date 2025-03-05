@@ -38,12 +38,12 @@ impl ChannelInfo {
         let id = d
             .get("id")
             .cloned()
-            .map(|obj| obj.as_int().unwrap())
+            .map(|obj| obj.to_int().unwrap())
             .unwrap();
         let argv = d
             .get("argv")
             .cloned()
-            .map(|obj| obj.as_array().unwrap())
+            .map(|obj| obj.to_array().unwrap())
             .unwrap();
         let stream = match d.get("stream").unwrap() {
             Object::String(s) => match s.as_thinstr().as_slice() {
@@ -72,10 +72,10 @@ impl ChannelInfo {
         let pty = d
             .get("pty")
             .cloned()
-            .map(|obj| obj.as_string().unwrap())
+            .map(|obj| obj.to_string().unwrap())
             .clone();
-        let buffer = d.get("buffer").cloned().map(|obj| obj.as_buffer().unwrap());
-        let client = d.get("client").cloned().map(|obj| obj.as_dict().unwrap());
+        let buffer = d.get("buffer").cloned().map(|obj| obj.to_buffer().unwrap());
+        let client = d.get("client").cloned().map(|obj| obj.to_dict().unwrap());
 
         Self {
             id,

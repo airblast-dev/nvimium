@@ -29,42 +29,42 @@ pub enum Object {
 }
 
 impl Object {
-    pub fn as_bool(self) -> Option<Boolean> {
+    pub fn to_bool(self) -> Option<Boolean> {
         match self {
             Object::Bool(b) => Some(b),
             _ => None,
         }
     }
 
-    pub fn as_int(self) -> Option<Integer> {
+    pub fn to_int(self) -> Option<Integer> {
         match self {
             Self::Integer(i) => Some(i),
             _ => None,
         }
     }
 
-    pub fn as_float(self) -> Option<Float> {
+    pub fn to_float(self) -> Option<Float> {
         match self {
             Object::Float(f) => Some(f),
             _ => None,
         }
     }
 
-    pub fn as_string(self) -> Option<OwnedThinString> {
+    pub fn to_string(self) -> Option<OwnedThinString> {
         match self {
             Self::String(s) => Some(s),
             _ => None,
         }
     }
 
-    pub fn as_array(self) -> Option<Array> {
+    pub fn to_array(self) -> Option<Array> {
         match self {
             Self::Array(a) => Some(a),
             _ => None,
         }
     }
 
-    pub fn as_dict(self) -> Option<Dictionary> {
+    pub fn to_dict(self) -> Option<Dictionary> {
         match self {
             Self::Dict(d) => Some(d),
             _ => None,
@@ -73,25 +73,25 @@ impl Object {
 
     // TODO: complete this after adding lua integration
     #[doc(hidden)]
-    fn as_luaref(self) -> Option<()> {
+    fn to_luaref(self) -> Option<()> {
         todo!()
     }
 
-    pub fn as_buffer(self) -> Option<Buffer> {
+    pub fn to_buffer(self) -> Option<Buffer> {
         match self {
             Self::Buffer(b) => Some(b),
             _ => None,
         }
     }
 
-    pub fn as_window(self) -> Option<Window> {
+    pub fn to_window(self) -> Option<Window> {
         match self {
             Self::Window(w) => Some(w),
             _ => None,
         }
     }
 
-    pub fn as_tabpage(self) -> Option<TabPage> {
+    pub fn to_tabpage(self) -> Option<TabPage> {
         match self {
             Self::TabPage(t) => Some(t),
             _ => None,
