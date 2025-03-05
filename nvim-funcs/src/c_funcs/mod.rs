@@ -64,7 +64,7 @@ extern "C" {
     pub fn nvim_get_color_by_name<'a>(name: ThinString<'a>) -> Integer;
     // the color names returned are not owned, to avoid freeing a const value deal with the
     // deallocation of the Dictionary manually
-    pub fn nvim_get_color_map(arena: *mut Arena) -> MaybeUninit<ManuallyDrop<Dictionary>>;
+    pub fn nvim_get_color_map(arena: *mut Arena) -> ManuallyDrop<Dictionary>;
     pub fn nvim_get_current_buf() -> Buffer;
     pub fn nvim_get_current_line(
         arena: *mut Arena,
