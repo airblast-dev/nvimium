@@ -569,7 +569,7 @@ impl Debug for ThinString<'_> {
     }
 }
 
-impl<'a> Borrow<[u8]> for ThinString<'a> {
+impl Borrow<[u8]> for ThinString<'_> {
     fn borrow(&self) -> &[u8] {
         self.as_slice_with_null()
     }
@@ -748,25 +748,25 @@ impl PartialEq<&str> for OwnedThinString {
     }
 }
 
-impl<'a> PartialEq<OwnedThinString> for str {
+impl PartialEq<OwnedThinString> for str {
     fn eq(&self, other: &OwnedThinString) -> bool {
         self.as_bytes() == other.0.as_slice()
     }
 }
 
-impl<'a> PartialEq<OwnedThinString> for &str {
+impl PartialEq<OwnedThinString> for &str {
     fn eq(&self, other: &OwnedThinString) -> bool {
         self.as_bytes() == other.0.as_slice()
     }
 }
 
-impl<'a> PartialEq<OwnedThinString> for [u8] {
+impl PartialEq<OwnedThinString> for [u8] {
     fn eq(&self, other: &OwnedThinString) -> bool {
         self == other.0.as_slice()
     }
 }
 
-impl<'a> PartialEq<OwnedThinString> for &[u8] {
+impl PartialEq<OwnedThinString> for &[u8] {
     fn eq(&self, other: &OwnedThinString) -> bool {
         *self == other.0.as_slice()
     }
