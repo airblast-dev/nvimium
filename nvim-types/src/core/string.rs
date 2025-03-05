@@ -433,6 +433,24 @@ impl PartialEq<OwnedThinString> for String {
     }
 }
 
+impl PartialOrd for String {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.as_thinstr().partial_cmp(&other.as_thinstr())
+    }
+}
+
+impl PartialOrd<ThinString<'_>> for String {
+    fn partial_cmp(&self, other: &ThinString<'_>) -> Option<std::cmp::Ordering> {
+        self.as_thinstr().partial_cmp(other)
+    }
+}
+
+impl PartialOrd<OwnedThinString> for String {
+    fn partial_cmp(&self, other: &OwnedThinString) -> Option<std::cmp::Ordering> {
+        self.as_thinstr().partial_cmp(&other.as_thinstr())
+    }
+}
+
 unsafe impl Sync for String {}
 unsafe impl Send for String {}
 
@@ -629,6 +647,26 @@ impl PartialEq<OwnedThinString> for ThinString<'_> {
     }
 }
 
+impl PartialOrd for ThinString<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        let s1 = core::str::from_utf8(self.as_thinstr().as_slice()).ok()?;
+        let s2 = core::str::from_utf8(other.as_thinstr().as_slice()).ok()?;
+        s1.partial_cmp(s2)
+    }
+}
+
+impl PartialOrd<String> for ThinString<'_> {
+    fn partial_cmp(&self, other: &String) -> Option<std::cmp::Ordering> {
+        self.partial_cmp(&other.as_thinstr())
+    }
+}
+
+impl PartialOrd<OwnedThinString> for ThinString<'_> {
+    fn partial_cmp(&self, other: &OwnedThinString) -> Option<std::cmp::Ordering> {
+        self.partial_cmp(&other.as_thinstr())
+    }
+}
+
 impl Default for ThinString<'static> {
     fn default() -> Self {
         Self {
@@ -684,7 +722,7 @@ pub enum ThinStringError {
 }
 
 #[repr(transparent)]
-#[derive(Debug)]
+#[derive(Debug, Eq)]
 pub struct OwnedThinString(ThinString<'static>);
 
 impl Clone for OwnedThinString {
@@ -710,6 +748,12 @@ impl OwnedThinString {
             __p: PhantomData::<&'a u8>,
             ..self.0
         }
+    }
+
+    pub(crate) fn leak(self) -> ThinString<'static> {
+        let th = self.0;
+        core::mem::forget(self);
+        th
     }
 }
 
@@ -781,6 +825,24 @@ impl<'a> PartialEq<ThinString<'a>> for OwnedThinString {
 impl PartialEq<String> for OwnedThinString {
     fn eq(&self, other: &String) -> bool {
         self.as_thinstr() == other.as_thinstr()
+    }
+}
+
+impl PartialOrd for OwnedThinString {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.as_thinstr().partial_cmp(&other.as_thinstr())
+    }
+}
+
+impl PartialOrd<String> for OwnedThinString {
+    fn partial_cmp(&self, other: &String) -> Option<std::cmp::Ordering> {
+        self.as_thinstr().partial_cmp(&other.as_thinstr())
+    }
+}
+
+impl PartialOrd<ThinString<'_>> for OwnedThinString {
+    fn partial_cmp(&self, other: &ThinString<'_>) -> Option<std::cmp::Ordering> {
+        self.as_thinstr().partial_cmp(other)
     }
 }
 
