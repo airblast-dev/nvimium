@@ -1,3 +1,5 @@
+use std::{mem::ManuallyDrop, ops::DerefMut};
+
 use macros::tri;
 use nvim_types::{
     array::Array,
@@ -8,7 +10,9 @@ use nvim_types::{
     func_types::{feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
     object::Object,
     opts::{echo::EchoOpts, eval_statusline::EvalStatusLineOpts},
-    returns::{channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict},
+    returns::{
+        channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict,
+    },
     string::AsThinString,
     Boolean, Integer,
 };
@@ -129,6 +133,17 @@ pub fn nvim_get_color_by_name<S: AsThinString>(name: S) -> Option<Integer> {
 }
 
 pub fn nvim_get_color_map() -> ColorMap {
-    let color_dict = unsafe { c_funcs::nvim_get_color_map(core::ptr::null_mut()) };
-    ColorMap::from_c_func_ret(color_dict)
+    if !ColorMap::is_loaded() {
+        #[cold]
+        #[inline(never)]
+        fn once() {}
+        once();
+        let mut color_dict = unsafe { c_funcs::nvim_get_color_map(core::ptr::null_mut()) };
+        let cm = ColorMap::from_c_func_ret(color_dict.deref_mut());
+        assert_eq!(color_dict.len(), 0);
+        unsafe { ManuallyDrop::drop(&mut color_dict) };
+        cm
+    } else {
+        ColorMap::initialized()
+    }
 }
