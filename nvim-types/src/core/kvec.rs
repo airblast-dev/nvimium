@@ -55,8 +55,7 @@ impl<T> KVec<T> {
         }
         self.slice_check();
 
-        // since self.ptr is non null, a slice is always valid since [`NonNull::dangling`] is
-        // correctly aligned.
+        // SAFETY: self has at least one element stored this means self.ptr is non null
         unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
     }
 
@@ -69,6 +68,7 @@ impl<T> KVec<T> {
         }
         self.slice_check();
 
+        // SAFETY: self has at least one element stored this means self.ptr is non null
         unsafe { std::slice::from_raw_parts_mut(self.ptr, self.len) }
     }
 
@@ -82,6 +82,7 @@ impl<T> KVec<T> {
         }
         self.slice_check();
 
+        // SAFETY: self has at least one element stored this means self.ptr is non null
         unsafe {
             std::slice::from_raw_parts_mut(
                 self.ptr.add(self.len).cast::<MaybeUninit<T>>(),
@@ -156,6 +157,10 @@ impl<T> KVec<T> {
             let Some(byte_cap) = capacity.checked_mul(Self::T_SIZE) else {
                 alloc_failed();
             };
+
+            if byte_cap > isize::MAX as usize {
+                alloc_failed();
+            }
 
             // When the requested size is 0, malloc may return NULL or a dangling pointer.
             // To always have a non null pointer we check the capacity above.
