@@ -8,7 +8,7 @@ use nvim_types::{
     func_types::{feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
     object::Object,
     opts::{echo::EchoOpts, eval_statusline::EvalStatusLineOpts},
-    returns::{channel_info::ChannelInfo, eval_statusline::EvalStatusLineDict},
+    returns::{channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict},
     string::AsThinString,
     Boolean, Integer,
 };
@@ -126,4 +126,9 @@ pub fn nvim_get_chan_info(channel_id: u64, chan: Integer) -> Result<ChannelInfo,
 pub fn nvim_get_color_by_name<S: AsThinString>(name: S) -> Option<Integer> {
     let i = unsafe { c_funcs::nvim_get_color_by_name(name.as_thinstr()) };
     Some(i).filter(|i| *i != -1)
+}
+
+pub fn nvim_get_color_map() -> ColorMap {
+    let color_dict = unsafe { c_funcs::nvim_get_color_map(core::ptr::null_mut()) };
+    ColorMap::from_c_func_ret(color_dict)
 }
