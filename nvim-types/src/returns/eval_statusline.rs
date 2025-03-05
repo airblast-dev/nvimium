@@ -1,4 +1,4 @@
-use crate::{dictionary::Dictionary, kvec::KVec, object::Object, string::OwnedThinString, Integer};
+use crate::{dictionary::Dictionary, kvec::KVec, string::OwnedThinString, Integer};
 
 #[derive(Debug)]
 pub struct EvalStatusLineDict {
