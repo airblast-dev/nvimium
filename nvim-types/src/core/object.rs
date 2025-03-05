@@ -28,57 +28,73 @@ pub enum Object {
     TabPage(TabPage),
 }
 
-macro_rules! to_unchecked {
-    ( $( $ty:tt, $ident:ident ),+ $(,)?) => {
-        $(
-            #[inline]
-            pub(crate) unsafe fn $ident(self) -> $ty {
-                match self {
-                    Self::$ty(inner) => inner,
-                    _ => ::core::hint::unreachable_unchecked(),
-                }
-            }
-        )+
-    };
-}
-
 impl Object {
-    to_unchecked!(
-        Integer,
-        into_integer_unchecked,
-        Float,
-        into_float_unchecked,
-        Array,
-        into_array_unchecked,
-        Buffer,
-        into_buffer_unchecked,
-        Window,
-        into_window_unchecked,
-        TabPage,
-        into_tabpage_unchecked,
-    );
-
-    #[inline]
-    pub(crate) unsafe fn into_string_unchecked(self) -> OwnedThinString {
+    pub fn as_bool(self) -> Option<Boolean> {
         match self {
-            Self::String(s) => s,
-            _ => unsafe { core::hint::unreachable_unchecked() },
+            Object::Bool(b) => Some(b),
+            _ => None,
         }
     }
 
-    #[inline]
-    pub(crate) unsafe fn into_dict_unchecked(self) -> Dictionary {
+    pub fn as_int(self) -> Option<Integer> {
         match self {
-            Self::Dict(d) => d,
-            _ => unsafe { core::hint::unreachable_unchecked() },
+            Self::Integer(i) => Some(i),
+            _ => None,
         }
     }
 
-    #[inline]
-    pub(crate) unsafe fn into_bool_unchecked(self) -> Boolean {
+    pub fn as_float(self) -> Option<Float> {
         match self {
-            Self::Bool(d) => d,
-            _ => unsafe { core::hint::unreachable_unchecked() },
+            Object::Float(f) => Some(f),
+            _ => None,
+        }
+    }
+
+    pub fn as_string(self) -> Option<OwnedThinString> {
+        match self {
+            Self::String(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    pub fn as_array(self) -> Option<Array> {
+        match self {
+            Self::Array(a) => Some(a),
+            _ => None,
+        }
+    }
+
+    pub fn as_dict(self) -> Option<Dictionary> {
+        match self {
+            Self::Dict(d) => Some(d),
+            _ => None,
+        }
+    }
+
+    // TODO: complete this after adding lua integration
+    #[doc(hidden)]
+    fn as_luaref(self) -> Option<()> {
+        todo!()
+    }
+
+    pub fn as_buffer(self) -> Option<Buffer> {
+        match self {
+            Self::Buffer(b) => Some(b),
+            _ => None,
+        }
+    }
+
+    pub fn as_window(self) -> Option<Window> {
+        match self {
+            Self::Window(w) => Some(w),
+            _ => None,
+        }
+    }
+
+    pub fn as_tabpage(self) -> Option<TabPage> {
+        match self {
+            Self::TabPage(t) => Some(t),
+            _ => None,
         }
     }
 }

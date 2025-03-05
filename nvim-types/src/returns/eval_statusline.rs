@@ -15,19 +15,11 @@ pub struct HighlightItem {
 
 impl EvalStatusLineDict {
     pub fn from_c_func_ret(mut d: Dictionary) -> Self {
-        let s = unsafe {
-            d.remove_skip_key_drop("str")
-                .unwrap_unchecked()
-                .into_string_unchecked()
-        };
-        let width = unsafe {
-            d.remove_skip_key_drop("width")
-                .unwrap_unchecked()
-                .into_integer_unchecked()
-        };
+        let s = d.remove_skip_key_drop("str").unwrap().as_string().unwrap();
+        let width = d.remove_skip_key_drop("width").unwrap().as_int().unwrap();
         let Some(highlights) = d
             .remove_skip_key_drop("highlights")
-            .map(|ob| unsafe { Object::into_array_unchecked(ob).into_kvec() })
+            .map(|ob| ob.as_array().unwrap().into_kvec())
         else {
             return Self {
                 chars: s,
@@ -39,22 +31,18 @@ impl EvalStatusLineDict {
         let highlight_items = highlights
             .into_iter()
             .map(|ob| {
-                let mut d = unsafe { Object::into_dict_unchecked(ob) };
-                let start = unsafe {
-                    d.remove_skip_key_drop("start")
-                        .unwrap_unchecked()
-                        .into_integer_unchecked()
-                };
-                let group = unsafe {
-                    d.remove_skip_key_drop("group")
-                        .unwrap_unchecked()
-                        .into_string_unchecked()
-                };
+                let mut d = ob.as_dict().unwrap();
+                let start = d.remove_skip_key_drop("start").unwrap().as_int().unwrap();
+                let group = d
+                    .remove_skip_key_drop("group")
+                    .unwrap()
+                    .as_string()
+                    .unwrap();
                 let hi = HighlightItem {
                     start,
                     // how long a group value may live is undefined, so we clone the value to an
                     // OwnedThinString to ensure the value can live as long as needed
-                    group: OwnedThinString::from(group.as_thinstr()),
+                    group: group.clone(),
                 };
                 core::mem::forget(group);
                 hi
