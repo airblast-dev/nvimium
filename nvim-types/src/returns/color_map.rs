@@ -89,3 +89,29 @@ impl ColorMap {
         Some(map[idx].1)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        dictionary::Dictionary,
+        object::Object,
+        string::{OwnedThinString, String},
+    };
+
+    use super::ColorMap;
+
+    #[test]
+    fn color_map_from_c_func_ret() {
+        let mut dict = Dictionary::default();
+        let colors: [(OwnedThinString, Object); 3] =
+            [("red", 255 << 16), ("green", 255 << 8), ("blue", 255)]
+                .map(|(s, c)| (OwnedThinString::from(String::from(s)), Object::Integer(c)));
+        for (name, val) in colors {
+            dict.insert(name, val);
+        }
+
+        {
+            let _c_map = ColorMap::from_c_func_ret(&mut dict);
+        }
+    }
+}
