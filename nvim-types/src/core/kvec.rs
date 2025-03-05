@@ -396,6 +396,7 @@ impl<T: Clone> Clone for KVec<T> {
 
     fn clone_from(&mut self, source: &Self) {
         let ptr = self.as_ptr();
+        // TODO: replace with shrink_* methods
         if !ptr.is_null() {
             unsafe {
                 core::ptr::slice_from_raw_parts_mut(self.as_ptr(), self.len()).drop_in_place();
