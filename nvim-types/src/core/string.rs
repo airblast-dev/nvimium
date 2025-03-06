@@ -249,7 +249,10 @@ impl String {
     /// FFI boundry where the foreign function will free it. Almost always [`String::as_thinstr`]
     /// should be preferred unless you really know you need this.
     pub(crate) fn leak(self) -> ThinString<'static> {
-        let th = unsafe { ThinString::new(self.len, self.data) };
+        // SAFETY: we do not drop the allocation which leaks the string
+        //
+        // use as_thinstr for null pointer check
+        let th: ThinString<'static> = unsafe { core::mem::transmute(self.as_thinstr()) };
         std::mem::forget(self);
         th
     }
@@ -761,7 +764,10 @@ impl OwnedThinString {
     }
 
     pub(crate) fn leak(self) -> ThinString<'static> {
-        let th = self.0;
+        // SAFETY: we do not drop the allocation which leaks the string
+        //
+        // use as_thinstr for null pointer check
+        let th: ThinString<'static> = unsafe { core::mem::transmute(self.as_thinstr()) };
         core::mem::forget(self);
         th
     }
@@ -891,10 +897,6 @@ unsafe impl AsThinString for String {
 
 unsafe impl AsThinString for ThinString<'_> {
     fn as_thinstr(&self) -> ThinString<'_> {
-        debug_assert!(
-            self.data.is_null(),
-            "ThinString pointer should never be null"
-        );
         if self.data.is_null() {
             EMPTY
         } else {
