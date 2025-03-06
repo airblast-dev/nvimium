@@ -2,19 +2,9 @@ use std::{mem::ManuallyDrop, ops::DerefMut};
 
 use macros::tri;
 use nvim_types::{
-    array::Array,
-    borrowed::Borrowed,
-    buffer::Buffer,
-    call_site::LUA_INTERNAL_CALL,
-    error::Error,
-    func_types::{feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
-    object::Object,
-    opts::{echo::EchoOpts, eval_statusline::EvalStatusLineOpts},
-    returns::{
+    array::Array, borrowed::Borrowed, buffer::Buffer, call_site::LUA_INTERNAL_CALL, error::Error, func_types::{feedkeys::FeedKeysMode, keymap_mode::KeyMapMode}, object::Object, opts::{echo::EchoOpts, eval_statusline::EvalStatusLineOpts}, returns::{
         channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict,
-    },
-    string::AsThinString,
-    Boolean, Integer,
+    }, string::{AsThinString, OwnedThinString}, tab_page::TabPage, window::Window, Boolean, Integer
 };
 
 // TODO: many of the functions exposed use static mutability internally
@@ -146,4 +136,27 @@ pub fn nvim_get_color_map() -> ColorMap {
     } else {
         ColorMap::initialized()
     }
+}
+
+pub fn nvim_get_current_buf() -> Buffer {
+    unsafe { c_funcs::nvim_get_current_buf() }
+}
+
+pub fn nvim_get_current_line() -> Result<OwnedThinString, Error> {
+    unsafe {
+        tri! {
+            let mut err;
+            c_funcs::nvim_get_current_line(core::ptr::null_mut(), &mut err),
+            Ok(res) => Ok(res.assume_init())
+        }
+    }
+}
+
+pub fn nvim_get_current_tabpage() -> TabPage {
+    unsafe { c_funcs::nvim_get_current_tabpage() }
+}
+
+
+pub fn nvim_get_current_win() -> Window {
+    unsafe { c_funcs::nvim_get_current_win() }
 }
