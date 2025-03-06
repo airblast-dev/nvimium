@@ -47,6 +47,8 @@ use std::{
 use libc::size_t;
 use panics::{alloc_failed, not_null_terminated};
 
+static EMPTY: ThinString<'static> = ThinString::from_null_terminated(c"".to_bytes_with_nul());
+
 /// A String type passed to wrapper functions
 ///
 /// Compared to [`std`] types, [`String`] is like a null terminated [`Vec<u8>`].
@@ -234,7 +236,11 @@ impl String {
     /// instead of [`String`].
     #[inline(always)]
     pub const fn as_thinstr(&self) -> ThinString {
-        unsafe { ThinString::new(self.len, self.data) }
+        if self.data.is_null() {
+            EMPTY
+        } else {
+            unsafe { ThinString::new(self.len, self.data) }
+        }
     }
 
     /// Leaks the [`String`]
@@ -744,9 +750,13 @@ impl Clone for OwnedThinString {
 
 impl OwnedThinString {
     pub fn as_thinstr<'a>(&'a self) -> ThinString<'a> {
-        ThinString {
-            __p: PhantomData::<&'a u8>,
-            ..self.0
+        if self.0.data.is_null() {
+            EMPTY
+        } else {
+            ThinString {
+                __p: PhantomData::<&'a u8>,
+                ..self.0
+            }
         }
     }
 
@@ -869,8 +879,6 @@ impl Drop for OwnedThinString {
 /// - The pointer in [`ThinString`] must not be null.
 /// - The string that the pointer points to must be minimally a single null byte.
 /// - The length must be the length of the allocation without the null byte.
-/// - The lifetime on the return value must match the owners lifetime.
-/// - The Self type must point to the same address as the returned [`ThinString`].
 pub unsafe trait AsThinString {
     fn as_thinstr(&self) -> ThinString<'_>;
 }
@@ -883,7 +891,15 @@ unsafe impl AsThinString for String {
 
 unsafe impl AsThinString for ThinString<'_> {
     fn as_thinstr(&self) -> ThinString<'_> {
-        *self
+        debug_assert!(
+            self.data.is_null(),
+            "ThinString pointer should never be null"
+        );
+        if self.data.is_null() {
+            EMPTY
+        } else {
+            *self
+        }
     }
 }
 
