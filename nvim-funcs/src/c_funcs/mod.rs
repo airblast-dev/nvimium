@@ -18,8 +18,13 @@ use nvim_types::{
 };
 use std::mem::ManuallyDrop;
 
-// Any of the functions can only take a [`ThinString`] or [`OwnedThinString`]. As the layout and
-// size of [`String`] is not the same.
+// Some of the neovim functions do not accept a null pointer with strings and call functions
+// such as strdup using the provided pointer. While this isn't a problem for strings constructed in
+// nvimium, it is a problem if the neovim decides to return a null pointing string and the user
+// provides it as an argument to a neovim function. [`AsThinString`] guarantees that the returned
+// value never contains a null pointer this means passing it to an FFI boundary is always safe.
+//
+// TLDR; every function here can only accept a ThinString as its string type.
 extern "C" {
     pub fn nvim_create_buf(listed: Boolean, scratch: Boolean, err: *mut Error) -> Buffer;
     pub fn nvim_del_current_line(arena: *mut Arena, err: *mut Error);
