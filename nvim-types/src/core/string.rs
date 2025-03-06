@@ -49,7 +49,7 @@ use panics::{alloc_failed, not_null_terminated};
 
 static EMPTY: ThinString<'static> = ThinString::from_null_terminated(c"".to_bytes_with_nul());
 
-/// A String type passed to wrapper functions
+/// A String type that can be passed to wrapper functions
 ///
 /// Compared to [`std`] types, [`String`] is like a null terminated [`Vec<u8>`].
 ///
@@ -65,7 +65,8 @@ static EMPTY: ThinString<'static> = ThinString::from_null_terminated(c"".to_byte
 /// If you are only interacting with functions defined in this library you can safely skip this
 /// section. These are only important if you are calling FFI functions directly.
 ///
-/// This struct not exactly the same as the String type in neovim, that would be [`ThinString`].
+/// This struct not exactly the same as the String type in neovim, that would be [`ThinString`] and
+/// [`OwnedThinString`]. 
 ///
 /// This is due to a few reasons:
 /// - The layout does not allow us to specify the capacity in it fields, this causes issues as it
@@ -730,6 +731,13 @@ pub enum ThinStringError {
     Empty,
 }
 
+/// An owned [`ThinString`]
+///
+/// Compared to [`std`] this is similar to a [`Box<str>`] where the capacity is unknown.
+///
+/// This type is guaranteed to have the same layout as [`ThinString`]. It is also the type stored
+/// in [`super::array::Array`] and [`super::dictionary::Dictionary`].
+// TODO: add more info
 #[repr(transparent)]
 #[derive(Debug, Eq)]
 pub struct OwnedThinString(ThinString<'static>);
@@ -884,7 +892,7 @@ impl Drop for OwnedThinString {
 /// Implementing requires the following variants to be upheld
 /// - The pointer in [`ThinString`] must not be null.
 /// - The string that the pointer points to must be minimally a single null byte.
-/// - The length must be the length of the allocation without the null byte.
+/// - The length must be the length of the string without the null byte.
 pub unsafe trait AsThinString {
     fn as_thinstr(&self) -> ThinString<'_>;
 }
