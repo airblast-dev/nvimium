@@ -1,4 +1,11 @@
-use std::{mem::ManuallyDrop, ops::DerefMut};
+use std::{
+    cell::Cell,
+    marker::PhantomData,
+    mem::ManuallyDrop,
+    ops::DerefMut,
+    sync::{Mutex, TryLockError},
+    thread::ThreadId,
+};
 
 use macros::tri;
 use nvim_types::{
@@ -170,4 +177,40 @@ pub fn nvim_get_current_tabpage() -> TabPage {
 
 pub fn nvim_get_current_win() -> Window {
     unsafe { c_funcs::nvim_get_current_win() }
+}
+
+pub fn nvim_exec<S: AsThinString>(src: S, output: Boolean) -> Result<(), Error> {
+    unsafe {
+        tri! {
+            let mut err;
+            c_funcs::nvim_exec(LUA_INTERNAL_CALL, src.as_thinstr(), output, &mut err),
+        }
+    }
+}
+
+#[cfg(feature = "testing")]
+mod tests {
+    use super::*;
+    use nvim_types::string::String;
+
+    #[nvim_test_macro::nvim_test(exit_call = nvim_exec)]
+    pub fn test_nvim_create_current_buf() {
+        let buf = nvim_get_current_buf();
+        assert_eq!(buf.as_int(), 1);
+        let buf = nvim_create_buf(true, true).unwrap();
+        assert_eq!(buf.as_int(), 2);
+    }
+
+    #[nvim_test_macro::nvim_test(exit_call = nvim_exec)]
+    pub fn test_nvim_get_color_map() {
+        let map = nvim_get_color_map();
+        let color = map
+            .get_with_name(String::from("Blue").as_thinstr())
+            .expect("color not found");
+        assert_eq!([0, 0, 255], color);
+        let color = map
+            .get_with_name(String::from("Red").as_thinstr())
+            .expect("color not found");
+        assert_eq!([255, 0, 0], color);
+    }
 }

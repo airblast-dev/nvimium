@@ -30,6 +30,9 @@
 #[macro_export]
 macro_rules! plugin {
     ($open:ident, $ident:ident) => {
+        #[cfg(test)]
+        pub const CDYLIB_TEST_PATH: ::std::sync::LazyLock<core::path::PathBuf> =
+            ::std::sync::LazyLock(::nvimium::test_cdylib::build_current_project);
         const _: () = const {
             const fn panic() -> ! {
                 ::core::panic!();

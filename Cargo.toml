@@ -1,12 +1,15 @@
 [package]
-name = "nvim-rs"
+name = "nvimium"
 version = "0.1.0"
 edition = "2021"
+
 
 [dependencies]
 nvim-types = { workspace = true }
 nvim-funcs = { workspace = true }
+nvim-test = { workspace = true }
 macros = { workspace = true }
+test-cdylib = { workspace = true }
 plugin = { path = "./plugin" }
 
 [workspace.dependencies]
@@ -15,13 +18,16 @@ bytemuck = { version = "1.22.0", features = ["must_cast"] }
 panics = { path = "./panics" }
 nvim-types = { path = "./nvim-types/" }
 nvim-funcs = { path = "./nvim-funcs/" }
+nvim-test = { path = "./nvim-test/" }
 macros = { path = "./macros/" }
+nvim-test-macro = { path = "./nvim-test-macro", default-features = false }
+test-cdylib = { path = "../test-cdylib/" }
 
 [dev-dependencies]
 trybuild = { version = "1.0.101" }
 
 [workspace]
-members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros"]
+members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros" , "nvim-test"]
 
 [profile.dev]
 incremental = true
@@ -30,3 +36,7 @@ incremental = true
 strip = "debuginfo"
 lto = true
 codegen-units = 1
+
+[features]
+default = ["testing"]
+testing = ["nvim-funcs/testing"]

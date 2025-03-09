@@ -138,4 +138,5 @@ extern "C" {
     ) -> MaybeUninit<Object>;
     // TODO
     pub fn nvim_open_term(buffer: Buffer);
+    pub fn nvim_exec<'a>(channel_id: u64, src: ThinString<'a>, output: Boolean, err: *mut Error);
 }

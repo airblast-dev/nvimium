@@ -7,3 +7,12 @@ edition = "2021"
 libc = { workspace = true }
 nvim-types = { workspace = true }
 macros = { workspace = true }
+nvim-test-macro = { workspace = true }
+nvim-test = { workspace = true }
+test-cdylib = { workspace = true }
+
+[features]
+testing = ["nvim-test-macro/testing"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
