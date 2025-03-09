@@ -61,7 +61,7 @@ impl<T: AsRef<[FeedKeysModeKind]>> From<T> for FeedKeysMode {
 
 impl Default for FeedKeysMode {
     fn default() -> Self {
-        Self(String::from([FeedKeysModeKind::default() as u8]))
+        Self(String::default())
     }
 }
 

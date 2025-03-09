@@ -17,7 +17,7 @@ impl Debug for Error {
         let cs = if !self.msg.is_null() {
             unsafe { CStr::from_ptr(self.msg.cast()) }
         } else {
-            CStr::from_bytes_until_nul(c"null ptr".to_bytes()).unwrap()
+            c"null ptr"
         };
         write!(f, "{:?}: {:?}", self.kind, cs)
     }
