@@ -1,11 +1,4 @@
-use std::{
-    cell::Cell,
-    marker::PhantomData,
-    mem::ManuallyDrop,
-    ops::DerefMut,
-    sync::{Mutex, TryLockError},
-    thread::ThreadId,
-};
+use std::{mem::ManuallyDrop, ops::DerefMut};
 
 use macros::tri;
 use nvim_types::{
