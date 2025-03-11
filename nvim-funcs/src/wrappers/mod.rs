@@ -12,7 +12,7 @@ use nvim_types::{
     object::Object,
     opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
-        get_hl_ns::GetHlNsOpts,
+        get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts,
     },
     returns::{
         channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict,
@@ -208,6 +208,18 @@ pub fn nvim_get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpaceId, Error> {
 pub fn nvim_get_keymap(mode: KeyMapMode) -> Array {
     let arr = unsafe { c_funcs::nvim_get_keymap(mode, core::ptr::null_mut()) };
     ManuallyDrop::into_inner(arr.clone())
+}
+
+pub fn nvim_get_mark<S: AsThinString>(name: S) -> Result<Array, Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_get_mark(name.as_thinstr(), &GetMarkOpts::default(), core::ptr::null_mut(), &mut err)},
+        Ok(arr) => {
+            let arr = unsafe { ManuallyDrop::new(arr.assume_init()) };
+            let ret = ManuallyDrop::into_inner(arr.clone());
+            Ok(ret)
+        }
+    }
 }
 
 pub fn nvim_exec<S: AsThinString>(src: S, output: Boolean) -> Result<(), Error> {
