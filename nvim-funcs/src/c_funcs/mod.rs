@@ -14,7 +14,7 @@ use nvim_types::{
     string::{OwnedThinString, ThinString},
     tab_page::TabPage,
     window::Window,
-    Arena, Boolean, Integer,
+    Arena, Boolean, Integer, NameSpaceId,
 };
 use std::mem::ManuallyDrop;
 
@@ -80,13 +80,13 @@ extern "C" {
     // TODO: replace with custom struct or clone and partially free the returned values stored in
     // the dictionary have lifetimes that are known at runtime
     pub fn nvim_get_hl<'a>(
-        ns_id: Integer,
+        ns_id: NameSpaceId,
         opts: *const GetHlOpts<'a>,
-        array: *mut Arena,
+        arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Dictionary>;
-    pub fn nvim_get_hl_ns<'a>(opts: *const GetHlNsOpts, err: *mut Error) -> Integer;
-    pub fn nvim_get_keymap(mode: KeyMapMode) -> MaybeUninit<Array>;
+    pub fn nvim_get_hl_ns(opts: *const GetHlNsOpts, err: *mut Error) -> MaybeUninit<NameSpaceId>;
+    pub fn nvim_get_keymap(mode: KeyMapMode, arena: *mut Arena) -> ManuallyDrop<Array>;
     pub fn nvim_get_mark<'a>(
         name: ThinString<'a>,
         opts: GetMarkOpts,
@@ -137,6 +137,6 @@ extern "C" {
         err: *mut Error,
     ) -> MaybeUninit<Object>;
     // TODO
-    pub fn nvim_open_term(buffer: Buffer);
+    pub fn nvim_open_term(buffer: Buffer, opts: *const OpenTermOpts);
     pub fn nvim_exec<'a>(channel_id: u64, src: ThinString<'a>, output: Boolean, err: *mut Error);
 }
