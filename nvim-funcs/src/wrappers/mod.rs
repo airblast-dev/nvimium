@@ -9,6 +9,7 @@ use nvim_types::{
     dictionary::Dictionary,
     error::Error,
     func_types::{feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
+    namespace::NameSpace,
     object::Object,
     opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
@@ -21,7 +22,7 @@ use nvim_types::{
     string::{AsThinString, OwnedThinString},
     tab_page::TabPage,
     window::Window,
-    Boolean, Integer, NameSpaceId,
+    Boolean, Integer,
 };
 
 // TODO: many of the functions exposed use static mutability internally
@@ -177,10 +178,7 @@ pub fn nvim_get_current_win() -> Window {
     unsafe { c_funcs::nvim_get_current_win() }
 }
 
-pub fn nvim_get_hl<S: AsThinString>(
-    ns: NameSpaceId,
-    opts: &GetHlOpts,
-) -> Result<Dictionary, Error> {
+pub fn nvim_get_hl<S: AsThinString>(ns: NameSpace, opts: &GetHlOpts) -> Result<Dictionary, Error> {
     tri! {
         let mut err;
         unsafe { c_funcs::nvim_get_hl(ns, opts, core::ptr::null_mut(), &mut err) },
@@ -198,7 +196,7 @@ pub fn nvim_get_hl<S: AsThinString>(
     }
 }
 
-pub fn nvim_get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpaceId, Error> {
+pub fn nvim_get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpace, Error> {
     tri! {
         let mut err;
         unsafe { c_funcs::nvim_get_hl_ns(opts, &mut err) },

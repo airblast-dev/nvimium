@@ -7,6 +7,7 @@ use nvim_types::{
     dictionary::Dictionary,
     error::Error,
     func_types::keymap_mode::KeyMapMode,
+    namespace::NameSpace,
     object::Object,
     opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
@@ -15,7 +16,7 @@ use nvim_types::{
     string::{OwnedThinString, ThinString},
     tab_page::TabPage,
     window::Window,
-    Arena, Boolean, Integer, NameSpaceId,
+    Arena, Boolean, Integer,
 };
 use std::mem::ManuallyDrop;
 
@@ -81,12 +82,12 @@ extern "C" {
     // TODO: replace with custom struct or clone and partially free the returned values stored in
     // the dictionary have lifetimes that are known at runtime
     pub fn nvim_get_hl<'a>(
-        ns_id: NameSpaceId,
+        ns_id: NameSpace,
         opts: *const GetHlOpts<'a>,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Dictionary>;
-    pub fn nvim_get_hl_ns(opts: *const GetHlNsOpts, err: *mut Error) -> MaybeUninit<NameSpaceId>;
+    pub fn nvim_get_hl_ns(opts: *const GetHlNsOpts, err: *mut Error) -> MaybeUninit<NameSpace>;
     pub fn nvim_get_keymap(mode: KeyMapMode, arena: *mut Arena) -> ManuallyDrop<Array>;
     pub fn nvim_get_mark<'a>(
         name: ThinString<'a>,
