@@ -14,3 +14,5 @@ pub type Integer = i64;
 pub type Boolean = bool;
 pub type Float = libc::c_double;
 pub type HandleT = libc::c_int;
+pub type LuaRef = libc::c_int;
+pub type NameSpaceId = HandleT;

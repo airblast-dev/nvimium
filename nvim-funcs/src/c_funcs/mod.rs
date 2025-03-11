@@ -10,7 +10,7 @@ use nvim_types::{
     object::Object,
     opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
-        get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts,
+        get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts, paste::PastePhase,
     },
     string::{OwnedThinString, ThinString},
     tab_page::TabPage,
@@ -127,8 +127,8 @@ extern "C" {
         col: Integer,
         err: *mut Error,
     );
-    pub fn nvim_list_bufs(arena: *mut Arena) -> MaybeUninit<Array>;
-    pub fn nvim_list_chans(arena: *mut Arena) -> MaybeUninit<Array>;
+    pub fn nvim_list_bufs(arena: *mut Arena) -> Array;
+    pub fn nvim_list_chans(arena: *mut Arena) -> Array;
     pub fn nvim_list_runtime_paths(arena: *mut Arena, err: *mut Error) -> MaybeUninit<Array>;
     pub fn nvim_list_tabpages(arena: *mut Arena) -> MaybeUninit<Array>;
     pub fn nvim_list_uis(arena: *mut Arena) -> MaybeUninit<Array>;
@@ -139,5 +139,30 @@ extern "C" {
     ) -> MaybeUninit<Object>;
     // TODO
     pub fn nvim_open_term(buffer: Buffer, opts: *const OpenTermOpts);
-    pub fn nvim_exec<'a>(channel_id: u64, src: ThinString<'a>, output: Boolean, err: *mut Error);
+    pub fn nvim_paste<'a>(
+        src: ThinString<'a>,
+        crlf: Boolean,
+        phase: PastePhase,
+        arena: *mut Arena,
+        err: *mut Error,
+    ) -> Boolean;
+
+
+
+
+    // these should come later
+    // TODO: use proper opts type
+    pub fn nvim_exec2<'a>(
+        channel_id: Channel,
+        src: ThinString<'a>,
+        opts: Dictionary,
+        err: *mut Error,
+    );
+    // TODO: use proper opts type
+    pub fn nvim_exec<'a>(
+        channel_id: Channel,
+        src: ThinString<'a>,
+        output: Boolean,
+        err: *mut Error,
+    );
 }
