@@ -1,7 +1,7 @@
 use super::HandleT;
 
 #[repr(transparent)]
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 pub struct Buffer(HandleT);
 
 impl Buffer {
