@@ -118,7 +118,7 @@ extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
-    pub fn nvim_input<'a>(keys: ThinString<'a>) -> Integer;
+    pub fn nvim_input<'a>(channel: Channel, keys: ThinString<'a>) -> Integer;
     pub fn nvim_input_mouse<'a>(
         button: ThinString<'a>,
         action: ThinString<'a>,
@@ -131,25 +131,34 @@ extern "C" {
     pub fn nvim_list_bufs(arena: *mut Arena) -> Array;
     pub fn nvim_list_chans(arena: *mut Arena) -> Array;
     pub fn nvim_list_runtime_paths(arena: *mut Arena, err: *mut Error) -> MaybeUninit<Array>;
-    pub fn nvim_list_tabpages(arena: *mut Arena) -> MaybeUninit<Array>;
-    pub fn nvim_list_uis(arena: *mut Arena) -> MaybeUninit<Array>;
-    pub fn nvim_list_wins(arena: *mut Arena) -> MaybeUninit<Array>;
-    pub fn nvim_load_context<'a>(
-        dict: Borrowed<'a, Dictionary>,
-        err: *mut Error,
-    ) -> MaybeUninit<Object>;
+    pub fn nvim_list_tabpages(arena: *mut Arena) -> Array;
+    pub fn nvim_list_uis(arena: *mut Arena) -> ManuallyDrop<Array>;
+    pub fn nvim_list_wins(arena: *mut Arena) -> Array;
+    pub fn nvim_load_context<'a>(dict: Borrowed<'a, Dictionary>, err: *mut Error) -> Object;
     // TODO
-    pub fn nvim_open_term(buffer: Buffer, opts: *const OpenTermOpts);
+    pub fn nvim_open_term(buffer: Buffer, opts: *const OpenTermOpts, err: *mut Error) -> Integer;
     pub fn nvim_paste<'a>(
+        channel: Channel,
         src: ThinString<'a>,
         crlf: Boolean,
         phase: PastePhase,
         arena: *mut Arena,
         err: *mut Error,
     ) -> Boolean;
-
-
-
+    pub fn nvim_put<'a>(
+        lines: Borrowed<'a, Array>,
+        behavior: ThinString<'a>,
+        after: Boolean,
+        follow: Boolean,
+        arena: *mut Arena,
+        err: *mut Error,
+    );
+    pub fn nvim_replace_termcodes<'a>(
+        s: ThinString<'a>,
+        from_part: Boolean,
+        do_lt: Boolean,
+        special: Boolean,
+    ) -> OwnedThinString;
 
     // these should come later
     // TODO: use proper opts type

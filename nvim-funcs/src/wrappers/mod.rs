@@ -13,7 +13,7 @@ use nvim_types::{
     object::Object,
     opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
-        get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts,
+        get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts, paste::PastePhase,
     },
     returns::{
         channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict,
@@ -315,7 +315,7 @@ pub fn nvim_get_vvar<S: AsThinString>(name: S) -> Result<Object, Error> {
 }
 
 pub fn nvim_input<S: AsThinString>(keys: S) -> Integer {
-    unsafe { c_funcs::nvim_input(keys.as_thinstr()) }
+    unsafe { c_funcs::nvim_input(LUA_INTERNAL_CALL, keys.as_thinstr()) }
 }
 
 pub fn nvim_input_mouse<S: AsThinString, S1: AsThinString, S2: AsThinString>(
@@ -363,7 +363,76 @@ pub fn nvim_list_runtime_paths() -> Result<Array, Error> {
 }
 
 pub fn nvim_list_tabpages() -> Array {
-    unsafe { c_funcs::nvim_list_tabpages(core::ptr::null_mut()).assume_init() }
+    unsafe { c_funcs::nvim_list_tabpages(core::ptr::null_mut()) }
+}
+
+pub fn nvim_list_uis() -> Array {
+    // TODO: might be multiple memory leaks here
+    unsafe {
+        let uis = c_funcs::nvim_list_uis(core::ptr::null_mut());
+        ManuallyDrop::into_inner(uis.clone())
+    }
+}
+
+pub fn nvim_list_wins() -> Array {
+    unsafe { c_funcs::nvim_list_wins(core::ptr::null_mut()) }
+}
+
+pub fn nvim_load_context(ctx: &Dictionary) -> Result<Object, Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_load_context(ctx.into(), &mut err) }
+    }
+}
+
+pub fn nvim_open_term(buf: Buffer, opts: &OpenTermOpts) -> Result<Integer, Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_open_term(buf, opts, &mut err) }
+    }
+}
+
+pub fn nvim_paste<S: AsThinString>(
+    src: S,
+    crlf: Boolean,
+    phase: PastePhase,
+) -> Result<Boolean, Error> {
+    tri! {
+        let mut err;
+        unsafe {
+            c_funcs::nvim_paste(
+                LUA_INTERNAL_CALL,
+                src.as_thinstr(),
+                crlf,
+                phase,
+                core::ptr::null_mut(),
+                &mut err
+            )
+        }
+    }
+}
+
+pub fn nvim_put<S: AsThinString>(
+    arr: &Array,
+    r#type: S,
+    after: Boolean,
+    follow: Boolean,
+) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe {
+            c_funcs::nvim_put(arr.into(), r#type.as_thinstr(), after, follow, core::ptr::null_mut(), &mut err);
+        }
+    }
+}
+
+pub fn nvim_replace_termcodes<S: AsThinString>(
+    s: S,
+    from_part: Boolean,
+    do_lt: Boolean,
+    special: Boolean,
+) -> OwnedThinString {
+    unsafe { c_funcs::nvim_replace_termcodes(s.as_thinstr(), from_part, do_lt, special) }
 }
 
 pub fn nvim_exec<S: AsThinString>(src: S, output: Boolean) -> Result<(), Error> {
