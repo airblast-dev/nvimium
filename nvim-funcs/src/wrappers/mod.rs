@@ -14,6 +14,7 @@ use nvim_types::{
     opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
         get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts, paste::PastePhase,
+        select_popupmenu_item::SelectPopupMenuOpts,
     },
     returns::{
         channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict,
@@ -433,6 +434,18 @@ pub fn nvim_replace_termcodes<S: AsThinString>(
     special: Boolean,
 ) -> OwnedThinString {
     unsafe { c_funcs::nvim_replace_termcodes(s.as_thinstr(), from_part, do_lt, special) }
+}
+
+pub fn nvim_select_popupmenu_item(
+    item: Integer,
+    insert: Boolean,
+    finish: Boolean,
+    opts: &SelectPopupMenuOpts,
+) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_select_popupmenu_item(item, insert, finish, opts, &mut err) }
+    }
 }
 
 pub fn nvim_exec<S: AsThinString>(src: S, output: Boolean) -> Result<(), Error> {

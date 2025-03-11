@@ -12,6 +12,7 @@ use nvim_types::{
     opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
         get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts, paste::PastePhase,
+        select_popupmenu_item::SelectPopupMenuOpts,
     },
     string::{OwnedThinString, ThinString},
     tab_page::TabPage,
@@ -159,6 +160,13 @@ extern "C" {
         do_lt: Boolean,
         special: Boolean,
     ) -> OwnedThinString;
+    pub fn nvim_select_popupmenu_item(
+        item: Integer,
+        insert: Boolean,
+        finish: Boolean,
+        opts: *const SelectPopupMenuOpts,
+        err: *mut Error,
+    );
 
     // these should come later
     // TODO: use proper opts type
