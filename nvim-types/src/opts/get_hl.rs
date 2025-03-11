@@ -6,8 +6,8 @@ masked_builder!(
     #[repr(C)]
     #[derive(Default, Debug)]
     pub struct GetHlOpts<'a> {
-        name: ThinString<'a>,
         id: Integer,
+        name: ThinString<'a>,
         link: Boolean,
         create: Boolean,
     }
