@@ -89,7 +89,7 @@ extern "C" {
     pub fn nvim_get_keymap(mode: KeyMapMode, arena: *mut Arena) -> ManuallyDrop<Array>;
     pub fn nvim_get_mark<'a>(
         name: ThinString<'a>,
-        opts: GetMarkOpts,
+        opts: *const GetMarkOpts,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Array>;
