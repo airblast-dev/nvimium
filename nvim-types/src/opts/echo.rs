@@ -6,6 +6,7 @@ builder!(
     #[repr(C)]
     #[derive(Clone, Debug)]
     pub struct EchoOpts {
-        pub verbose: Boolean,
+        err: Boolean,
+        verbose: Boolean,
     }
 );
