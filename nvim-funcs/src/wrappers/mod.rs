@@ -5,7 +5,7 @@ use nvim_types::{
     array::Array,
     borrowed::Borrowed,
     buffer::Buffer,
-    call_site::LUA_INTERNAL_CALL,
+    call_site::{Channel, LUA_INTERNAL_CALL},
     dictionary::Dictionary,
     error::Error,
     func_types::{feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
@@ -124,10 +124,10 @@ pub fn nvim_feedkeys<S: AsThinString>(keys: S, mode: &FeedKeysMode, escape_ks: B
 }
 
 pub fn nvim_get_api_info() -> Borrowed<'static, Array> {
-    unsafe { c_funcs::nvim_get_api_info() }
+    unsafe { c_funcs::nvim_get_api_info(LUA_INTERNAL_CALL, core::ptr::null_mut()) }
 }
 
-pub fn nvim_get_chan_info(channel_id: u64, chan: Integer) -> Result<ChannelInfo, Error> {
+pub fn nvim_get_chan_info(channel_id: Channel, chan: Integer) -> Result<ChannelInfo, Error> {
     tri! {
         let mut err;
         unsafe { c_funcs::nvim_get_chan_info(channel_id, chan, core::ptr::null_mut(), &mut err) },
