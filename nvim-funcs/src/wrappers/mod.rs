@@ -6,17 +6,21 @@ use nvim_types::{
     borrowed::Borrowed,
     buffer::Buffer,
     call_site::LUA_INTERNAL_CALL,
+    dictionary::Dictionary,
     error::Error,
     func_types::{feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
     object::Object,
-    opts::{echo::EchoOpts, eval_statusline::EvalStatusLineOpts},
+    opts::{
+        echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
+        get_hl_ns::GetHlNsOpts,
+    },
     returns::{
         channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict,
     },
     string::{AsThinString, OwnedThinString},
     tab_page::TabPage,
     window::Window,
-    Boolean, Integer,
+    Boolean, Integer, NameSpaceId,
 };
 
 // TODO: many of the functions exposed use static mutability internally
@@ -170,6 +174,40 @@ pub fn nvim_get_current_tabpage() -> TabPage {
 
 pub fn nvim_get_current_win() -> Window {
     unsafe { c_funcs::nvim_get_current_win() }
+}
+
+pub fn nvim_get_hl<S: AsThinString>(
+    ns: NameSpaceId,
+    opts: &GetHlOpts,
+) -> Result<Dictionary, Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_get_hl(ns, opts, core::ptr::null_mut(), &mut err) },
+        Ok(dict) => {
+            // TODO: might be leaking some memory here
+            let mut dict = ManuallyDrop::new(unsafe { dict.assume_init() });
+            let res = Ok(ManuallyDrop::into_inner(dict.clone()));
+            unsafe {
+                dict.kvec_mut().set_len(0);
+                ManuallyDrop::drop(&mut dict);
+            };
+
+            res
+        }
+    }
+}
+
+pub fn nvim_get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpaceId, Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_get_hl_ns(opts, &mut err) },
+        Ok(ns) => Ok( unsafe { ns.assume_init() })
+    }
+}
+
+pub fn nvim_get_keymap(mode: KeyMapMode) -> Array {
+    let arr = unsafe { c_funcs::nvim_get_keymap(mode, core::ptr::null_mut()) };
+    ManuallyDrop::into_inner(arr.clone())
 }
 
 pub fn nvim_exec<S: AsThinString>(src: S, output: Boolean) -> Result<(), Error> {
