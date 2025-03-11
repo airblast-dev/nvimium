@@ -8,3 +8,9 @@ pub const LUA_INTERNAL_CALL: Channel = Channel(VIML_INTERNAL_CALL.0 + 1);
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug)]
 pub struct Channel(u64);
+
+impl Channel {
+    pub const fn as_int(self) -> u64 {
+        self.0
+    }
+}
