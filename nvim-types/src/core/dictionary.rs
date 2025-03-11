@@ -31,7 +31,7 @@ impl From<(Object, String)> for KeyValuePair {
 
 #[repr(transparent)]
 #[derive(Clone, Default, Debug)]
-pub struct Dictionary(pub(crate) KVec<KeyValuePair>);
+pub struct Dictionary(pub KVec<KeyValuePair>);
 
 impl Deref for Dictionary {
     type Target = [KeyValuePair];

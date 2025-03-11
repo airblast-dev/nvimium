@@ -16,6 +16,7 @@ use nvim_types::{
     },
     returns::{
         channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict,
+        get_mode::Mode,
     },
     string::{AsThinString, OwnedThinString},
     tab_page::TabPage,
@@ -188,7 +189,7 @@ pub fn nvim_get_hl<S: AsThinString>(
             let mut dict = ManuallyDrop::new(unsafe { dict.assume_init() });
             let res = Ok(ManuallyDrop::into_inner(dict.clone()));
             unsafe {
-                dict.kvec_mut().set_len(0);
+                dict.0.set_len(0);
                 ManuallyDrop::drop(&mut dict);
             };
 
@@ -222,6 +223,149 @@ pub fn nvim_get_mark<S: AsThinString>(name: S) -> Result<Array, Error> {
             Ok(ret)
         }
     }
+}
+
+pub fn nvim_get_mode() -> Mode {
+    let mut dict = unsafe { c_funcs::nvim_get_mode(core::ptr::null_mut()) };
+    let mode = dict
+        .remove_skip_key_drop("mode")
+        .map(|m| {
+            if let Object::String(s) = m {
+                s
+            } else {
+                panic!("unexpected object type returned from nvim_get_mode for \"mode\" key");
+            }
+        })
+        .expect("\"mode\" key missing in nvim_get_mode Dictionary");
+    let blocking = dict
+        .remove_skip_key_drop("blocking")
+        .map(|b| {
+            if let Object::Bool(b) = b {
+                b
+            } else {
+                panic!("unexpected object type returned from nvim_get_mode for \"blocking\" key");
+            }
+        })
+        .expect("\"blocking\" key missing in nvim_get_mode Dictionary");
+
+    Mode { mode, blocking }
+}
+
+pub fn nvim_get_proc(pid: Integer) -> Result<Option<Dictionary>, Error> {
+    // TODO: might be multiple memory leaks here
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_get_proc(pid, core::ptr::null_mut(), &mut err) },
+        Ok(obj) => {
+            let obj = unsafe { ManuallyDrop::new(obj.assume_init()) };
+            let cpy = ManuallyDrop::into_inner(obj.clone());
+            match cpy {
+                Object::Null => Ok(None),
+                Object::Dict(d) => Ok(Some(d)),
+                _ => unreachable!("unknown object kind returned from nvim_get_proc")
+            }
+        }
+    }
+}
+
+pub fn nvim_get_proc_children(pid: Integer) -> Result<Array, Error> {
+    // TODO: might be multiple memory leaks here
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_get_proc_children(pid, core::ptr::null_mut(), &mut err) },
+        Ok(obj) => {
+            let obj = unsafe { ManuallyDrop::new(obj.assume_init()) };
+            Ok(ManuallyDrop::into_inner(obj.clone()))
+        }
+    }
+}
+
+pub fn nvim_get_runtime_file<S: AsThinString>(name: S, all: Boolean) -> Result<Array, Error> {
+    // TODO: might be multiple memory leaks here
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_get_runtime_file(name.as_thinstr(), all, core::ptr::null_mut(), &mut err) },
+        Ok(arr) => {
+            let arr = unsafe { ManuallyDrop::new(arr.assume_init()) };
+            Ok(ManuallyDrop::into_inner(arr.clone()))
+        }
+    }
+}
+
+pub fn nvim_get_var<S: AsThinString>(name: S) -> Result<Object, Error> {
+    // TODO: might be multiple memory leaks here
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_get_var(name.as_thinstr(), core::ptr::null_mut(), &mut err) },
+        Ok(obj) => {
+            let obj = unsafe { ManuallyDrop::new(obj.assume_init()) };
+            Ok(ManuallyDrop::into_inner(obj.clone()))
+        }
+    }
+}
+
+pub fn nvim_get_vvar<S: AsThinString>(name: S) -> Result<Object, Error> {
+    // TODO: might be multiple memory leaks here
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_get_vvar(name.as_thinstr(), core::ptr::null_mut(), &mut err) },
+        Ok(obj) => {
+            let obj = unsafe { ManuallyDrop::new(obj.assume_init()) };
+            Ok(ManuallyDrop::into_inner(obj.clone()))
+        }
+    }
+}
+
+pub fn nvim_input<S: AsThinString>(keys: S) -> Integer {
+    unsafe { c_funcs::nvim_input(keys.as_thinstr()) }
+}
+
+pub fn nvim_input_mouse<S: AsThinString, S1: AsThinString, S2: AsThinString>(
+    button: S,
+    action: S1,
+    modifier: S2,
+    grid: Integer,
+    row: Integer,
+    col: Integer,
+) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe {
+            c_funcs::nvim_input_mouse(
+                button.as_thinstr(),
+                action.as_thinstr(),
+                modifier.as_thinstr(),
+                grid,
+                row,
+                col,
+                &mut err,
+            )
+        }
+    }
+}
+
+pub fn nvim_list_bufs() -> Array {
+    unsafe { c_funcs::nvim_list_bufs(core::ptr::null_mut()) }
+}
+
+pub fn nvim_list_chans() -> Array {
+    unsafe { c_funcs::nvim_list_chans(core::ptr::null_mut()) }
+}
+
+pub fn nvim_list_runtime_paths() -> Result<Array, Error> {
+    // TODO: might be multiple memory leaks here
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_list_runtime_paths(core::ptr::null_mut(), &mut err) },
+        Ok(arr) => {
+            let arr = unsafe { ManuallyDrop::new(arr.assume_init()) };
+            Ok(ManuallyDrop::into_inner(arr.clone()))
+        }
+    }
+}
+
+pub fn nvim_list_tabpages() -> Array {
+    unsafe { c_funcs::nvim_list_tabpages(core::ptr::null_mut()).assume_init() }
 }
 
 pub fn nvim_exec<S: AsThinString>(src: S, output: Boolean) -> Result<(), Error> {
