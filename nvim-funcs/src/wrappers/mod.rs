@@ -207,6 +207,7 @@ pub fn nvim_get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpaceId, Error> {
 
 pub fn nvim_get_keymap(mode: KeyMapMode) -> Array {
     let arr = unsafe { c_funcs::nvim_get_keymap(mode, core::ptr::null_mut()) };
+    // TODO: fix memory leak, probably should create a specialized struct as well
     ManuallyDrop::into_inner(arr.clone())
 }
 
@@ -215,6 +216,7 @@ pub fn nvim_get_mark<S: AsThinString>(name: S) -> Result<Array, Error> {
         let mut err;
         unsafe { c_funcs::nvim_get_mark(name.as_thinstr(), &GetMarkOpts::default(), core::ptr::null_mut(), &mut err)},
         Ok(arr) => {
+            // TODO: fix memory leak, probably should create a specialized struct as well
             let arr = unsafe { ManuallyDrop::new(arr.assume_init()) };
             let ret = ManuallyDrop::into_inner(arr.clone());
             Ok(ret)
