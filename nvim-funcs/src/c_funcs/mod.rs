@@ -3,6 +3,7 @@ use nvim_types::{
     array::Array,
     borrowed::Borrowed,
     buffer::Buffer,
+    call_site::Channel,
     dictionary::Dictionary,
     error::Error,
     func_types::keymap_mode::KeyMapMode,
@@ -29,7 +30,7 @@ extern "C" {
     pub fn nvim_create_buf(listed: Boolean, scratch: Boolean, err: *mut Error) -> Buffer;
     pub fn nvim_del_current_line(arena: *mut Arena, err: *mut Error);
     pub fn nvim_del_keymap<'a>(
-        chan: u64,
+        chan: Channel,
         map_mode: KeyMapMode,
         lhs: ThinString<'a>,
         err: *mut Error,
