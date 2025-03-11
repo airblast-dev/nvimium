@@ -25,12 +25,12 @@ impl Display for FeedKeysModeKind {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct FeedKeysMode(String);
 
 impl FeedKeysMode {
     pub fn new() -> Self {
-       Self::default() 
+        Self::default()
     }
 
     pub fn push(&mut self, mode: FeedKeysModeKind) {
@@ -59,12 +59,6 @@ impl<T: AsRef<[FeedKeysModeKind]>> From<T> for FeedKeysMode {
     }
 }
 
-impl Default for FeedKeysMode {
-    fn default() -> Self {
-        Self(String::default())
-    }
-}
-
 #[cfg(all(test, miri))]
 mod tests {
     use crate::string::String;
@@ -73,7 +67,11 @@ mod tests {
 
     #[test]
     fn feed_keys_mode_from_kind() {
-        let kinds = [FeedKeysModeKind::Remap, FeedKeysModeKind::Execute, FeedKeysModeKind::NoEnd];
+        let kinds = [
+            FeedKeysModeKind::Remap,
+            FeedKeysModeKind::Execute,
+            FeedKeysModeKind::NoEnd,
+        ];
         let mode = FeedKeysMode::from(kinds);
 
         assert_eq!(mode.0, String::from("mx!"));
