@@ -41,8 +41,6 @@ macro_rules! func_gen {
 
 #[cfg(test)]
 mod tests {
-    use std::borrow::Cow;
-
     #[test]
     fn builder_lf() {
         builder!(

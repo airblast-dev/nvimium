@@ -2,7 +2,7 @@
 macro_rules! masked_builder {
     (
         $(#[$meta:meta])*
-        $pub:vis struct $ident:ident$(< $( $gen:tt ),* >)? {
+        $pub:vis struct $ident:ident$(< $( $lf:lifetime ),* >)? {
             $(
                 $(#[$field_meta:meta])*
                 $vis:vis $field:ident: $field_ty:ty
@@ -10,7 +10,7 @@ macro_rules! masked_builder {
         }
     ) => {
         $(#[$meta])*
-        $pub struct $ident$(<$($gen),*>),* {
+        $pub struct $ident$(<$($lf),*>),* {
             mask: u64,
             $(
                 $(#[$field_meta])*
@@ -18,8 +18,15 @@ macro_rules! masked_builder {
             ),*
         }
 
-        impl$(<$($gen),*>)? $ident$(<$($gen),*>),* {
+        impl$(<$($lf),*>)? $ident$(<$($lf),*>),* {
             $crate::func_gen_masked!($($field: $field_ty,)*);
+        }
+
+        impl $(<$($lf),*>)? $ident$(<$($lf),*>)? {
+            pub const SIZES: &'static [(&'static str, usize)] = [
+                ("mask", ::core::mem::size_of::<u64>()),
+                $(( stringify!($field), ::core::mem::size_of::<$field_ty>() )),*
+            ].as_slice();
         }
     };
 }
