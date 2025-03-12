@@ -21,13 +21,6 @@ macro_rules! masked_builder {
         impl$(<$($lf),*>)? $ident$(<$($lf),*>),* {
             $crate::func_gen_masked!($($field: $field_ty,)*);
         }
-
-        impl $(<$($lf),*>)? $ident$(<$($lf),*>)? {
-            pub const SIZES: &'static [(&'static str, usize)] = [
-                ("mask", ::core::mem::size_of::<u64>()),
-                $(( stringify!($field), ::core::mem::size_of::<$field_ty>() )),*
-            ].as_slice();
-        }
     };
 }
 
