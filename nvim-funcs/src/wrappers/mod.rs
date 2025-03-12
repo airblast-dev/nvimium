@@ -14,7 +14,7 @@ use nvim_types::{
     opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
         get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts, paste::PastePhase,
-        select_popupmenu_item::SelectPopupMenuOpts,
+        select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind,
     },
     returns::{
         channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict,
@@ -445,6 +445,29 @@ pub fn nvim_select_popupmenu_item(
     tri! {
         let mut err;
         unsafe { c_funcs::nvim_select_popupmenu_item(item, insert, finish, opts, &mut err) }
+    }
+}
+
+pub fn nvim_set_client_info<S: AsThinString>(
+    name: S,
+    version: Borrowed<'_, Dictionary>,
+    kind: ClientKind,
+    methods: &Dictionary,
+    attributes: &Dictionary,
+) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe { 
+            c_funcs::nvim_set_client_info(
+                name.as_thinstr(), 
+                version, 
+                kind,
+                methods.into(),
+                attributes.into(),
+                core::ptr::null_mut(),
+                &mut err
+            ); 
+        }
     }
 }
 

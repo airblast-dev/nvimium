@@ -12,7 +12,7 @@ use nvim_types::{
     opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
         get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts, paste::PastePhase,
-        select_popupmenu_item::SelectPopupMenuOpts,
+        select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind,
     },
     string::{OwnedThinString, ThinString},
     tab_page::TabPage,
@@ -165,6 +165,15 @@ extern "C" {
         insert: Boolean,
         finish: Boolean,
         opts: *const SelectPopupMenuOpts,
+        err: *mut Error,
+    );
+    pub fn nvim_set_client_info<'a>(
+        name: ThinString<'a>,
+        version: Borrowed<'a, Dictionary>,
+        kind: ClientKind,
+        methods: Borrowed<'a, Dictionary>,
+        attributes: Borrowed<'a, Dictionary>,
+        arena: *mut Arena,
         err: *mut Error,
     );
 
