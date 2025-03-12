@@ -10,12 +10,10 @@ pub fn test_body(dylib_path: &Path, func_name: &str) -> Result<(), String> {
         dylib_path.to_str().unwrap()
     );
     let mut cmd = Command::new("nvim");
-    cmd.arg("--clean").arg("-c").arg(load_cmd);
+    cmd.arg("--headless").arg("--clean").arg("-c").arg(load_cmd);
     let output = cmd.output();
     let o = match output {
-        Ok(o) => {
-            o
-        }
+        Ok(o) => o,
         Err(err) => return Err(err.to_string()),
     };
     let err = o.stderr;
