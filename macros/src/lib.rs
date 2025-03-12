@@ -44,6 +44,24 @@ mod tests {
     use std::borrow::Cow;
 
     #[test]
+    fn builder_lf() {
+        builder!(
+            struct A<'a> {
+                a: usize,
+                b: &'a str,
+            }
+        );
+
+        let mut a = A { a: 1, b: "" };
+
+        a.a(3_u8);
+        a.b("b");
+
+        assert_eq!(a.a, 3);
+        assert_eq!(a.b, "b");
+    }
+
+    #[test]
     fn builder() {
         builder!(
             struct A {
