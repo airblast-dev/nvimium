@@ -1,9 +1,9 @@
 use macros::masked_builder;
 
-use crate::{Boolean, LuaRef};
+use crate::{lua_ref::LuaRef, Boolean};
 
 // TODO: replace with manual builder
-masked_builder!{
+masked_builder! {
     #[repr(C)]
     #[derive(Debug)]
     pub struct OpenTermOpts {

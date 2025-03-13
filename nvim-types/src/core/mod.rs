@@ -1,4 +1,5 @@
 pub mod array;
+pub mod lua_ref;
 pub mod borrowed;
 pub mod buffer;
 pub mod call_site;
@@ -15,4 +16,4 @@ pub type Integer = i64;
 pub type Boolean = bool;
 pub type Float = libc::c_double;
 pub type HandleT = libc::c_int;
-pub type LuaRef = libc::c_int;
+pub type LuaRefT = libc::c_int;

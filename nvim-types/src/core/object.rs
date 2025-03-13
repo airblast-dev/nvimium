@@ -1,10 +1,10 @@
-use std::fmt::Debug;
+use std::{any::TypeId, fmt::Debug};
 
 use crate::{array::Array, dictionary::Dictionary};
 
 use super::{
-    buffer::Buffer, string::OwnedThinString, tab_page::TabPage, window::Window, Boolean, Float,
-    Integer,
+    buffer::Buffer, lua_ref::LuaRef, string::OwnedThinString, tab_page::TabPage, window::Window,
+    Boolean, Float, Integer,
 };
 
 // For layout rules see https://rust-lang.github.io/rfcs/2195-really-tagged-unions.html
@@ -22,7 +22,7 @@ pub enum Object {
     String(OwnedThinString),
     Array(Array),
     Dict(Dictionary),
-    LuaRef,
+    LuaRef(LuaRef),
     Buffer(Buffer),
     Window(Window),
     TabPage(TabPage),
@@ -109,10 +109,175 @@ impl Debug for Object {
             Object::String(th) => write!(f, "{:?}", th),
             Object::Array(a) => write!(f, "{:?}", a),
             Object::Dict(d) => write!(f, "{:?}", d),
-            Object::LuaRef => todo!(),
+            Object::LuaRef(lref) => write!(f, "{:?}", lref),
             Object::Buffer(buf) => write!(f, "{:?}", buf),
             Object::Window(win) => write!(f, "{:?}", win),
             Object::TabPage(tp) => write!(f, "{:?}", tp),
         }
     }
+}
+
+impl From<Boolean> for Object {
+    fn from(value: Boolean) -> Self {
+        Self::Bool(value)
+    }
+}
+
+impl From<Integer> for Object {
+    fn from(value: Integer) -> Self {
+        Self::Integer(value)
+    }
+}
+
+impl From<Float> for Object {
+    fn from(value: Float) -> Self {
+        Self::Float(value)
+    }
+}
+
+impl From<OwnedThinString> for Object {
+    fn from(value: OwnedThinString) -> Self {
+        Self::String(value)
+    }
+}
+
+impl From<Array> for Object {
+    fn from(value: Array) -> Self {
+        Self::Array(value)
+    }
+}
+
+impl From<Dictionary> for Object {
+    fn from(value: Dictionary) -> Self {
+        Self::Dict(value)
+    }
+}
+
+impl From<LuaRef> for Object {
+    fn from(value: LuaRef) -> Self {
+        Self::LuaRef(value)
+    }
+}
+
+impl From<Buffer> for Object {
+    fn from(value: Buffer) -> Self {
+        Self::Buffer(value)
+    }
+}
+
+impl From<Window> for Object {
+    fn from(value: Window) -> Self {
+        Self::Window(value)
+    }
+}
+
+impl From<TabPage> for Object {
+    fn from(value: TabPage) -> Self {
+        Self::TabPage(value)
+    }
+}
+
+impl TryFrom<Object> for Boolean {
+    type Error = ObjectConversionError;
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Bool(b) => Ok(b),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
+impl TryFrom<Object> for Integer {
+    type Error = ObjectConversionError;
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Integer(i) => Ok(i),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
+impl TryFrom<Object> for Float {
+    type Error = ObjectConversionError;
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Float(f) => Ok(f),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
+impl TryFrom<Object> for OwnedThinString {
+    type Error = ObjectConversionError;
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::String(s) => Ok(s),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
+impl TryFrom<Object> for Array {
+    type Error = ObjectConversionError;
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Array(a) => Ok(a),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
+impl TryFrom<Object> for Dictionary {
+    type Error = ObjectConversionError;
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Dict(d) => Ok(d),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
+impl TryFrom<Object> for LuaRef {
+    type Error = ObjectConversionError;
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::LuaRef(d) => Ok(d),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
+impl TryFrom<Object> for Buffer {
+    type Error = ObjectConversionError;
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Buffer(b) => Ok(b),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
+impl TryFrom<Object> for Window {
+    type Error = ObjectConversionError;
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Window(w) => Ok(w),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
+impl TryFrom<Object> for TabPage {
+    type Error = ObjectConversionError;
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::TabPage(v) => Ok(v),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum ObjectConversionError {
+    IncorrectKind,
 }
