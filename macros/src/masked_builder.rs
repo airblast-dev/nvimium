@@ -34,11 +34,11 @@ macro_rules! func_gen_masked {
     ) => {
         $(#[$func_meta])*
         pub fn $field<T: Into<$field_ty>>(&mut self, $field: T) -> &mut Self {
-            self.mask |= 1;
+            self.mask |= 2;
             self.$field = $field.into();
             self
         }
-        $crate::func_gen_masked_inner!(2, $( $(#[$inner_meta])* $inner: $inner_ty,)*);
+        $crate::func_gen_masked_inner!(4, $( $(#[$inner_meta])* $inner: $inner_ty,)*);
     };
     () => {}
 }
@@ -83,11 +83,11 @@ mod tests {
             c: true,
         };
         c.a(20_u32);
-        assert_eq!(c.mask, 1 << 0);
+        assert_eq!(c.mask, 2);
         c.b("hello");
-        assert_eq!(c.mask, 1 | (1 << 1));
+        assert_eq!(c.mask, 6 | (2 << 1));
         c.c(false);
-        assert_eq!(c.mask, 3 | (1 << 2));
+        assert_eq!(c.mask, 14 | (2 << 2));
 
         assert!(!c.c);
         assert_eq!(c.a, 20_u32);
@@ -108,12 +108,12 @@ mod tests {
         };
 
         c.a(5_u32);
-        assert_eq!(c.mask, 1);
+        assert_eq!(c.mask, 2);
         c.b(6_u64);
-        assert_eq!(c.mask, 1 | 2);
+        assert_eq!(c.mask, 2 | 4);
         c.c("HAHAHA");
         assert_eq!(c.c, "HAHAHA");
-        assert_eq!(c.mask, 1 | 2 | 4);
+        assert_eq!(c.mask, 2 | 4 | 8);
 
         assert_eq!(c.a, 5_u32);
         assert_eq!(c.b, 6_u64);
