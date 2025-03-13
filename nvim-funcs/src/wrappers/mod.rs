@@ -457,17 +457,52 @@ pub fn nvim_set_client_info<S: AsThinString>(
 ) -> Result<(), Error> {
     tri! {
         let mut err;
-        unsafe { 
+        unsafe {
             c_funcs::nvim_set_client_info(
-                name.as_thinstr(), 
-                version, 
+                name.as_thinstr(),
+                version,
                 kind,
                 methods.into(),
                 attributes.into(),
                 core::ptr::null_mut(),
                 &mut err
-            ); 
+            );
         }
+    }
+}
+
+pub fn nvim_set_current_buf(buf: Buffer) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_set_current_buf(buf, &mut err); }
+    }
+}
+
+pub fn nvim_set_current_dir<S: AsThinString>(dir: S) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_set_current_dir(dir.as_thinstr(), &mut err) }
+    }
+}
+
+pub fn nvim_set_current_line<S: AsThinString>(line: S) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_set_current_line(line.as_thinstr(), core::ptr::null_mut(), &mut err) }
+    }
+}
+
+pub fn nvim_set_current_tabpage(page: TabPage) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_set_current_tabpage(page, &mut err); }
+    }
+}
+
+pub fn nvim_set_current_win(win: Window) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_set_current_win(win, &mut err); } 
     }
 }
 

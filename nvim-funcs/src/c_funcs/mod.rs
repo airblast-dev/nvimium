@@ -176,6 +176,11 @@ extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     );
+    pub fn nvim_set_current_buf(buf: Buffer, err: *mut Error);
+    pub fn nvim_set_current_dir<'a>(dir: ThinString<'a>, err: *mut Error);
+    pub fn nvim_set_current_line<'a>(line: ThinString<'a>, arena: *mut Arena, err: *mut Error);
+    pub fn nvim_set_current_tabpage(tp: TabPage, err: *mut Error);
+    pub fn nvim_set_current_win(win: Window, err: *mut Error);
 
     // these should come later
     // TODO: use proper opts type
