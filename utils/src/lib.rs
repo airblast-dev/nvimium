@@ -1,7 +1,7 @@
 use core::ptr::NonNull;
 use std::ffi::c_void;
 
-use libc::malloc;
+use libc::{c_char, malloc};
 use panics::alloc_failed;
 
 #[inline]
@@ -69,7 +69,10 @@ pub unsafe fn xfree<T>(ptr: &mut *mut T, capacity: usize) {
 #[must_use]
 pub unsafe fn xmemdupz<T>(src: *const T, len: usize) -> NonNull<T> {
     unsafe {
-        let dst: NonNull<T> = xmalloc(len.checked_add(1).unwrap_or_else(|| alloc_failed()));
+        let dst: NonNull<T> = xmalloc(
+            len.checked_add(size_of::<c_char>())
+                .unwrap_or_else(|| alloc_failed()),
+        );
         xmemcpyz(src, dst.as_ptr(), len);
         dst
     }
@@ -80,6 +83,6 @@ pub unsafe fn xmemcpyz<T>(src: *const T, dst: *mut T, len: usize) {
     let byte_len = len.checked_mul(size_of::<T>()).unwrap();
     unsafe {
         libc::memcpy(dst as *mut c_void, src as *const c_void, byte_len);
-        dst.byte_add(byte_len).cast::<u8>().write(0);
+        dst.byte_add(byte_len).cast::<c_char>().write(0);
     }
 }

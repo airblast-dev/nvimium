@@ -3,13 +3,19 @@ use std::{
     fmt::{Debug, Display},
 };
 
+use libc::c_char;
+
 use super::string::{String, ThinString};
+
+// Any platform that uses more than a byte as `c_char` limits the API in a few places.
+// TODO: Rather than to limit the API for niche systems find an alternative if possible.
+const _: () = assert!(size_of::<u8>() == size_of::<c_char>());
 
 #[derive(Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Error {
     kind: ErrorType,
-    msg: *const u8,
+    msg: *const c_char,
 }
 
 impl Debug for Error {
@@ -46,7 +52,7 @@ impl Error {
         core::mem::forget(s);
         Self {
             kind: ErrorType::Exception,
-            msg: ptr,
+            msg: ptr as *const c_char,
         }
     }
 

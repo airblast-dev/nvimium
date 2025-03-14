@@ -44,11 +44,16 @@ use std::{
     ops::Deref,
 };
 
+use bytemuck::must_cast_slice;
 use libc::size_t;
 use panics::not_null_terminated;
 use utils::{xfree, xmalloc, xmemcpyz, xmemdupz, xrealloc};
 
 static EMPTY: ThinString<'static> = ThinString::from_null_terminated(c"".to_bytes_with_nul());
+
+// Any platform that uses more than a byte as `c_char` limits the API in a few places.
+// TODO: Rather than to limit the API for niche systems find an alternative if possible.
+const _: () = assert!(size_of::<u8>() == size_of::<c_char>());
 
 /// A String type that can be passed to wrapper functions
 ///
@@ -257,7 +262,7 @@ impl String {
     /// This will allocate the minimal amount needed to add the bytes. When pushing bytes in a loop
     /// prefer [`String`]'s [`Extend`] implementation.
     pub fn push<'a, B: 'a + AsRef<[u8]>>(&mut self, string: B) {
-        let slice = string.as_ref();
+        let slice = must_cast_slice(string.as_ref());
         self.reserve_exact(slice.len());
         unsafe {
             xmemcpyz(
@@ -510,8 +515,8 @@ impl<'a> ThinString<'a> {
     /// For similar reasons to [`std::ffi::CStr`] this does not allow mutating the buffer. Thus the
     /// returned pointer can be cast to a *mut but it should never be mutated.
     #[inline(always)]
-    pub const fn as_ptr(&self) -> *const u8 {
-        self.data.cast::<u8>()
+    pub fn as_ptr(&self) -> *const u8 {
+        self.data as *const u8
     }
 
     /// Returns the length of the string excluding the null byte
@@ -528,22 +533,22 @@ impl<'a> ThinString<'a> {
 
     /// Returns a slice of the buffers bytes without a null byte
     #[inline(always)]
-    pub const fn as_slice(&self) -> &'a [u8] {
+    pub fn as_slice(&self) -> &'a [u8] {
         let ptr = self.as_ptr();
         if ptr.is_null() {
             return &[];
         }
-        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len) }
+        unsafe { must_cast_slice(std::slice::from_raw_parts(self.as_ptr(), self.len)) }
     }
 
     // Returns a slice of the buffers bytes with a null byte
     #[inline(always)]
-    pub const fn as_slice_with_null(&self) -> &'a [u8] {
+    pub fn as_slice_with_null(&self) -> &'a [u8] {
         let ptr = self.as_ptr();
         if ptr.is_null() {
             return &[0];
         }
-        unsafe { std::slice::from_raw_parts(ptr, self.len + 1) }
+        unsafe { must_cast_slice(std::slice::from_raw_parts(ptr, self.len + 1)) }
     }
 
     /// Initialize a [`ThinString`] from raw bytes
@@ -563,7 +568,7 @@ impl<'a> ThinString<'a> {
         let last = b.last().copied();
         match last {
             Some(1..) | None => not_null_terminated(last),
-            _ => {}
+            Some(0) => {}
         }
 
         Self {
@@ -781,10 +786,10 @@ impl OwnedThinString {
 
 impl<'a> From<ThinString<'a>> for OwnedThinString {
     fn from(th: ThinString<'a>) -> Self {
-        let source = th.as_slice();
-        let dst = unsafe { xmemdupz(source.as_ptr(), th.len()) };
+        let source = th.as_ptr();
+        let dst = unsafe { xmemdupz(source, th.len()) };
 
-        Self(unsafe { ThinString::new(th.len(), dst.cast::<c_char>().as_ptr()) })
+        Self(unsafe { ThinString::new(th.len(), dst.as_ptr() as *mut c_char) })
     }
 }
 
