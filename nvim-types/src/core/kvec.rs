@@ -3,9 +3,9 @@ use std::iter::FusedIterator;
 use std::mem::{self, MaybeUninit};
 use std::num::NonZeroUsize;
 use std::ops::{Deref, DerefMut, RangeBounds};
-use std::ptr::NonNull;
 
-use panics::{alloc_failed, slice_error};
+use panics::slice_error;
+use utils::{xfree, xmalloc, xrealloc};
 
 unsafe impl<T> Sync for KVec<T> where T: Sync {}
 unsafe impl<T> Send for KVec<T> where T: Send {}
@@ -148,29 +148,7 @@ impl<T> KVec<T> {
     /// This function is guaranteed to at least allocate for `capacity` elements.
     pub fn with_capacity(capacity: usize) -> Self {
         // We shouldn't be storing ZST's in any use case, but if we do, just return a dangling pointer.
-        let ptr = if Self::ZST {
-            NonNull::dangling().as_ptr()
-        } else if capacity == 0 {
-            core::ptr::null_mut()
-        } else {
-            let Some(byte_cap) = capacity.checked_mul(Self::T_SIZE) else {
-                alloc_failed();
-            };
-
-            if byte_cap > isize::MAX as usize {
-                alloc_failed();
-            }
-
-            // When the requested size is 0, malloc may return NULL or a dangling pointer.
-            // To always have a non null pointer we check the capacity above.
-            assert_ne!(byte_cap, 0);
-
-            let ptr = unsafe { libc::malloc(byte_cap) };
-            if ptr.is_null() {
-                alloc_failed();
-            }
-            ptr as *mut T
-        };
+        let ptr = unsafe { xmalloc(capacity) }.as_ptr();
 
         Self {
             len: 0,
@@ -250,18 +228,8 @@ impl<T> KVec<T> {
     // Inlined as most of the conditions are likely to be checked in call sites.
     #[inline(always)]
     fn realloc(&mut self, new_capacity: usize) {
-        if Self::ZST {
-        } else if new_capacity == 0 && self.capacity > 0 {
-            unsafe { libc::free(self.ptr as *mut libc::c_void) };
-        } else {
-            let Some(byte_capacity) = new_capacity.checked_mul(Self::T_SIZE) else {
-                alloc_failed();
-            };
-            let ptr = unsafe { libc::realloc(self.ptr as *mut libc::c_void, byte_capacity) };
-            if ptr.is_null() {
-                alloc_failed();
-            }
-            self.ptr = ptr as *mut T;
+        if self.capacity() != new_capacity {
+            self.ptr = unsafe { xrealloc(self.ptr, self.capacity(), new_capacity) }.as_ptr();
         }
         self.capacity = new_capacity;
     }
@@ -562,7 +530,7 @@ impl<T> Drop for KVec<T> {
             unsafe { std::ptr::drop_in_place(ptr.add(i)) }
         }
         unsafe {
-            libc::free(self.as_ptr() as *mut libc::c_void);
+            xfree(&mut self.ptr);
         }
     }
 }
