@@ -6,21 +6,24 @@ use panics::alloc_failed;
 
 #[inline]
 #[must_use = "Not using the returned pointer causes a memory leak"]
-pub fn xmalloc<T>(count: usize) -> NonNull<T> {
-    unsafe { try_xmalloc(count) }.unwrap_or_else(|| alloc_failed())
+pub unsafe fn xmalloc<T>(count: usize) -> NonNull<T> {
+    unsafe { try_xmalloc::<T>(count) }.unwrap_or_else(|| alloc_failed())
 }
 
 #[inline]
 #[must_use = "Not using the returned pointer causes a memory leak"]
 pub unsafe fn try_xmalloc<T>(count: usize) -> Option<NonNull<T>> {
     let size = size_of::<T>();
-    if size == 0 {
+    if size == 0 || count == 0 {
         return Some(NonNull::dangling());
     }
 
-    let new_cap: isize = size.checked_mul(count)?.try_into().ok()?;
+    let new_cap: usize = isize::try_from(size.checked_mul(count)?)
+        .ok()?
+        .try_into()
+        .ok()?;
 
-    let ptr = unsafe { malloc(new_cap as usize) };
+    let ptr = unsafe { malloc(new_cap) };
     NonNull::new(ptr as *mut T)
 }
 
@@ -36,10 +39,13 @@ pub unsafe fn try_xrealloc<T>(ptr: *mut T, old_cap: usize, cap: usize) -> Option
     if size_of::<T>() == 0 {
         return Some(NonNull::dangling());
     }
-    if cap == 0 && old_cap != 0 {
-        unsafe { libc::free(ptr as *mut libc::c_void) };
+    if cap == 0 {
+        if old_cap != 0 {
+            unsafe { libc::free(ptr as *mut libc::c_void) };
+        }
         return Some(NonNull::dangling());
     }
+
     let ptr = unsafe {
         libc::realloc(
             ptr as *mut libc::c_void,
@@ -52,8 +58,10 @@ pub unsafe fn try_xrealloc<T>(ptr: *mut T, old_cap: usize, cap: usize) -> Option
 }
 
 #[inline]
-pub unsafe fn xfree<T>(ptr: &mut *mut T) {
-    unsafe { libc::free(*ptr as *mut libc::c_void) };
+pub unsafe fn xfree<T>(ptr: &mut *mut T, capacity: usize) {
+    if capacity != 0 {
+        unsafe { libc::free(*ptr as *mut libc::c_void) };
+    }
     *ptr = core::ptr::null_mut();
 }
 
