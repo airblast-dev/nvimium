@@ -19,6 +19,7 @@ panics = { path = "./panics" }
 nvim-types = { path = "./nvim-types/" }
 nvim-funcs = { path = "./nvim-funcs/" }
 nvim-test = { path = "./nvim-test/" }
+utils = { path = "./utils" }
 macros = { path = "./macros/" }
 nvim-test-macro = { path = "./nvim-test-macro", default-features = false }
 test-cdylib = { path = "../test-cdylib/" }
@@ -27,7 +28,7 @@ test-cdylib = { path = "../test-cdylib/" }
 trybuild = { version = "1.0.101" }
 
 [workspace]
-members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros" , "nvim-test"]
+members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros" , "nvim-test", "utils"]
 
 [profile.dev]
 incremental = true
