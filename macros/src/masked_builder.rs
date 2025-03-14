@@ -46,8 +46,8 @@ macro_rules! func_gen_masked {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! func_gen_masked_inner {
-    ( 
-        $mask:expr, $(#[$func_meta:meta])* $field:ident: $field_ty:ty, 
+    (
+        $mask:expr, $(#[$func_meta:meta])* $field:ident: $field_ty:ty,
         $( $(#[$inner_meta:meta])* $inner:ident: $inner_ty:ty,)*
     ) => {
         $( #[$func_meta] )*

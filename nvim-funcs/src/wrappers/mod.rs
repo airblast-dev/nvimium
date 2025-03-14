@@ -502,7 +502,7 @@ pub fn nvim_set_current_tabpage(page: TabPage) -> Result<(), Error> {
 pub fn nvim_set_current_win(win: Window) -> Result<(), Error> {
     tri! {
         let mut err;
-        unsafe { c_funcs::nvim_set_current_win(win, &mut err); } 
+        unsafe { c_funcs::nvim_set_current_win(win, &mut err); }
     }
 }
 

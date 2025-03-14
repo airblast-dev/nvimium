@@ -113,7 +113,10 @@ mod tests {
         let c_map = ColorMap::from_c_func_ret(&mut dict);
         drop(dict);
         assert_eq!(Some([255, 0, 0]), c_map.get_with_name(String::from("red")));
-        assert_eq!(Some([0, 255, 0]), c_map.get_with_name(String::from("green")));
+        assert_eq!(
+            Some([0, 255, 0]),
+            c_map.get_with_name(String::from("green"))
+        );
         assert_eq!(Some([0, 0, 255]), c_map.get_with_name(String::from("blue")));
     }
 }
