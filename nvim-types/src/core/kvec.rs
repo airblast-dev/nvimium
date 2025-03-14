@@ -19,11 +19,7 @@ pub struct KVec<T> {
 
 impl<T> Default for KVec<T> {
     fn default() -> Self {
-        Self {
-            len: 0,
-            capacity: 0,
-            ptr: core::ptr::null_mut(),
-        }
+        Self::new()
     }
 }
 
