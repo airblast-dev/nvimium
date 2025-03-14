@@ -148,7 +148,7 @@ impl<T> KVec<T> {
     /// This function is guaranteed to at least allocate for `capacity` elements.
     pub fn with_capacity(capacity: usize) -> Self {
         // We shouldn't be storing ZST's in any use case, but if we do, just return a dangling pointer.
-        let ptr = unsafe { xmalloc(capacity) }.as_ptr();
+        let ptr: *mut T = unsafe { xmalloc::<T>(capacity) }.as_ptr();
 
         Self {
             len: 0,
@@ -434,9 +434,10 @@ impl<Item: PartialEq> PartialEq<KVec<Item>> for [Item] {
 }
 
 pub struct Iter<T> {
-    start: *mut T,
+    start_ptr: *mut T,
     start_pos: usize,
     end_pos: usize,
+    capacity: usize,
 }
 
 impl<T> Iterator for Iter<T> {
@@ -446,7 +447,7 @@ impl<T> Iterator for Iter<T> {
             return None;
         }
 
-        let item = unsafe { self.start.add(self.start_pos).read() };
+        let item = unsafe { self.start_ptr.add(self.start_pos).read() };
         self.start_pos += 1;
 
         Some(item)
@@ -460,7 +461,7 @@ impl<T> DoubleEndedIterator for Iter<T> {
         }
 
         self.end_pos -= 1;
-        Some(unsafe { self.start.add(self.end_pos).read() })
+        Some(unsafe { self.start_ptr.add(self.end_pos).read() })
     }
 }
 
@@ -469,16 +470,16 @@ impl<T> FusedIterator for Iter<T> {}
 impl<T> Drop for Iter<T> {
     fn drop(&mut self) {
         // construct a KVec to drop it
-        KVec::<T> {
-            len: 0,
-            ptr: self.start,
-            capacity: 0,
-        };
 
-        for offset in self.start_pos..self.end_pos {
-            unsafe {
-                self.start.add(offset).drop_in_place();
+        unsafe {
+            if !self.start_ptr.is_null() {
+                core::ptr::slice_from_raw_parts_mut(
+                    self.start_ptr.add(self.start_pos),
+                    self.end_pos - self.start_pos,
+                )
+                .drop_in_place();
             }
+            xfree(&mut self.start_ptr, self.capacity);
         }
     }
 }
@@ -490,7 +491,8 @@ impl<T> IntoIterator for KVec<T> {
         let iter = Iter {
             start_pos: 0,
             end_pos: self.len(),
-            start: self.as_ptr(),
+            start_ptr: self.as_ptr(),
+            capacity: self.capacity(),
         };
         core::mem::forget(self);
 
@@ -529,8 +531,9 @@ impl<T> Drop for KVec<T> {
         for i in 0..self.len() {
             unsafe { std::ptr::drop_in_place(ptr.add(i)) }
         }
+        let cap = self.capacity();
         unsafe {
-            xfree(&mut self.ptr);
+            xfree(&mut self.ptr, cap);
         }
     }
 }

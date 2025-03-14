@@ -166,7 +166,7 @@ impl String {
     ///
     /// Allocates for cap + 1 to make the [`String`] null terminated.
     pub fn with_capacity(cap: usize) -> Self {
-        let ptr = xmalloc(cap + 1).as_ptr() as *mut c_char;
+        let ptr = unsafe { xmalloc(cap + 1) }.as_ptr() as *mut c_char;
         unsafe { ptr.write(0) };
         Self {
             len: 0,
@@ -459,7 +459,8 @@ const _: () = assert!(
 impl Drop for String {
     fn drop(&mut self) {
         unsafe { debug_assert_eq!(*self.data.add(self.len()), 0) };
-        unsafe { xfree(&mut self.data) };
+        let cap = self.capacity().get();
+        unsafe { xfree(&mut self.data, cap) };
     }
 }
 
@@ -871,7 +872,7 @@ unsafe impl Send for OwnedThinString {}
 impl Drop for OwnedThinString {
     fn drop(&mut self) {
         unsafe { debug_assert_eq!(*self.0.data.add(self.0.len()), 0) };
-        unsafe { xfree(&mut (self.0.data as *mut c_void)) }
+        unsafe { xfree(&mut (self.0.data as *mut c_void), self.0.len() + 1) }
     }
 }
 
