@@ -45,7 +45,8 @@ use std::{
 };
 
 use libc::size_t;
-use panics::{alloc_failed, not_null_terminated};
+use panics::not_null_terminated;
+use utils::{xfree, xmalloc, xmemcpyz, xmemdupz, xrealloc};
 
 static EMPTY: ThinString<'static> = ThinString::from_null_terminated(c"".to_bytes_with_nul());
 
@@ -66,7 +67,7 @@ static EMPTY: ThinString<'static> = ThinString::from_null_terminated(c"".to_byte
 /// section. These are only important if you are calling FFI functions directly.
 ///
 /// This struct not exactly the same as the String type in neovim, that would be [`ThinString`] and
-/// [`OwnedThinString`]. 
+/// [`OwnedThinString`].
 ///
 /// This is due to a few reasons:
 /// - The layout does not allow us to specify the capacity in it fields, this causes issues as it
@@ -165,11 +166,7 @@ impl String {
     ///
     /// Allocates for cap + 1 to make the [`String`] null terminated.
     pub fn with_capacity(cap: usize) -> Self {
-        let ptr = unsafe { libc::malloc(cap + 1) };
-        if ptr.is_null() {
-            alloc_failed();
-        }
-        let ptr = ptr as *mut c_char;
+        let ptr = xmalloc(cap + 1).as_ptr() as *mut c_char;
         unsafe { ptr.write(0) };
         Self {
             len: 0,
@@ -223,11 +220,8 @@ impl String {
     }
 
     fn realloc(&mut self, new_capacity: NonZeroUsize) {
-        let ptr = unsafe { libc::realloc(self.data as *mut c_void, new_capacity.get()) };
-        if ptr.is_null() {
-            alloc_failed();
-        }
-        self.data = ptr as *mut c_char;
+        let ptr = unsafe { xrealloc(self.data, self.capacity().get(), new_capacity.get()) };
+        self.data = ptr.as_ptr() as *mut c_char;
         self.capacity = new_capacity;
     }
 
@@ -265,23 +259,16 @@ impl String {
     pub fn push<'a, B: 'a + AsRef<[u8]>>(&mut self, string: B) {
         let slice = string.as_ref();
         self.reserve_exact(slice.len());
-        // SAFETY: self.data is NonNull and we have reserved space to push the string
-        // it is now safe to copy the bytes
-        //
-        // preferred to use libc::memcpy for better binary size
         unsafe {
-            libc::memcpy(
-                self.data.add(self.len()) as *mut c_void,
-                slice.as_ptr() as *const c_void,
+            xmemcpyz(
+                slice.as_ptr(),
+                self.as_mut_ptr().add(self.len()),
                 slice.len(),
-            );
-        }
+            )
+        };
 
         // SAFETY: the values have been initialized above, it is now safe to set the new length.
         unsafe { self.set_len(self.len() + slice.len()) };
-
-        // SAFETY: we already had enough space, just write the null byte
-        unsafe { self.data.add(self.len()).write(0) };
     }
 }
 
@@ -471,7 +458,8 @@ const _: () = assert!(
 
 impl Drop for String {
     fn drop(&mut self) {
-        unsafe { libc::free(self.data as *mut c_void) };
+        unsafe { debug_assert_eq!(*self.data.add(self.len()), 0) };
+        unsafe { xfree(&mut self.data) };
     }
 }
 
@@ -748,12 +736,21 @@ impl Clone for OwnedThinString {
     }
 
     fn clone_from(&mut self, source: &Self) {
-        let src = source.as_thinstr().as_slice().as_ptr() as *const c_void;
+        let src = source.as_thinstr().as_slice().as_ptr() as *const c_char;
         if self.0.len() >= source.0.len() {
-            let dst = self.0.as_ptr() as *mut c_void;
-            unsafe { libc::memcpy(dst, src, source.0.len() + 1) };
+            let dst = self.0.as_ptr() as *mut c_char;
+            unsafe { xmemcpyz(src, dst, source.0.len()) };
             self.0.len = source.0.len();
         } else {
+            let dst = self.as_thinstr().as_slice().as_ptr() as *mut c_char;
+            let res = unsafe {
+                xrealloc(
+                    dst,
+                    self.as_thinstr().len() + 1,
+                    source.as_thinstr().len() + 1,
+                )
+            };
+            unsafe { xmemcpyz(src, res.as_ptr(), source.as_thinstr().len()) };
             *self = source.clone();
         }
     }
@@ -783,12 +780,10 @@ impl OwnedThinString {
 
 impl<'a> From<ThinString<'a>> for OwnedThinString {
     fn from(th: ThinString<'a>) -> Self {
-        let source = th.as_slice().as_ptr() as *const c_char;
-        let ptr = unsafe { libc::strdup(source) };
-        if ptr.is_null() {
-            alloc_failed()
-        }
-        Self(unsafe { ThinString::new(th.len(), ptr) })
+        let source = th.as_slice();
+        let dst = unsafe { xmemdupz(source.as_ptr(), th.len()) };
+
+        Self(unsafe { ThinString::new(th.len(), dst.cast::<c_char>().as_ptr()) })
     }
 }
 
@@ -875,7 +870,8 @@ unsafe impl Send for OwnedThinString {}
 
 impl Drop for OwnedThinString {
     fn drop(&mut self) {
-        unsafe { libc::free(self.0.data as *mut c_void) }
+        unsafe { debug_assert_eq!(*self.0.data.add(self.0.len()), 0) };
+        unsafe { xfree(&mut (self.0.data as *mut c_void)) }
     }
 }
 

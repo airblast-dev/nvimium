@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+utils = { workspace = true }
 libc = { workspace = true }
 panics = { workspace = true }
 macros = { workspace = true }
