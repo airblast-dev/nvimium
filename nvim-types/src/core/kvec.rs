@@ -355,6 +355,27 @@ impl<T> KVec<T> {
             rem
         }
     }
+
+    /// Truncates the [`KVec`] to be the length of `to`
+    ///
+    /// This does not modify the capacity or reallocate.
+    /// The new length is guaranteed to be `to` after this function is called.
+    /// If `to` is greater than [`KVec::len`] calling this function does nothing.
+    pub fn truncate(&mut self, to: usize) {
+        if to >= self.len() {
+            return;
+        }
+
+        let len = self.len();
+        // SAFETY: we have checked if our length is zero above meaning we cant have a null pointer
+        unsafe {
+            // set the length to zero in case one of the drops panic
+            self.set_len(0);
+            // len - to cannot overflow due to the condition above
+            core::ptr::slice_from_raw_parts_mut(self.as_ptr().add(to), len - to).drop_in_place();
+            self.set_len(to);
+        }
+    }
 }
 
 impl<T: Clone> Clone for KVec<T> {
@@ -550,6 +571,8 @@ const _: () = assert!(
 mod tests {
     use std::num::NonZeroUsize;
 
+    use super::KVec;
+
     type KVec = super::KVec<String>;
 
     #[test]
@@ -569,7 +592,6 @@ mod tests {
         v.clone_from(&a);
         assert_eq!(v, a);
 
-        let v = KVec::default();
         let a = v.clone();
         assert_eq!(v, a);
 
@@ -880,5 +902,20 @@ mod tests {
         assert_eq!(kv_iter.next_back(), None);
         assert_eq!(kv_iter.next(), None);
         assert_eq!(kv_iter.next_back(), None);
+    }
+
+    #[test]
+    fn truncate() {
+        let mut kv = KVec::from_iter(["1", "2", "3", "4"].map(String::from));
+        let cap = kv.capacity();
+        kv.truncate(2);
+        assert_eq!(kv.len(), 2);
+        assert_eq!(kv.capacity(), cap);
+        kv.truncate(3);
+        assert_eq!(kv.len(), 2);
+        assert_eq!(kv.capacity(), cap);
+        kv.truncate(30);
+        assert_eq!(kv.len(), 2);
+        assert_eq!(kv.capacity(), cap);
     }
 }
