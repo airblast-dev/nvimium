@@ -546,13 +546,17 @@ impl<T> Drop for KVec<T> {
         if Self::ZST {
             return;
         }
-        let ptr = self.as_ptr();
-        for i in 0..self.len() {
-            unsafe { std::ptr::drop_in_place(ptr.add(i)) }
-        }
         let cap = self.capacity();
         unsafe {
-            xfree(&mut self.ptr, cap);
+            let len = self.len();
+            // set the length to zero in case the drops panic
+            self.set_len(0);
+            // SAFETY: if capacity is greater than zero we have an allocated pointer which is non
+            // null
+            if cap > 0 {
+                core::ptr::slice_from_raw_parts_mut(self.as_ptr(), len).drop_in_place();
+                xfree(&mut self.ptr, cap);
+            }
         }
     }
 }
