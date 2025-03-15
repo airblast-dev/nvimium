@@ -757,7 +757,7 @@ impl Clone for OwnedThinString {
                 )
             };
             unsafe { xmemcpyz(src, res.as_ptr(), source.as_thinstr().len()) };
-            *self = source.clone();
+            self.0.data = res.as_ptr();
         }
     }
 }
