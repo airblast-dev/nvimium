@@ -5,10 +5,24 @@ use crate::{kvec::KVec, object::Object, string::String};
 use super::{borrowed::Borrowed, string::OwnedThinString};
 
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct KeyValuePair {
     pub key: OwnedThinString,
     pub object: Object,
+}
+
+impl Clone for KeyValuePair {
+    fn clone(&self) -> Self {
+        KeyValuePair {
+            key: self.key.clone(),
+            object: self.object.clone(),
+        }
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        self.object.clone_from(&source.object);
+        self.key.clone_from(&source.key);
+    }
 }
 
 impl From<(String, Object)> for KeyValuePair {
@@ -30,8 +44,18 @@ impl From<(Object, String)> for KeyValuePair {
 }
 
 #[repr(transparent)]
-#[derive(Clone, Default, Debug)]
+#[derive(Default, Debug)]
 pub struct Dictionary(pub KVec<KeyValuePair>);
+
+impl Clone for Dictionary {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        self.0.clone_from(&source.0);
+    }
+}
 
 impl Deref for Dictionary {
     type Target = [KeyValuePair];

@@ -9,8 +9,18 @@ use super::borrowed::Borrowed;
 /// The implementation intentionally does not provide methods on [`Array`] itself and delegates the
 /// implementations via [`Deref`] to [`KVec`]. See its documentation instead.
 #[repr(transparent)]
-#[derive(Clone, Default, Debug)]
+#[derive(Default, Debug)]
 pub struct Array(pub KVec<Object>);
+
+impl Clone for Array {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        self.0.clone_from(source);
+    }
+}
 
 impl Deref for Array {
     type Target = KVec<Object>;
@@ -37,7 +47,7 @@ impl Array {
     }
 }
 
-impl <'a> From<&'a Array> for Borrowed<'a, Array> {
+impl<'a> From<&'a Array> for Borrowed<'a, Array> {
     fn from(value: &'a Array) -> Self {
         Borrowed::new(value)
     }
