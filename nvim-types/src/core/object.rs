@@ -1,4 +1,4 @@
-use std::{any::TypeId, fmt::Debug};
+use std::fmt::Debug;
 
 use crate::{array::Array, dictionary::Dictionary};
 
@@ -11,7 +11,7 @@ use super::{
 // Annoyingly isn't in any other official documentation :|
 //
 // For the enum values see src/nvim/api/private/defs.h 0.10.0 l:93
-#[derive(Clone, Default)]
+#[derive(Debug, Default)]
 #[repr(C, u32)]
 pub enum Object {
     #[default]
@@ -26,6 +26,37 @@ pub enum Object {
     Buffer(Buffer),
     Window(Window),
     TabPage(TabPage),
+}
+
+impl Clone for Object {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Null => Self::Null,
+            Self::Bool(b) => Self::Bool(*b),
+            Self::Integer(i) => Self::Integer(*i),
+            Self::Float(f) => Self::Float(*f),
+            Self::String(s) => Self::String(s.clone()),
+            Self::Array(a) => Self::Array(a.clone()),
+            Self::Dict(d) => Self::Dict(d.clone()),
+            Self::LuaRef(_) => todo!("add proper clone to lua state once lua support is added"),
+            Self::Buffer(b) => Self::Buffer(*b),
+            Self::Window(w) => Self::Window(*w),
+            Self::TabPage(t) => Self::TabPage(*t),
+        }
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        match (self, source) {
+            (Self::String(s), Self::String(src)) => s.clone_from(src),
+            (Self::Array(a), Self::Array(src)) => a.clone_from(src),
+            (Self::Dict(d), Self::Dict(src)) => d.clone_from(src),
+            (Self::LuaRef(_), _) | (_, Self::LuaRef(_)) => {
+                todo!("add proper clone_from to lua state once lua support is added")
+            }
+            // other variants are copy which wont benefit from clone_from
+            (se, src) => *se = src.clone(),
+        }
+    }
 }
 
 impl Object {
@@ -95,24 +126,6 @@ impl Object {
         match self {
             Self::TabPage(t) => Some(t),
             _ => None,
-        }
-    }
-}
-
-impl Debug for Object {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Object::Null => write!(f, "null"),
-            Object::Bool(b) => write!(f, "{:?}", b),
-            Object::Integer(i) => write!(f, "{:?}", i),
-            Object::Float(fl) => write!(f, "{:?}", fl),
-            Object::String(th) => write!(f, "{:?}", th),
-            Object::Array(a) => write!(f, "{:?}", a),
-            Object::Dict(d) => write!(f, "{:?}", d),
-            Object::LuaRef(lref) => write!(f, "{:?}", lref),
-            Object::Buffer(buf) => write!(f, "{:?}", buf),
-            Object::Window(win) => write!(f, "{:?}", win),
-            Object::TabPage(tp) => write!(f, "{:?}", tp),
         }
     }
 }
