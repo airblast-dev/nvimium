@@ -1,3 +1,5 @@
+// TODO: rewrite? this is getting pretty messy each time I add something
+
 #[macro_export]
 macro_rules! masked_builder {
     (
@@ -6,6 +8,7 @@ macro_rules! masked_builder {
             $(
                 $(#[field_meta = $field_meta:meta])*
                 $(#[func_meta = $func_meta:meta])*
+                $(#[pre_func = $pre_func:ident])?
                 $vis:vis $field:ident: $field_ty:ty
             ), *$(,)?
         }
@@ -20,7 +23,7 @@ macro_rules! masked_builder {
         }
 
         impl$(<$($lf),*>)? $ident$(<$($lf),*>),* {
-            $crate::func_gen_masked!($( $( #[$func_meta] )* $field: $field_ty,)*);
+            $crate::func_gen_masked!($( $( #[func_meta = $func_meta] )* $( #[pre_func = $pre_func] )? $field: $field_ty,)*);
         }
     };
 }
@@ -29,16 +32,16 @@ macro_rules! masked_builder {
 #[macro_export]
 macro_rules! func_gen_masked {
     (
-        $(#[$func_meta:meta])* $field:ident: $field_ty:ty,
-        $($(#[$inner_meta:meta])* $inner:ident: $inner_ty:ty,)*
+        $(#[func_meta = $func_meta:meta])* $(#[pre_func = $pre_func:ident])? $field:ident: $field_ty:ty,
+        $($(#[func_meta = $inner_meta:meta])* $(#[pre_func = $inner_pre_func:ident])* $inner:ident: $inner_ty:ty,)*
     ) => {
         $(#[$func_meta])*
-        pub fn $field<T: Into<$field_ty>>(&mut self, $field: T) -> &mut Self {
+        pub $($pre_func)* fn $field<T: Into<$field_ty>>(&mut self, $field: T) -> &mut Self {
             self.mask |= 2;
             self.$field = $field.into();
             self
         }
-        $crate::func_gen_masked_inner!(4, $( $(#[$inner_meta])* $inner: $inner_ty,)*);
+        $crate::func_gen_masked_inner!(4, $( $(#[func_meta = $inner_meta])* $( #[pre_func = $inner_pre_func] )? $inner: $inner_ty,)*);
     };
     () => {}
 }
@@ -47,16 +50,16 @@ macro_rules! func_gen_masked {
 #[macro_export]
 macro_rules! func_gen_masked_inner {
     (
-        $mask:expr, $(#[$func_meta:meta])* $field:ident: $field_ty:ty,
-        $( $(#[$inner_meta:meta])* $inner:ident: $inner_ty:ty,)*
+        $mask:expr, $(#[func_meta = $func_meta:meta])* $( #[pre_func = $pre_func:ident] )? $field:ident: $field_ty:ty,
+        $( $(#[func_meta = $inner_meta:meta])* $(#[pre_func = $($inner_pre_func:ident),+])? $inner:ident: $inner_ty:ty,)*
     ) => {
         $( #[$func_meta] )*
-        pub fn $field<T: Into<$field_ty>>(&mut self, $field: T) -> &mut Self {
+        pub $( $pre_func )? fn $field<T: Into<$field_ty>>(&mut self, $field: T) -> &mut Self {
             self.mask |= $mask;
             self.$field = $field.into();
             self
         }
-        $crate::func_gen_masked_inner!($mask << 1, $( $(#[$inner_meta])* $inner: $inner_ty,)*);
+        $crate::func_gen_masked_inner!($mask << 1, $( $(#[func_meta = $inner_meta])* $(#[pre_func = $($inner_pre_func),+])? $inner: $inner_ty,)*);
     };
     ($mask:expr $(,)?) => {};
 }
