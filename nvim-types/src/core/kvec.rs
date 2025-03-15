@@ -46,7 +46,7 @@ impl<T> KVec<T> {
     }
 
     #[inline]
-    pub const fn as_slice(&self) -> &[T] {
+    pub fn as_slice(&self) -> &[T] {
         // we can't check null pointers consistently in const context
         // since a null pointers length must always 0 this is the equivelant
         if self.is_empty() {
@@ -59,7 +59,7 @@ impl<T> KVec<T> {
     }
 
     #[inline]
-    pub const fn as_mut_slice(&mut self) -> &mut [T] {
+    pub fn as_mut_slice(&mut self) -> &mut [T] {
         // we can't check null pointers consistently in const context
         // since a null pointers length must always 0 this is the equivelant
         if self.is_empty() {
@@ -73,7 +73,7 @@ impl<T> KVec<T> {
 
     /// Returns the uninitialized but allocated space for `T`
     #[inline]
-    pub const fn spare_capacity_mut(&mut self) -> &mut [MaybeUninit<T>] {
+    pub fn spare_capacity_mut(&mut self) -> &mut [MaybeUninit<T>] {
         // we can't check null pointers consistently in const context
         // since a null pointers capacity must always 0 this is the equivelant
         if self.capacity() == 0 {
@@ -129,7 +129,7 @@ impl<T> KVec<T> {
     ///
     /// Calling this function when len items are not initialized may cause undefined behavior.
     #[inline(always)]
-    pub const unsafe fn set_len(&mut self, len: usize) {
+    pub unsafe fn set_len(&mut self, len: usize) {
         self.len = len;
     }
 
