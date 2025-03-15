@@ -386,16 +386,11 @@ impl<T: Clone> Clone for KVec<T> {
     }
 
     fn clone_from(&mut self, source: &Self) {
-        let ptr = self.as_ptr();
-        // TODO: replace with shrink_* methods
-        if !ptr.is_null() {
-            unsafe {
-                core::ptr::slice_from_raw_parts_mut(self.as_ptr(), self.len()).drop_in_place();
-                self.set_len(0);
-            }
-        }
-
-        self.extend_from_slice(source.as_slice());
+        let mid_len = self.len().min(source.len());
+        self.reserve_exact(source.len().saturating_sub(self.capacity()));
+        self.truncate(mid_len);
+        self[0..mid_len].clone_from_slice(&source[0..mid_len]);
+        self.extend_from_slice(&source[mid_len..]);
     }
 }
 
@@ -571,8 +566,6 @@ const _: () = assert!(
 mod tests {
     use std::num::NonZeroUsize;
 
-    use super::KVec;
-
     type KVec = super::KVec<String>;
 
     #[test]
@@ -599,6 +592,24 @@ mod tests {
         let mut a = KVec::default();
         a.clone_from(&v);
         assert_eq!(v, a);
+
+        let v = KVec::from_iter([1, 2, 3, 4, 5].map(|b| b.to_string()));
+        let a = KVec::from_iter([6, 7].map(|b| b.to_string()));
+        {
+            let mut v = v.clone();
+            v.clone_from(&a);
+            assert_eq!(v.as_slice(), [6, 7].map(|b| b.to_string()).as_slice());
+            assert_eq!(v, a);
+        }
+        {
+            let mut a = a.clone();
+            a.clone_from(&v);
+            assert_eq!(
+                a.as_slice(),
+                [1, 2, 3, 4, 5].map(|b| b.to_string()).as_slice()
+            );
+            assert_eq!(a, v);
+        }
     }
 
     #[test]
