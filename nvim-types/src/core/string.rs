@@ -35,7 +35,6 @@
 //! functions may still limit what kind of string can be passed.
 
 use std::{
-    borrow::Borrow,
     ffi::{c_char, c_void, CStr, CString},
     fmt::Debug,
     hash::Hash,
@@ -588,12 +587,6 @@ impl Debug for ThinString<'_> {
             .field("len", &self.len)
             .field("repr", &l)
             .finish()
-    }
-}
-
-impl Borrow<[u8]> for ThinString<'_> {
-    fn borrow(&self) -> &[u8] {
-        self.as_slice_with_null()
     }
 }
 
