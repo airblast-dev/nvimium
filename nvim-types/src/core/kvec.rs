@@ -268,12 +268,15 @@ impl<T> KVec<T> {
     {
         self.reserve_exact(s.len());
         if !Self::ZST {
+            // SAFETY: we have reserved the required space, we now have enough provenance to
+            // get_unchecked
             let spare = unsafe { self.spare_capacity_mut().get_unchecked_mut(..s.len()) };
             for i in 0..s.len() {
                 spare[i].write(s[i].clone());
             }
         }
 
+        // SAFETY: s.len() items have been initialized
         unsafe { self.set_len(self.len() + s.len()) };
     }
 
