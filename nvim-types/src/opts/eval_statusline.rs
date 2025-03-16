@@ -1,10 +1,6 @@
 use macros::masked_builder;
 
-use crate::{
-    string::{OwnedThinString, String, ThinString},
-    window::Window,
-    Boolean, Integer,
-};
+use crate::{string::ThinString, window::Window, Boolean, Integer};
 
 masked_builder!(
     #[derive(Clone, Debug)]

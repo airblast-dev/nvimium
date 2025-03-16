@@ -3,7 +3,8 @@ use std::fmt::Debug;
 use crate::{array::Array, dictionary::Dictionary};
 
 use super::{
-    borrowed::Borrowed, buffer::Buffer, lua_ref::LuaRef, string::OwnedThinString, tab_page::TabPage, window::Window, Boolean, Float, Integer
+    borrowed::Borrowed, buffer::Buffer, lua_ref::LuaRef, string::OwnedThinString,
+    tab_page::TabPage, window::Window, Boolean, Float, Integer,
 };
 
 // For layout rules see https://rust-lang.github.io/rfcs/2195-really-tagged-unions.html
