@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 #[repr(i64)]
 pub enum PastePhase {
     Start = 1,
