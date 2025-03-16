@@ -462,6 +462,7 @@ const _: () = assert!(
 
 impl Drop for String {
     fn drop(&mut self) {
+        debug_assert!(!self.data.is_null());
         unsafe { debug_assert_eq!(*self.data.add(self.len()), 0) };
         let cap = self.capacity().get();
         unsafe { xfree(&mut self.data, cap) };
