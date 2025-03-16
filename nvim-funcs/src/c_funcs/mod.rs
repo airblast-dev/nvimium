@@ -12,7 +12,7 @@ use nvim_types::{
     opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
         get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts, paste::PastePhase,
-        select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind,
+        select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind, set_hl::SetHlOpts,
     },
     string::{OwnedThinString, ThinString},
     tab_page::TabPage,
@@ -181,6 +181,14 @@ extern "C" {
     pub fn nvim_set_current_line<'a>(line: ThinString<'a>, arena: *mut Arena, err: *mut Error);
     pub fn nvim_set_current_tabpage(tp: TabPage, err: *mut Error);
     pub fn nvim_set_current_win(win: Window, err: *mut Error);
+    // unlike other options this theoretically might be mutated (url field)
+    pub fn nvim_set_hl<'a>(
+        chan: Channel,
+        ns: NameSpace,
+        name: ThinString<'a>,
+        val: *mut SetHlOpts,
+        err: *mut Error,
+    );
 
     // these should come later
     // TODO: use proper opts type

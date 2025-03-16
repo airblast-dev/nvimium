@@ -14,7 +14,7 @@ use nvim_types::{
     opts::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
         get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts, paste::PastePhase,
-        select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind,
+        select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind, set_hl::SetHlOpts,
     },
     returns::{
         channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict,
@@ -503,6 +503,21 @@ pub fn nvim_set_current_win(win: Window) -> Result<(), Error> {
     tri! {
         let mut err;
         unsafe { c_funcs::nvim_set_current_win(win, &mut err); }
+    }
+}
+
+pub fn nvim_set_hl<S: AsThinString>(ns: NameSpace, name: S, opts: &SetHlOpts) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe {
+            c_funcs::nvim_set_hl(
+                Channel::LUA_INTERNAL_CALL,
+                ns, name.as_thinstr(),
+                // may technically be mutated in neovim due to the url field
+                (opts as *const SetHlOpts) as *mut SetHlOpts,
+                &mut err
+            );
+        }
     }
 }
 
