@@ -39,7 +39,8 @@ use crate::c_funcs;
 pub fn nvim_create_buf(listed: Boolean, scratch: Boolean) -> Result<Buffer, Error> {
     tri! {
         let mut err;
-        unsafe { c_funcs::nvim_create_buf(listed, scratch, &mut err) }
+        unsafe { c_funcs::nvim_create_buf(listed, scratch, &mut err) },
+        Ok(buf) => Ok(unsafe{buf.assume_init()})
     }
 }
 
@@ -62,7 +63,8 @@ pub fn nvim_del_mark<S: AsThinString>(name: S) -> Result<Boolean, Error> {
         let mut err;
         unsafe {
             c_funcs::nvim_del_mark(name.as_thinstr(), &mut err)
-        }
+        },
+        Ok(b) => Ok(unsafe{b.assume_init()})
     }
 }
 
@@ -383,14 +385,16 @@ pub fn nvim_list_wins() -> Array {
 pub fn nvim_load_context(ctx: &Dictionary) -> Result<Object, Error> {
     tri! {
         let mut err;
-        unsafe { c_funcs::nvim_load_context(ctx.into(), &mut err) }
+        unsafe { c_funcs::nvim_load_context(ctx.into(), &mut err) },
+        Ok(obj) => Ok(unsafe{obj.assume_init()})
     }
 }
 
 pub fn nvim_open_term(buf: Buffer, opts: &OpenTermOpts) -> Result<Integer, Error> {
     tri! {
         let mut err;
-        unsafe { c_funcs::nvim_open_term(buf, opts, &mut err) }
+        unsafe { c_funcs::nvim_open_term(buf, opts, &mut err) },
+        Ok(i) => Ok(unsafe{i.assume_init()})
     }
 }
 
@@ -410,7 +414,8 @@ pub fn nvim_paste<S: AsThinString>(
                 core::ptr::null_mut(),
                 &mut err
             )
-        }
+        },
+        Ok(b) => Ok(unsafe{b.assume_init()})
     }
 }
 

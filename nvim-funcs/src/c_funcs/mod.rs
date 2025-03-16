@@ -30,7 +30,11 @@ use std::mem::ManuallyDrop;
 //
 // TLDR; every function here can only accept a ThinString as its string type.
 extern "C" {
-    pub fn nvim_create_buf(listed: Boolean, scratch: Boolean, err: *mut Error) -> Buffer;
+    pub fn nvim_create_buf(
+        listed: Boolean,
+        scratch: Boolean,
+        err: *mut Error,
+    ) -> MaybeUninit<Buffer>;
     pub fn nvim_del_current_line(arena: *mut Arena, err: *mut Error);
     pub fn nvim_del_keymap<'a>(
         chan: Channel,
@@ -38,7 +42,7 @@ extern "C" {
         lhs: ThinString<'a>,
         err: *mut Error,
     );
-    pub fn nvim_del_mark<'a>(name: ThinString<'a>, err: *mut Error) -> Boolean;
+    pub fn nvim_del_mark<'a>(name: ThinString<'a>, err: *mut Error) -> MaybeUninit<Boolean>;
     pub fn nvim_del_var<'a>(var_name: ThinString<'a>, err: *mut Error);
     // TODO: Array<Array<[String; 2]>>
     pub fn nvim_echo<'a>(
@@ -136,9 +140,16 @@ extern "C" {
     pub fn nvim_list_tabpages(arena: *mut Arena) -> Array;
     pub fn nvim_list_uis(arena: *mut Arena) -> ManuallyDrop<Array>;
     pub fn nvim_list_wins(arena: *mut Arena) -> Array;
-    pub fn nvim_load_context<'a>(dict: Borrowed<'a, Dictionary>, err: *mut Error) -> Object;
+    pub fn nvim_load_context<'a>(
+        dict: Borrowed<'a, Dictionary>,
+        err: *mut Error,
+    ) -> MaybeUninit<Object>;
     // TODO
-    pub fn nvim_open_term(buffer: Buffer, opts: *const OpenTermOpts, err: *mut Error) -> Integer;
+    pub fn nvim_open_term(
+        buffer: Buffer,
+        opts: *const OpenTermOpts,
+        err: *mut Error,
+    ) -> MaybeUninit<Integer>;
     pub fn nvim_paste<'a>(
         channel: Channel,
         src: ThinString<'a>,
@@ -146,7 +157,7 @@ extern "C" {
         phase: PastePhase,
         arena: *mut Arena,
         err: *mut Error,
-    ) -> Boolean;
+    ) -> MaybeUninit<Boolean>;
     pub fn nvim_put<'a>(
         lines: Borrowed<'a, Array>,
         behavior: ThinString<'a>,
