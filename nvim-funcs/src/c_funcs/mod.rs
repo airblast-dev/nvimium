@@ -211,6 +211,9 @@ extern "C" {
         opts: *const SetKeymapOpts,
         err: *mut Error,
     );
+    pub fn nvim_set_var<'a>(name: ThinString<'a>, obj: Borrowed<'a, Object>, err: *mut Error);
+    pub fn nvim_set_vvar<'a>(name: ThinString<'a>, obj: Borrowed<'a, Object>, err: *mut Error);
+    pub fn nvim_strwidth<'a>(name: ThinString<'a>, err: *mut Error) -> MaybeUninit<Integer>;
 
     // these should come later
     // TODO: use proper opts type

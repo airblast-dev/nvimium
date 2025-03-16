@@ -3,8 +3,7 @@ use std::fmt::Debug;
 use crate::{array::Array, dictionary::Dictionary};
 
 use super::{
-    buffer::Buffer, lua_ref::LuaRef, string::OwnedThinString, tab_page::TabPage, window::Window,
-    Boolean, Float, Integer,
+    borrowed::Borrowed, buffer::Buffer, lua_ref::LuaRef, string::OwnedThinString, tab_page::TabPage, window::Window, Boolean, Float, Integer
 };
 
 // For layout rules see https://rust-lang.github.io/rfcs/2195-really-tagged-unions.html
@@ -293,4 +292,10 @@ impl TryFrom<Object> for TabPage {
 #[derive(Clone, Copy, Debug)]
 pub enum ObjectConversionError {
     IncorrectKind,
+}
+
+impl<'a> From<&'a Object> for Borrowed<'a, Object> {
+    fn from(value: &'a Object) -> Self {
+        Borrowed::new(value)
+    }
 }

@@ -553,6 +553,28 @@ pub fn nvim_set_keymap<S: AsThinString, S1: AsThinString>(
     }
 }
 
+pub fn nvim_set_var<S: AsThinString>(s: S, obj: &Object) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_set_var(s.as_thinstr(), obj.into(), &mut err); }
+    }
+}
+
+pub fn nvim_set_vvar<S: AsThinString>(s: S, obj: &Object) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_set_vvar(s.as_thinstr(), obj.into(), &mut err); }
+    }
+}
+
+pub fn nvim_strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_strwidth(s.as_thinstr(), &mut err) },
+        Ok(len) => Ok(unsafe{len.assume_init()})
+    }
+}
+
 pub fn nvim_exec<S: AsThinString>(src: S, output: Boolean) -> Result<(), Error> {
     unsafe {
         tri! {
