@@ -792,6 +792,15 @@ impl From<String> for OwnedThinString {
     }
 }
 
+impl<T: AsRef<[u8]>> From<T> for OwnedThinString {
+    fn from(value: T) -> Self {
+        let bytes = value.as_ref();
+        let mut s = String::with_capacity(bytes.len());
+        s.push(bytes);
+        Self::from(s)
+    }
+}
+
 impl PartialEq for OwnedThinString {
     fn eq(&self, other: &Self) -> bool {
         self.as_thinstr() == other.as_thinstr()
