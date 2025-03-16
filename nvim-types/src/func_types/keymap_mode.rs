@@ -1,7 +1,8 @@
 use crate::string::ThinString;
 
 macro_rules! fast_th {
-    ($ident:ident, $lit:literal) => {
+    ($(#[$meta:meta])* $ident:ident, $lit:literal) => {
+        $(#[$meta])*
         pub const $ident: KeyMapMode =
             KeyMapMode(ThinString::from_null_terminated($lit.to_bytes_with_nul()));
     };
@@ -19,6 +20,19 @@ impl KeyMapMode {
     fast_th!(SELECT, c"s");
     fast_th!(MODE_OP_PENDING, c"o");
     fast_th!(MODE_TERMINAL, c"t");
+
+    fast_th!(
+        /// Only accepted when setting a keymap
+        ABREVIATION_INSERT, c"ia"
+    );
+    fast_th!(
+        /// Only accepted when setting a keymap
+        ABREVIATION_CMD, c"ca"
+    );
+    fast_th!(
+        /// Only accepted when setting a keymap
+        ABREVIATION_INSERT_CMD, c"!a"
+    );
 }
 #[repr(transparent)]
 #[derive(Clone, Debug, PartialEq, Eq)]

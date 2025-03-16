@@ -15,6 +15,7 @@ use nvim_types::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
         get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts, paste::PastePhase,
         select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind, set_hl::SetHlOpts,
+        set_keymap::SetKeymapOpts,
     },
     returns::{
         channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict,
@@ -518,6 +519,32 @@ pub fn nvim_set_hl<S: AsThinString>(ns: NameSpace, name: S, opts: &SetHlOpts) ->
                 &mut err
             );
         }
+    }
+}
+
+pub fn nvim_set_hl_ns(ns: NameSpace) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_set_hl_ns(ns, &mut err) }
+    }
+}
+
+pub fn nvim_set_hl_ns_fast(ns: NameSpace) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_set_hl_ns_fast(ns, &mut err) }
+    }
+}
+
+pub fn nvim_set_keymap<S: AsThinString, S1: AsThinString>(
+    mode: KeyMapMode,
+    lhs: S,
+    rhs: S1,
+    opts: &SetKeymapOpts,
+) -> Result<(), Error> {
+    tri! {
+        let mut err;
+        unsafe { c_funcs::nvim_set_keymap(Channel::LUA_INTERNAL_CALL, mode, lhs.as_thinstr(), rhs.as_thinstr(), opts, &mut err); }
     }
 }
 

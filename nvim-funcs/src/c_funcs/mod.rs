@@ -13,6 +13,7 @@ use nvim_types::{
         echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
         get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts, paste::PastePhase,
         select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind, set_hl::SetHlOpts,
+        set_keymap::SetKeymapOpts,
     },
     string::{OwnedThinString, ThinString},
     tab_page::TabPage,
@@ -187,6 +188,16 @@ extern "C" {
         ns: NameSpace,
         name: ThinString<'a>,
         val: *mut SetHlOpts,
+        err: *mut Error,
+    );
+    pub fn nvim_set_hl_ns(ns: NameSpace, err: *mut Error);
+    pub fn nvim_set_hl_ns_fast(ns: NameSpace, err: *mut Error);
+    pub fn nvim_set_keymap<'a>(
+        chan: Channel,
+        mode: KeyMapMode,
+        lhs: ThinString<'a>,
+        rhs: ThinString<'a>,
+        opts: *const SetKeymapOpts,
         err: *mut Error,
     );
 
