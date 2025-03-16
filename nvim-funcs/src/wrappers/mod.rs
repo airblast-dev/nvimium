@@ -5,7 +5,7 @@ use nvim_types::{
     array::Array,
     borrowed::Borrowed,
     buffer::Buffer,
-    call_site::{Channel, LUA_INTERNAL_CALL},
+    call_site::Channel,
     dictionary::Dictionary,
     error::Error,
     func_types::{feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
@@ -52,7 +52,7 @@ pub fn nvim_del_current_line() -> Result<(), Error> {
 pub fn nvim_del_keymap<S: AsThinString>(map_mode: KeyMapMode, lhs: S) -> Result<(), Error> {
     tri! {
         let mut err;
-        unsafe { c_funcs::nvim_del_keymap(LUA_INTERNAL_CALL, map_mode, lhs.as_thinstr(), &mut err) }
+        unsafe { c_funcs::nvim_del_keymap(Channel::LUA_INTERNAL_CALL, map_mode, lhs.as_thinstr(), &mut err) }
     }
 }
 
@@ -125,7 +125,7 @@ pub fn nvim_feedkeys<S: AsThinString>(keys: S, mode: &FeedKeysMode, escape_ks: B
 }
 
 pub fn nvim_get_api_info() -> Borrowed<'static, Array> {
-    unsafe { c_funcs::nvim_get_api_info(LUA_INTERNAL_CALL, core::ptr::null_mut()) }
+    unsafe { c_funcs::nvim_get_api_info(Channel::LUA_INTERNAL_CALL, core::ptr::null_mut()) }
 }
 
 pub fn nvim_get_chan_info(channel_id: Channel, chan: Integer) -> Result<ChannelInfo, Error> {
@@ -316,7 +316,7 @@ pub fn nvim_get_vvar<S: AsThinString>(name: S) -> Result<Object, Error> {
 }
 
 pub fn nvim_input<S: AsThinString>(keys: S) -> Integer {
-    unsafe { c_funcs::nvim_input(LUA_INTERNAL_CALL, keys.as_thinstr()) }
+    unsafe { c_funcs::nvim_input(Channel::LUA_INTERNAL_CALL, keys.as_thinstr()) }
 }
 
 pub fn nvim_input_mouse<S: AsThinString, S1: AsThinString, S2: AsThinString>(
@@ -402,7 +402,7 @@ pub fn nvim_paste<S: AsThinString>(
         let mut err;
         unsafe {
             c_funcs::nvim_paste(
-                LUA_INTERNAL_CALL,
+                Channel::LUA_INTERNAL_CALL,
                 src.as_thinstr(),
                 crlf,
                 phase,
@@ -510,7 +510,7 @@ pub fn nvim_exec<S: AsThinString>(src: S, output: Boolean) -> Result<(), Error> 
     unsafe {
         tri! {
             let mut err;
-            c_funcs::nvim_exec(LUA_INTERNAL_CALL, src.as_thinstr(), output, &mut err),
+            c_funcs::nvim_exec(Channel::LUA_INTERNAL_CALL, src.as_thinstr(), output, &mut err),
         }
     }
 }
