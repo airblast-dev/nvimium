@@ -3,7 +3,7 @@ use macros::masked_builder;
 use crate::{string::ThinString, window::Window, Boolean, Integer};
 
 masked_builder!(
-    #[derive(Clone, Debug)]
+    #[derive(Clone)]
     #[repr(C)]
     pub struct EvalStatusLineOpts<'a> {
         winid: Window,

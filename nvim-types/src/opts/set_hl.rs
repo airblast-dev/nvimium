@@ -7,7 +7,6 @@ use crate::{Boolean, Integer};
 
 masked_builder! {
     #[repr(C)]
-    #[derive(Debug)]
     pub struct SetHlOpts {
         bold: Boolean,
         standout: Boolean,

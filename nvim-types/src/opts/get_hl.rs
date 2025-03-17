@@ -4,7 +4,6 @@ use crate::{string::ThinString, Boolean, Integer};
 
 masked_builder!(
     #[repr(C)]
-    #[derive(Debug)]
     pub struct GetHlOpts<'a> {
         id: Integer,
         name: ThinString<'a>,

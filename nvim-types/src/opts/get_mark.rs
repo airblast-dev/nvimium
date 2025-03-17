@@ -2,6 +2,6 @@ use macros::masked_builder;
 
 masked_builder!(
     #[repr(C)]
-    #[derive(Clone, Debug)]
+    #[derive(Clone)]
     pub struct GetMarkOpts {}
 );

@@ -1,4 +1,7 @@
 // TODO: replace meta fragments with ident to allow better comparison in macros?
+// TODO: derive Debug for better debug print output
+
+use std::{any::type_name, marker::PhantomData, mem::MaybeUninit};
 
 #[macro_export]
 macro_rules! masked_builder {
@@ -60,9 +63,55 @@ macro_rules! masked_builder {
 
             }
         }
+
+        impl $(<$($lf),*>)? ::core::fmt::Debug for $ident $(<$($lf),*>)? {
+            #[allow(unreachable_code)]
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                let mut base_mask = 1;
+                use $crate::masked_builder::Uninit;
+                use ::core::marker::PhantomData;
+
+
+                $(let $field;)*
+                f.debug_struct(stringify!($ident))
+                    $(
+                        .field(stringify!($field), {
+                            base_mask <<= 1;
+                            if self.mask & base_mask == base_mask {
+                                ( unsafe { self.$field.assume_init_ref() } as &dyn ::core::fmt::Debug )
+                            } else {
+                                $field = if true {
+                                    $crate::masked_builder::Uninit(PhantomData)
+                                }
+                                // we cant use the lifetimes stored in field_ty so we infer the type instead :P
+                                else {
+                                    unreachable!("pretty if true always takes the same branch");
+
+                                    $crate::masked_builder::Uninit::new(self.$field)
+                                };
+                                &$field as &dyn ::core::fmt::Debug
+                            }
+                        })
+                    )*
+                    .finish()
+            }
+        }
     };
+}
 
+#[doc(hidden)]
+pub struct Uninit<T>(#[doc(hidden)] pub PhantomData<T>);
+impl<T> Uninit<T> {
+    #[doc(hidden)]
+    pub fn new(_: MaybeUninit<T>) -> Self {
+        Self(PhantomData)
+    }
+}
 
+impl<T> ::core::fmt::Debug for Uninit<T> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        write!(f, "Uninit<{}>", type_name::<T>())
+    }
 }
 
 #[doc(hidden)]
@@ -248,6 +297,34 @@ mod tests {
             }
         }
 
-        C::default();
+        let mut c = C::default();
+
+        #[rustfmt::skip]
+        assert_eq!(
+"C {
+    a: Uninit<alloc::string::String>,
+    b: Uninit<alloc::string::String>,
+    c: Uninit<core::num::nonzero::NonZero<usize>>,
+}",
+            format!("{:#?}", c)
+        );
+        c.a("Hello");
+
+        #[rustfmt::skip]
+        assert_eq!(
+"C {
+    a: \"Hello\",
+    b: Uninit<alloc::string::String>,
+    c: Uninit<core::num::nonzero::NonZero<usize>>,
+}", format!("{:#?}", c));
+        c.c(NonZeroUsize::new(5).unwrap());
+
+        #[rustfmt::skip]
+        assert_eq!(
+"C {
+    a: \"Hello\",
+    b: Uninit<alloc::string::String>,
+    c: 5,
+}", format!("{:#?}", c));
     }
 }

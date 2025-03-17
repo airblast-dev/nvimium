@@ -4,7 +4,7 @@ use crate::window::Window;
 
 masked_builder!(
     #[repr(C)]
-    #[derive(Debug, Clone)]
+    #[derive(Clone)]
     pub struct GetHlNsOpts {
         winid: Window,
     }
