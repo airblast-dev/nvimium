@@ -13,7 +13,7 @@ dependencies = ["miri-tests", "normal-tests"]
 [tasks.normal-tests]
 dependencies = ["install-rust-src"]
 command = "cargo"
-# no need to check nvim-types, we run them with miri
+# no need to check nvim-types and macros, we run them with miri
 args = ["test", "--workspace", "--exclude", "nvim-types", "--exclude", "macros", "--features", "testing"]
 
 
