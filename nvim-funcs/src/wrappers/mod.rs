@@ -609,4 +609,12 @@ mod tests {
             .expect("color not found");
         assert_eq!([255, 0, 0], color);
     }
+
+    #[nvim_test_macro::nvim_test(exit_call = nvim_exec)]
+    pub fn test_nvim_strwidth() {
+        let width = nvim_strwidth(c"".as_thinstr()).unwrap();
+        assert_eq!(0, width);
+        let width = nvim_strwidth(c"Hello".as_thinstr()).unwrap();
+        assert_eq!(5, width);
+    }
 }
