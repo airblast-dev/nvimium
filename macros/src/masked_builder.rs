@@ -178,8 +178,9 @@ macro_rules! func_gen_masked_inner {
 pub fn cold() {}
 
 #[cfg(test)]
+#[allow(unused)]
 mod tests {
-    use std::{borrow::Cow, mem::MaybeUninit};
+    use std::{borrow::Cow, mem::MaybeUninit, num::NonZeroUsize};
 
     #[test]
     fn builder_masked() {
@@ -236,5 +237,17 @@ mod tests {
             assert_eq!(c.a.assume_init(), 5_u32);
             assert_eq!(c.b.assume_init(), 6_u64);
         }
+
+        B::default();
+
+        masked_builder! {
+            struct C {
+                a: String,
+                b: String,
+                c: NonZeroUsize,
+            }
+        }
+
+        C::default();
     }
 }
