@@ -1084,6 +1084,8 @@ mod string_alloc {
 
 #[cfg(all(test, miri))]
 mod string_fmt {
+    use std::io::Write;
+
     use crate::string::{String, ThinString};
 
     #[test]
@@ -1108,6 +1110,13 @@ mod string_fmt {
         };
         assert_eq!(pre_ptr, "ThinString<'_> { data: ");
         assert_eq!(post_ptr, "len: 0, repr: \"\" }");
+    }
+
+    #[test]
+    fn fmt() {
+        let mut s = String::new();
+        s.write_fmt(format_args!("{}-{}-{}", "hi", "bye", 5));
+        assert_eq!(s, "hi-bye-5");
     }
 }
 
