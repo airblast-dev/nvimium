@@ -47,8 +47,6 @@ impl<T> KVec<T> {
 
     #[inline]
     pub fn as_slice(&self) -> &[T] {
-        // we can't check null pointers consistently in const context
-        // since a null pointers length must always 0 this is the equivelant
         if self.is_empty() {
             return &mut [];
         }
@@ -60,8 +58,6 @@ impl<T> KVec<T> {
 
     #[inline]
     pub fn as_mut_slice(&mut self) -> &mut [T] {
-        // we can't check null pointers consistently in const context
-        // since a null pointers length must always 0 this is the equivelant
         if self.is_empty() {
             return &mut [];
         }
@@ -219,9 +215,9 @@ impl<T> KVec<T> {
         if remaining >= additional {
             return None;
         }
-        // SAFETY: additional is always bigger than remaining which is checked above
         let new_capacity = self.capacity + additional - remaining;
         assert_ne!(new_capacity, 0);
+        // SAFETY: additional is always bigger than remaining which is checked above
         unsafe { Some(NonZeroUsize::new_unchecked(new_capacity)) }
     }
 
@@ -251,6 +247,10 @@ impl<T> KVec<T> {
     ///     
     /// Callers must guarantee that enough space is allocated. It is undefined behavior otherwise.
     unsafe fn push_unchecked(&mut self, element: T) {
+        debug_assert!(
+            self.len() < self.capacity(),
+            "called KVec::push_unchecked without enough capacity"
+        );
         if !Self::ZST {
             unsafe {
                 self.ptr.add(self.len()).write(element);
