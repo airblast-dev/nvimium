@@ -1,5 +1,11 @@
 use super::LuaRefT;
 
 #[repr(transparent)]
-#[derive(Clone, Copy, Debug)]
-pub struct LuaRef(LuaRefT);
+#[derive(Debug)]
+pub struct LuaRef(pub(crate) LuaRefT);
+
+impl LuaRef {
+    pub fn as_int(&self) -> LuaRefT {
+        self.0
+    }
+}
