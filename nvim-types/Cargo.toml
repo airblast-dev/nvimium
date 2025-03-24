@@ -9,3 +9,4 @@ libc = { workspace = true }
 panics = { workspace = true }
 macros = { workspace = true }
 bytemuck = { workspace = true }
+mlua-sys = { version = "0.6.7", features = ["lua51"] }
