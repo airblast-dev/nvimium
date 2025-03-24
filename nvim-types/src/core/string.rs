@@ -1115,7 +1115,8 @@ mod string_fmt {
     #[test]
     fn fmt() {
         let mut s = String::new();
-        s.write_fmt(format_args!("{}-{}-{}", "hi", "bye", 5)).unwrap();
+        s.write_fmt(format_args!("{}-{}-{}", "hi", "bye", 5))
+            .unwrap();
         assert_eq!(s, "hi-bye-5");
     }
 }
