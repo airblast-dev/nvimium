@@ -495,7 +495,7 @@ impl<'a> ThinString<'a> {
     ///
     /// See [`String::as_thinstr`] for a function that makes use of this.
     #[inline(always)]
-    const unsafe fn new<'b>(len: usize, data: *mut c_char) -> ThinString<'a>
+    pub const unsafe fn new<'b>(len: usize, data: *const c_char) -> ThinString<'a>
     where
         'a: 'b,
     {
