@@ -8,3 +8,4 @@ pub mod returns;
 
 pub use arena::*;
 pub use core::*;
+pub use lua::{FromLua, FromLuaMulti, IntoLua, IntoLuaMulti};

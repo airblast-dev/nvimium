@@ -1,10 +1,11 @@
 use std::ffi::c_int;
 
-use mlua_sys::{lua_tolstring, lua_type, LUA_TNONE, LUA_TSTRING};
+use libc::c_char;
+use mlua_sys::{LUA_TNONE, LUA_TSTRING, lua_pushlstring, lua_tolstring, lua_type};
 
-use crate::string::{OwnedThinString, ThinString};
+use crate::string::{AsThinString, OwnedThinString, ThinString};
 
-use super::{FromLua, FromLuaErr, Result};
+use super::{FromLua, FromLuaErr, IntoLua, Result};
 
 #[doc(hidden)]
 impl ThinString<'static> {
@@ -35,5 +36,12 @@ impl FromLua for OwnedThinString {
     unsafe fn pop(l: *mut mlua_sys::lua_State, idx: c_int) -> Result<Self> {
         let th = unsafe { ThinString::pop(l, idx) }?;
         Ok(Self::from(th))
+    }
+}
+
+impl<T: AsThinString> IntoLua for T {
+    unsafe fn push(&self, l: *mut mlua_sys::lua_State) {
+        let th = self.as_thinstr();
+        unsafe { lua_pushlstring(l, th.as_ptr() as *const c_char, th.len()) };
     }
 }

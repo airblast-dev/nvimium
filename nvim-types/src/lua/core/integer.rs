@@ -1,8 +1,11 @@
-use mlua_sys::{LUA_TNONE, LUA_TNUMBER, lua_tointeger, lua_tonumber, lua_type};
+use mlua_sys::{
+    LUA_TNONE, LUA_TNUMBER, lua_checkstack, lua_pushinteger, lua_pushnumber, lua_tointeger,
+    lua_tonumber, lua_type,
+};
 
 use crate::{Float, Integer};
 
-use super::{FromLua, FromLuaErr};
+use super::{FromLua, FromLuaErr, IntoLua};
 
 impl FromLua for Integer {
     unsafe fn pop(l: *mut mlua_sys::lua_State, idx: std::ffi::c_int) -> super::Result<Self> {
@@ -19,6 +22,15 @@ impl FromLua for Integer {
     }
 }
 
+impl IntoLua for Integer {
+    unsafe fn push(&self, l: *mut mlua_sys::lua_State) {
+        unsafe {
+            lua_checkstack(l, 1);
+            lua_pushinteger(l, *self);
+        }
+    }
+}
+
 impl FromLua for Float {
     unsafe fn pop(l: *mut mlua_sys::lua_State, idx: std::ffi::c_int) -> super::Result<Self> {
         let ty = unsafe { lua_type(l, idx) };
@@ -30,5 +42,14 @@ impl FromLua for Float {
         }
 
         Ok(unsafe { lua_tonumber(l, idx) })
+    }
+}
+
+impl IntoLua for Float {
+    unsafe fn push(&self, l: *mut mlua_sys::lua_State) {
+        unsafe {
+            lua_checkstack(l, 1);
+            lua_pushnumber(l, *self);
+        };
     }
 }

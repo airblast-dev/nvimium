@@ -1,4 +1,8 @@
 #[doc(hidden)]
+pub use mlua_sys::lua_State;
+#[doc(hidden)]
+pub use nvim_types::IntoLuaMulti;
+#[doc(hidden)]
 pub use thread_lock::scoped;
 
 /// The recommended way to define an entrypoint for a plugin
@@ -55,9 +59,10 @@ macro_rules! plugin {
             }
         };
         #[unsafe(no_mangle)]
-        extern "C" fn $open(lstate: *mut usize) -> usize {
-            let func: fn() -> () = $ident;
-            unsafe { $crate::scoped(|_| $ident, ()); }
+        extern "C" fn $open(lstate: *mut $crate::lua_State) -> usize {
+            let func: fn() -> _ = $ident;
+            let ret = unsafe { $crate::scoped(|_| $ident(), ()) };
+            unsafe { $crate::IntoLuaMulti::push(&ret, lstate) };
             1
         }
     };

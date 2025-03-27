@@ -18,14 +18,14 @@ impl<T: FromLua> FromLuaMulti for T {
     }
 }
 
-pub(crate) trait FromLua: 'static + Sized {
+pub trait FromLua: 'static + Sized {
     unsafe fn pop(l: *mut lua_State, idx: c_int) -> Result<Self>;
 }
 
 pub(crate) type Result<T> = core::result::Result<T, FromLuaErr>;
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) enum FromLuaErr {
+pub enum FromLuaErr {
     NotFound,
     IncorrectType,
 }
@@ -40,16 +40,20 @@ impl<T: FromLua> FromLua for Option<T> {
     }
 }
 
-pub(crate) trait IntoLua: 'static {
-    unsafe fn push(l: *mut lua_State);
+pub trait IntoLua {
+    unsafe fn push(&self, l: *mut lua_State);
 }
 
 impl<T: IntoLua> IntoLuaMulti for T {
-    unsafe fn push(l: *mut lua_State) {
-        unsafe { <Self as IntoLua>::push(l) };
+    unsafe fn push(&self, l: *mut lua_State) {
+        unsafe { <Self as IntoLua>::push(self, l) };
     }
 }
 
-pub trait IntoLuaMulti: 'static + Sized {
-    unsafe fn push(l: *mut lua_State);
+pub trait IntoLuaMulti: Sized {
+    unsafe fn push(&self, l: *mut lua_State);
+}
+
+impl IntoLua for () {
+    unsafe fn push(&self, _: *mut lua_State) {}
 }

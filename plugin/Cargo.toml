@@ -6,3 +6,5 @@ edition = "2024"
 [dependencies]
 libc = { workspace = true }
 thread-lock = { workspace = true }
+nvim-types =  { workspace = true }
+mlua-sys = { workspace = true }

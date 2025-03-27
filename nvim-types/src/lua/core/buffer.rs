@@ -1,7 +1,9 @@
 
-use crate::{buffer::Buffer, HandleT, Integer};
+use mlua_sys::lua_pushinteger;
 
-use super::{FromLua, FromLuaErr};
+use crate::{buffer::Buffer, lua::LuaInteger, HandleT, Integer};
+
+use super::{FromLua, FromLuaErr, IntoLua};
 
 impl FromLua for Buffer {
     unsafe fn pop(l: *mut mlua_sys::lua_State, idx: std::ffi::c_int) -> super::Result<Self> {
@@ -15,5 +17,11 @@ impl FromLua for Buffer {
             //   so problems are expected anyways
             HandleT::try_from(int).map_err(|_| FromLuaErr::IncorrectType)?,
         ))
+    }
+}
+
+impl IntoLua for Buffer{
+    unsafe fn push(&self, l: *mut mlua_sys::lua_State) {
+        unsafe { lua_pushinteger(l, self.0 as LuaInteger) };
     }
 }

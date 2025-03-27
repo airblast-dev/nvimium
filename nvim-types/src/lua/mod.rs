@@ -16,10 +16,10 @@
 // as all use cases have a fix set of arguments which we can handle internally
 mod box_fn;
 mod closure;
-mod core;
+pub mod core;
 mod fn_ptr;
 
-use core::{FromLua, FromLuaMulti, IntoLua, IntoLuaMulti};
+pub use core::{FromLua, FromLuaMulti, IntoLua, IntoLuaMulti};
 use std::any::Any;
 
 use mlua_sys::lua_State;
@@ -37,7 +37,11 @@ type LuaInteger = i64;
 struct Function(LuaRef);
 
 impl Function {
-    pub(crate) fn from_fn<F: 'static + Send + Sync + Fn(A) -> R + Unpin, A: FromLua, R: IntoLuaMulti>(
+    pub(crate) fn from_fn<
+        F: 'static + Send + Sync + Fn(A) -> R + Unpin,
+        A: FromLua,
+        R: IntoLuaMulti,
+    >(
         f: F,
     ) -> Self {
         Self(LuaRef(closure::register(unsafe { L }, f)))
@@ -47,7 +51,11 @@ impl Function {
         Self(LuaRef(fn_ptr::register(unsafe { L }, f)))
     }
 
-    pub(crate) fn from_box_fn<F: 'static + Send + Sync + Fn(A) -> R, A: FromLuaMulti, R: IntoLuaMulti>(
+    pub(crate) fn from_box_fn<
+        F: 'static + Send + Sync + Fn(A) -> R,
+        A: FromLuaMulti,
+        R: IntoLuaMulti,
+    >(
         f: F,
     ) -> Self {
         Self(LuaRef(box_fn::register(unsafe { L }, f)))
@@ -57,7 +65,11 @@ impl Function {
     ///
     /// The provided function will be attempted to be downcasted to a function pointer for cheaper
     /// initialization and drops.
-    pub fn wrap<F: 'static + Send + Sync + Fn(A) -> R + Unpin, A: FromLuaMulti, R: IntoLuaMulti>(
+    pub fn wrap<
+        F: 'static + Send + Sync + Fn(A) -> R + Unpin,
+        A: FromLuaMulti,
+        R: 'static + IntoLuaMulti,
+    >(
         f: F,
     ) -> Self {
         // if F is a function pointer we can avoid dynamic dispatch, an extra indirection and the drop
