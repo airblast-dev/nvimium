@@ -7,7 +7,7 @@ use crate::string::{OwnedThinString, ThinString};
 use super::{FromLua, FromLuaErr, Result};
 
 #[doc(hidden)]
-impl FromLua for ThinString<'static> {
+impl ThinString<'static> {
     /// Returns a [`ThinString`] with a static lifetime.
     ///
     /// Used to avoid an extra allocation in callbacks. The actual lifetime is how long this value
