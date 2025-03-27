@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 libc = { workspace = true }
+thread-lock = { workspace = true }
