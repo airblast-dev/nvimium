@@ -24,12 +24,13 @@ utils = { path = "./utils" }
 macros = { path = "./macros/" }
 nvim-test-macro = { path = "./nvim-test-macro", default-features = false }
 test-cdylib = { path = "../test-cdylib/" }
+thread_lock = { path = "./thread_lock/" }
 
 [dev-dependencies]
 trybuild = { version = "1.0.101" }
 
 [workspace]
-members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros" , "nvim-test", "utils"]
+members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros" , "nvim-test", "utils", "thread_lock"]
 
 [profile.dev]
 incremental = true
