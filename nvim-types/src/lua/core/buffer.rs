@@ -1,13 +1,12 @@
-
 use mlua_sys::lua_pushinteger;
 
-use crate::{buffer::Buffer, lua::LuaInteger, HandleT, Integer};
+use crate::{HandleT, Integer, buffer::Buffer, lua::LuaInteger};
 
 use super::{FromLua, FromLuaErr, IntoLua};
 
 impl FromLua for Buffer {
-    unsafe fn pop(l: *mut mlua_sys::lua_State, idx: std::ffi::c_int) -> super::Result<Self> {
-        let int = unsafe { Integer::pop(l, idx) }?;
+    unsafe fn pop(l: *mut mlua_sys::lua_State) -> super::Result<Self> {
+        let int = unsafe { Integer::pop(l) }?;
 
         Ok(Self(
             // buffer arg should be at most [`i32::MAX`] so exceeding that value would mean
@@ -20,7 +19,7 @@ impl FromLua for Buffer {
     }
 }
 
-impl IntoLua for Buffer{
+impl IntoLua for Buffer {
     unsafe fn push(&self, l: *mut mlua_sys::lua_State) {
         unsafe { lua_pushinteger(l, self.0 as LuaInteger) };
     }

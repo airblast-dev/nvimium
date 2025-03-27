@@ -1,15 +1,15 @@
 use std::{
-    ffi::{c_char, CStr},
+    ffi::{CStr, c_char},
     sync::OnceLock,
 };
 
 use mlua_sys::{
-    luaL_newmetatable, luaL_ref, lua_State, lua_checkstack, lua_newuserdata, lua_pop,
-    lua_pushcclosure, lua_pushcfunction, lua_rawgeti, lua_setfield, lua_setmetatable,
-    lua_touserdata, lua_upvalueindex, LUA_REGISTRYINDEX,
+    LUA_REGISTRYINDEX, lua_State, lua_checkstack, lua_newuserdata, lua_pop, lua_pushcclosure,
+    lua_pushcfunction, lua_rawgeti, lua_setfield, lua_setmetatable, lua_touserdata,
+    lua_upvalueindex, luaL_newmetatable, luaL_ref,
 };
 
-use super::{core::FromLuaMulti, FromLua};
+use super::FromLua;
 
 trait TypeName {
     fn metatable_key(l: *mut lua_State) -> i32;
@@ -41,7 +41,7 @@ fn metatable_key(l: *mut lua_State) -> i32 {
 
 static KEY: OnceLock<i32> = OnceLock::new();
 
-pub fn register<F: 'static + Send + Sync + Fn(A) -> R, A: FromLuaMulti, R>(
+pub fn register<F: 'static + Send + Sync + Fn(A) -> R, A: FromLua, R>(
     l: *mut lua_State,
     f: F,
 ) -> i32 {

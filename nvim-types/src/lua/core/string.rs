@@ -1,5 +1,3 @@
-use std::ffi::c_int;
-
 use libc::c_char;
 use mlua_sys::{LUA_TNONE, LUA_TSTRING, lua_pushlstring, lua_tolstring, lua_type};
 
@@ -16,9 +14,9 @@ impl ThinString<'static> {
     ///
     /// Only use internally as users are free to push and pop from the stack when using mlua inside
     /// callbacks
-    unsafe fn pop(l: *mut mlua_sys::lua_State, idx: c_int) -> Result<Self> {
+    unsafe fn pop(l: *mut mlua_sys::lua_State) -> Result<Self> {
         unsafe {
-            let ty = lua_type(l, idx);
+            let ty = lua_type(l, -1);
             if LUA_TNONE == ty {
                 return Err(FromLuaErr::NotFound);
             }
@@ -26,15 +24,15 @@ impl ThinString<'static> {
                 return Err(FromLuaErr::IncorrectType);
             }
             let mut len = 0;
-            let th: ThinString<'static> = ThinString::new(len, lua_tolstring(l, idx, &mut len));
+            let th: ThinString<'static> = ThinString::new(len, lua_tolstring(l, -1, &mut len));
             Ok(th)
         }
     }
 }
 
 impl FromLua for OwnedThinString {
-    unsafe fn pop(l: *mut mlua_sys::lua_State, idx: c_int) -> Result<Self> {
-        let th = unsafe { ThinString::pop(l, idx) }?;
+    unsafe fn pop(l: *mut mlua_sys::lua_State) -> Result<Self> {
+        let th = unsafe { ThinString::pop(l) }?;
         Ok(Self::from(th))
     }
 }

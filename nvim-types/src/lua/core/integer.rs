@@ -8,8 +8,8 @@ use crate::{Float, Integer};
 use super::{FromLua, FromLuaErr, IntoLua};
 
 impl FromLua for Integer {
-    unsafe fn pop(l: *mut mlua_sys::lua_State, idx: std::ffi::c_int) -> super::Result<Self> {
-        let ty = unsafe { lua_type(l, idx) };
+    unsafe fn pop(l: *mut mlua_sys::lua_State) -> super::Result<Self> {
+        let ty = unsafe { lua_type(l, -1) };
         if ty == LUA_TNONE {
             return Err(FromLuaErr::NotFound);
         }
@@ -18,7 +18,7 @@ impl FromLua for Integer {
         }
 
         // on 32 bit platforms tointeger returns an i32 so just cast it
-        Ok(unsafe { lua_tointeger(l, idx) as Self })
+        Ok(unsafe { lua_tointeger(l, -1) as Self })
     }
 }
 
@@ -32,8 +32,8 @@ impl IntoLua for Integer {
 }
 
 impl FromLua for Float {
-    unsafe fn pop(l: *mut mlua_sys::lua_State, idx: std::ffi::c_int) -> super::Result<Self> {
-        let ty = unsafe { lua_type(l, idx) };
+    unsafe fn pop(l: *mut mlua_sys::lua_State) -> super::Result<Self> {
+        let ty = unsafe { lua_type(l, -1) };
         if ty == LUA_TNONE {
             return Err(FromLuaErr::NotFound);
         }
@@ -41,7 +41,7 @@ impl FromLua for Float {
             return Err(FromLuaErr::IncorrectType);
         }
 
-        Ok(unsafe { lua_tonumber(l, idx) })
+        Ok(unsafe { lua_tonumber(l, -1) })
     }
 }
 

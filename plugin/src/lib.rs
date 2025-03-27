@@ -1,7 +1,7 @@
 #[doc(hidden)]
 pub use mlua_sys::lua_State;
 #[doc(hidden)]
-pub use nvim_types::IntoLuaMulti;
+pub use nvim_types::IntoLua;
 #[doc(hidden)]
 pub use thread_lock::scoped;
 
@@ -62,7 +62,7 @@ macro_rules! plugin {
         extern "C" fn $open(lstate: *mut $crate::lua_State) -> usize {
             let func: fn() -> _ = $ident;
             let ret = unsafe { $crate::scoped(|_| $ident(), ()) };
-            unsafe { $crate::IntoLuaMulti::push(&ret, lstate) };
+            unsafe { $crate::IntoLua::push(&ret, lstate) };
             1
         }
     };
