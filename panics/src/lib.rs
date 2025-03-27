@@ -1,7 +1,7 @@
 // TODO: add more recovery/abort functions
 //
 // see [`alloc_failed`] for example usage
-extern "C" {
+unsafe extern "C" {
     /// Neovim's custom abort
     ///
     /// Does some cleanup and logging before crashing.

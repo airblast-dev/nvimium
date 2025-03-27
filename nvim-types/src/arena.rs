@@ -34,6 +34,6 @@ impl Drop for ArenaMem<'_> {
 
 // TODO: use arena to optimize performance
 // This is somewhat low priority but will be useful for large allocations
-extern "C" {
+unsafe extern "C" {
     fn arena_mem_free(arena_mem: ArenaMem);
 }

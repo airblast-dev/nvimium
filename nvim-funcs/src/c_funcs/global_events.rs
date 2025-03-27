@@ -1,6 +1,6 @@
-use nvim_types::{call_site::Channel, string::ThinString, Integer};
+use nvim_types::{Integer, call_site::Channel, string::ThinString};
 
-extern "C" {
+unsafe extern "C" {
     pub fn nvim_error_event<'a>(chan: Channel, error_type: Integer, message: ThinString<'a>);
 }
 
@@ -10,7 +10,6 @@ mod testing {
     use nvim_types::string::String;
 
     use crate::wrappers::global::nvim_exec;
-
 
     // we actually cant test if this succedes but if the test fails or hangs we can tell something
     // is wrong

@@ -29,7 +29,7 @@ use std::mem::ManuallyDrop;
 // value never contains a null pointer this means passing it to an FFI boundary is always safe.
 //
 // TLDR; every function here can only accept a ThinString as its string type.
-extern "C" {
+unsafe extern "C" {
     pub fn nvim_create_buf(
         listed: Boolean,
         scratch: Boolean,
