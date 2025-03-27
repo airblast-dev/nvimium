@@ -1,4 +1,5 @@
-use thread_lock::scoped;
+#[doc(hidden)]
+pub use thread_lock::scoped;
 
 /// The recommended way to define an entrypoint for a plugin
 ///
@@ -56,8 +57,7 @@ macro_rules! plugin {
         #[unsafe(no_mangle)]
         extern "C" fn $open(lstate: *mut usize) -> usize {
             let func: fn() -> () = $ident;
-            $crate::scoped($ident, ());
-            $ident();
+            unsafe { $crate::scoped(|_| $ident, ()); }
             1
         }
     };

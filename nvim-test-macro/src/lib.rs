@@ -24,6 +24,7 @@ pub fn nvim_test(
         #[unsafe(no_mangle)]
         #[allow(non_snake_case)]
         pub extern "C" fn #cdylib_ident(state: *mut ()) -> libc::c_int {
+            let _th = unsafe { unlock() };
             #func
             let func: fn() -> () = #orig_ident;
             func();

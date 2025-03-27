@@ -641,6 +641,12 @@ pub fn nvim_exec<S: AsThinString>(src: S, output: Boolean) -> Result<(), Error> 
 mod tests {
     use super::*;
     use nvim_types::string::String;
+    use thread_lock::unlock;
+
+    // calling `thread_lock::unlock` is safe as every test is spawned as a process with independent
+    // threads
+    //
+    // only exclusion is when multithreading may being tested
 
     #[nvim_test_macro::nvim_test(exit_call = nvim_exec)]
     pub fn test_nvim_create_current_buf() {

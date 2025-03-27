@@ -8,6 +8,7 @@ unsafe extern "C" {
 mod testing {
     use nvim_types::call_site::Channel;
     use nvim_types::string::String;
+    use thread_lock::unlock;
 
     use crate::wrappers::global::nvim_exec;
 
