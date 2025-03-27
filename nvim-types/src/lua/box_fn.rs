@@ -9,7 +9,7 @@ use mlua_sys::{
     lua_touserdata, lua_upvalueindex, LUA_REGISTRYINDEX,
 };
 
-use super::FromLua;
+use super::{core::FromLuaMulti, FromLua};
 
 trait TypeName {
     fn metatable_key(l: *mut lua_State) -> i32;
@@ -41,7 +41,7 @@ fn metatable_key(l: *mut lua_State) -> i32 {
 
 static KEY: OnceLock<i32> = OnceLock::new();
 
-pub fn register<F: 'static + Send + Sync + Fn(A) -> R, A: FromLua, R>(
+pub fn register<F: 'static + Send + Sync + Fn(A) -> R, A: FromLuaMulti, R>(
     l: *mut lua_State,
     f: F,
 ) -> i32 {
@@ -62,7 +62,7 @@ pub fn register<F: 'static + Send + Sync + Fn(A) -> R, A: FromLua, R>(
 
         // f must be moved or else it gets freed at the end of the scope
         let f: Box<dyn Fn(*mut lua_State)> = Box::new(move |l| {
-            let arg = A::pop(l, -1).unwrap();
+            let arg = A::pop(l).unwrap();
             f(arg);
         });
 

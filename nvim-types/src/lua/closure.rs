@@ -4,19 +4,19 @@ use mlua_sys::{
     LUA_REGISTRYINDEX,
 };
 
-use super::FromLua;
+use super::{core::{FromLuaMulti, IntoLuaMulti}, FromLua};
 
 #[inline]
-fn closure_drop<F: Fn(A) -> R + Send + Sync + Unpin, A: FromLua, R>() -> (
+fn closure_drop<F: Fn(A) -> R + Send + Sync + Unpin, A: FromLuaMulti, R>() -> (
     extern "C-unwind" fn(*mut lua_State) -> i32,
     extern "C-unwind" fn(*mut lua_State) -> i32,
 ) {
-    extern "C-unwind" fn callback<F: Fn(A) -> R, A: FromLua, R>(l: *mut lua_State) -> i32 {
+    extern "C-unwind" fn callback<F: Fn(A) -> R, A: FromLuaMulti, R>(l: *mut lua_State) -> i32 {
         let ud = unsafe { lua_touserdata(l, lua_upvalueindex(1)) } as *mut F;
         unsafe { (ud.as_ref().unwrap())(core::mem::zeroed()) };
         0
     }
-    extern "C-unwind" fn drop_fn<T: Fn(A) -> R, A: FromLua, R>(l: *mut lua_State) -> i32 {
+    extern "C-unwind" fn drop_fn<T: Fn(A) -> R, A: FromLuaMulti, R>(l: *mut lua_State) -> i32 {
         let ud = unsafe { lua_touserdata(l, 1) } as *mut T;
         if !ud.is_null() {
             unsafe { ud.read() };
@@ -28,7 +28,7 @@ fn closure_drop<F: Fn(A) -> R + Send + Sync + Unpin, A: FromLua, R>() -> (
 }
 
 #[inline]
-pub fn register<F: 'static + Fn(A) -> R + Send + Sync + Unpin, A: FromLua, R>(
+pub fn register<F: 'static + Fn(A) -> R + Send + Sync + Unpin, A: FromLuaMulti, R: IntoLuaMulti>(
     l: *mut lua_State,
     f: F,
 ) -> i32 {

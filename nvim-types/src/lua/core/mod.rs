@@ -8,13 +8,13 @@ use std::ffi::c_int;
 
 use mlua_sys::lua_State;
 
-pub(crate) trait FromLuaMulti: 'static + Sized {
+pub trait FromLuaMulti: 'static + Sized {
     unsafe fn pop(l: *mut lua_State) -> Result<Self>;
 }
 
 impl<T: FromLua> FromLuaMulti for T {
     unsafe fn pop(l: *mut lua_State) -> Result<Self> {
-        <Self as FromLua>::pop(l, -1)
+        unsafe { <Self as FromLua>::pop(l, -1) }
     }
 }
 
@@ -46,10 +46,10 @@ pub(crate) trait IntoLua: 'static {
 
 impl<T: IntoLua> IntoLuaMulti for T {
     unsafe fn push(l: *mut lua_State) {
-        <Self as IntoLua>::push(l);
+        unsafe { <Self as IntoLua>::push(l) };
     }
 }
 
-trait IntoLuaMulti: 'static + Sized {
+pub trait IntoLuaMulti: 'static + Sized {
     unsafe fn push(l: *mut lua_State);
 }

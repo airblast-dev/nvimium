@@ -6,6 +6,6 @@ use super::FromLua;
 
 impl FromLua for Boolean {
     unsafe fn pop(l: *mut mlua_sys::lua_State, idx: std::ffi::c_int) -> super::Result<Self> {
-        Ok(lua_toboolean(l, idx) != 0)
+        Ok(unsafe { lua_toboolean(l, idx) } != 0)
     }
 }
