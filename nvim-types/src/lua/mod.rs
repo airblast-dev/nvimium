@@ -40,17 +40,17 @@ impl Function {
     pub(crate) fn from_fn<F: 'static + Send + Sync + Fn(A) -> R + Unpin, A: FromLua, R: IntoLua>(
         f: F,
     ) -> Self {
-        Self(LuaRef(closure::register(unsafe { L }, f)))
+        Self(unsafe { LuaRef::new(closure::register(L, f)) })
     }
 
     pub(crate) fn from_fn_ptr<A: FromLua, R: IntoLua>(f: fn(A) -> R) -> Self {
-        Self(LuaRef(fn_ptr::register(unsafe { L }, f)))
+        Self(unsafe { LuaRef::new(fn_ptr::register(L, f)) })
     }
 
     pub(crate) fn from_box_fn<F: 'static + Send + Sync + Fn(A) -> R, A: FromLua, R: IntoLua>(
         f: F,
     ) -> Self {
-        Self(LuaRef(box_fn::register(unsafe { L }, f)))
+        Self(unsafe { LuaRef::new(box_fn::register(L, f)) })
     }
 
     /// Wraps the provided function and returns a [`Function`] that stores the key to the lua registry

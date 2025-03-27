@@ -2,7 +2,7 @@ use super::LuaRefT;
 
 #[repr(transparent)]
 #[derive(Debug)]
-pub struct LuaRef(pub(crate) LuaRefT);
+pub struct LuaRef(LuaRefT);
 
 impl LuaRef {
     /// Initialize a new LuaRef with an key
