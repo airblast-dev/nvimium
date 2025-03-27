@@ -33,7 +33,7 @@ pub use thread_lock::scoped;
 ///
 /// The first argument must be typed manually even though it always must be "luaopen_" +
 /// "<your_func>", this is due to identifier concatenation not being stable (and it seems it never will
-/// be). See [`core::compile_error`] and its linked issue for more information.
+/// be). See [`core::concat_idents`] and its linked issue for more information.
 #[macro_export]
 macro_rules! plugin {
     ($open:ident, $ident:ident) => {
