@@ -1,7 +1,6 @@
-use std::{path::PathBuf, sync::LazyLock};
+use nvim_test::test_pkg;
 
-pub(crate) static CDYLIB_TEST_PATH: LazyLock<PathBuf> =
-    LazyLock::new(test_cdylib::build_current_project);
+test_pkg!();
 
 pub mod c_funcs;
 pub mod wrappers;

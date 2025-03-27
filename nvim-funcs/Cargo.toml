@@ -9,11 +9,10 @@ nvim-types = { workspace = true }
 macros = { workspace = true }
 nvim-test-macro = { workspace = true }
 nvim-test = { workspace = true }
-test-cdylib = { workspace = true }
 thread-lock = { workspace = true }
 
 [features]
-testing = ["nvim-test-macro/testing"]
+testing = ["nvim-test-macro/testing", "nvim-test/testing"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

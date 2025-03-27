@@ -9,7 +9,6 @@ nvim-types = { workspace = true }
 nvim-funcs = { workspace = true }
 nvim-test = { workspace = true }
 macros = { workspace = true }
-test-cdylib = { workspace = true }
 plugin = { path = "./plugin" }
 
 [workspace.dependencies]
@@ -24,7 +23,6 @@ nvim-test = { path = "./nvim-test/" }
 utils = { path = "./utils" }
 macros = { path = "./macros/" }
 nvim-test-macro = { path = "./nvim-test-macro", default-features = false }
-test-cdylib = { path = "../test-cdylib/" }
 
 [dev-dependencies]
 trybuild = { version = "1.0.101" }

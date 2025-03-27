@@ -105,13 +105,15 @@ dependencies = [
  "nvim-test",
  "nvim-test-macro",
  "nvim-types",
- "test-cdylib",
  "thread-lock",
 ]
 
 [[package]]
 name = "nvim-test"
 version = "0.1.0"
+dependencies = [
+ "test-cdylib",
+]
 
 [[package]]
 name = "nvim-test-macro"
@@ -143,7 +145,6 @@ dependencies = [
  "nvim-test",
  "nvim-types",
  "plugin",
- "test-cdylib",
  "trybuild",
 ]
 

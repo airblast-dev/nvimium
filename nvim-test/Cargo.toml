@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+test-cdylib = { path = "../../test-cdylib/", optional = true }
+
+[features]
+testing = ["dep:test-cdylib"]

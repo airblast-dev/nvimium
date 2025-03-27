@@ -3,6 +3,10 @@ use std::{
     process::{Command, Output},
 };
 
+#[cfg(feature = "testing")]
+#[doc(hidden)]
+pub use test_cdylib;
+
 pub fn test_body(dylib_path: &Path, func_name: &str) -> Result<(), String> {
     // TODO: add better panic and error info
     let load_cmd = format!(
@@ -32,4 +36,20 @@ fn match_output(o: &Output) -> Result<(), String> {
         let exit_msg = format!("Neovim exited with exit code: {}", o.status);
         Err(exit_msg)
     }
+}
+
+#[cfg(feature = "testing")]
+#[macro_export]
+macro_rules! test_pkg {
+    () => {
+        #[allow(unused)]
+        static CDYLIB_TEST_PATH: ::std::sync::LazyLock<::std::path::PathBuf> =
+            ::std::sync::LazyLock::new($crate::test_cdylib::build_current_project);
+    };
+}
+
+#[cfg(not(feature = "testing"))]
+#[macro_export]
+macro_rules! test_pkg {
+    () => {};
 }
