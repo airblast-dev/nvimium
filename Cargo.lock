@@ -48,13 +48,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8d1add55171497b4705a648c6b583acafb01d58050a51727785f0b2c8e0a2b2"
 
 [[package]]
-name = "global_lock"
-version = "0.1.0"
-dependencies = [
- "mlua-sys",
-]
-
-[[package]]
 name = "hashbrown"
 version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -113,6 +106,7 @@ dependencies = [
  "nvim-test-macro",
  "nvim-types",
  "test-cdylib",
+ "thread-lock",
 ]
 
 [[package]]
@@ -294,6 +288,13 @@ dependencies = [
  "serde",
  "serde_json",
  "toml 0.5.11",
+]
+
+[[package]]
+name = "thread-lock"
+version = "0.1.0"
+dependencies = [
+ "mlua-sys",
 ]
 
 [[package]]

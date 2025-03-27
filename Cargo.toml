@@ -16,6 +16,7 @@ plugin = { path = "./plugin" }
 bytemuck = { version = "1.22.0", features = ["must_cast"] }
 mlua-sys = { version = "0.6.7", features = ["lua51"] }
 libc = { version = "0.2.169", default-features = false }
+thread-lock = { path = "./thread-lock/" }
 panics = { path = "./panics" }
 nvim-types = { path = "./nvim-types/" }
 nvim-funcs = { path = "./nvim-funcs/" }
@@ -24,13 +25,12 @@ utils = { path = "./utils" }
 macros = { path = "./macros/" }
 nvim-test-macro = { path = "./nvim-test-macro", default-features = false }
 test-cdylib = { path = "../test-cdylib/" }
-thread_lock = { path = "./thread_lock/" }
 
 [dev-dependencies]
 trybuild = { version = "1.0.101" }
 
 [workspace]
-members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros" , "nvim-test", "utils", "thread_lock"]
+members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros" , "nvim-test", "utils", "thread-lock"]
 
 [profile.dev]
 incremental = true
