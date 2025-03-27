@@ -1,7 +1,5 @@
 use std::fmt::Display;
 
-use bytemuck::{must_cast_slice, NoUninit};
-
 use crate::string::{AsThinString, String, ThinString};
 
 #[repr(u8)]
@@ -16,8 +14,6 @@ pub enum FeedKeysModeKind {
     Execute = b'x',
     NoEnd = b'!',
 }
-
-unsafe impl NoUninit for FeedKeysModeKind {}
 
 impl Display for FeedKeysModeKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -53,9 +49,11 @@ impl<T: AsRef<[FeedKeysModeKind]>> From<T> for FeedKeysMode {
         // the cast may change the length of the slice which isn't what we want
         // assert the size to avoid that case
         const _: () = assert!(core::mem::size_of::<FeedKeysModeKind>() == 1);
-        Self(String::from(must_cast_slice::<FeedKeysModeKind, u8>(
-            value.as_ref(),
-        )))
+        Self(unsafe {
+            String::from(core::mem::transmute::<&[FeedKeysModeKind], &[u8]>(
+                value.as_ref(),
+            ))
+        })
     }
 }
 

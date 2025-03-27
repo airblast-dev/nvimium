@@ -35,7 +35,7 @@
 //! functions may still limit what kind of string can be passed.
 
 use std::{
-    ffi::{c_char, c_void, CStr, CString},
+    ffi::{CStr, CString, c_char, c_void},
     fmt::Debug,
     hash::Hash,
     marker::PhantomData,
@@ -43,7 +43,6 @@ use std::{
     ops::Deref,
 };
 
-use bytemuck::must_cast_slice;
 use libc::size_t;
 use panics::not_null_terminated;
 use utils::{xfree, xmalloc, xmemcpyz, xmemdupz, xrealloc};
@@ -261,7 +260,7 @@ impl String {
     /// This will allocate the minimal amount needed to add the bytes. When pushing bytes in a loop
     /// prefer [`String`]'s [`Extend`] implementation.
     pub fn push<'a, B: 'a + AsRef<[u8]>>(&mut self, string: B) {
-        let slice = must_cast_slice(string.as_ref());
+        let slice = string.as_ref();
         self.reserve_exact(slice.len());
         unsafe {
             xmemcpyz(
@@ -538,7 +537,7 @@ impl<'a> ThinString<'a> {
         if ptr.is_null() {
             return &[];
         }
-        unsafe { must_cast_slice(std::slice::from_raw_parts(self.as_ptr(), self.len)) }
+        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len) }
     }
 
     // Returns a slice of the buffers bytes with a null byte
@@ -548,7 +547,7 @@ impl<'a> ThinString<'a> {
         if ptr.is_null() {
             return &[0];
         }
-        unsafe { must_cast_slice(std::slice::from_raw_parts(ptr, self.len + 1)) }
+        unsafe { std::slice::from_raw_parts(ptr, self.len + 1) }
     }
 
     /// Initialize a [`ThinString`] from raw bytes
@@ -911,11 +910,7 @@ unsafe impl AsThinString for String {
 
 unsafe impl AsThinString for ThinString<'_> {
     fn as_thinstr(&self) -> ThinString<'_> {
-        if self.data.is_null() {
-            EMPTY
-        } else {
-            *self
-        }
+        if self.data.is_null() { EMPTY } else { *self }
     }
 }
 
