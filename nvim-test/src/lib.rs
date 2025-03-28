@@ -43,6 +43,7 @@ fn match_output(o: &Output) -> Result<(), String> {
 macro_rules! test_pkg {
     () => {
         #[allow(unused)]
+        #[cfg(test)]
         static CDYLIB_TEST_PATH: ::std::sync::LazyLock<::std::path::PathBuf> =
             ::std::sync::LazyLock::new($crate::test_cdylib::build_current_project);
     };
