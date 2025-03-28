@@ -128,16 +128,16 @@ macro_rules! func_gen_masked {
     ) => {
         $(#[$func_meta])*
         pub fn $field<T: Into<$field_ty>>(&mut self, $field: T) -> &mut Self {
-            if self.mask & 2 == 2 {
+            if self.mask & 1 == 1 {
                 $crate::masked_builder::cold();
                 unsafe { self.$field.assume_init_drop() }
             }
-            self.mask |= 2;
+            self.mask |= 1;
             self.$field.write($field.into());
             self
         }
         $crate::func_gen_masked_inner!(
-            4,
+            2,
             $(
                 $(#[builder($inner_skip)])?
                 $( #[func_meta = $inner_func_meta] )*
