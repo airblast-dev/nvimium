@@ -27,6 +27,9 @@ nvim-test-macro = { path = "./nvim-test-macro", default-features = false }
 members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros" , "nvim-test", "utils", "thread-lock"]
 exclude = ["examples"]
 
+[dev-dependencies]
+trybuild = "1.0.104"
+
 [profile.dev]
 incremental = true
 
