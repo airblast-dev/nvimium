@@ -55,10 +55,10 @@ macro_rules! masked_builder {
                 // TODO: might be possible to optimize this with tagged scope and comparisons
                 let mut base_mask = 1;
                 $(
-                    base_mask <<= 1;
                     if self.mask & base_mask == base_mask {
                         unsafe { self.$field.assume_init_drop() }
                     }
+                    base_mask <<= 1;
                 )*
 
             }
