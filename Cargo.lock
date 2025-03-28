@@ -156,6 +156,7 @@ dependencies = [
  "macros",
  "nvim-funcs",
  "nvim-test",
+ "nvim-test-macro",
  "nvim-types",
  "plugin",
  "trybuild",
@@ -180,6 +181,7 @@ version = "0.1.0"
 dependencies = [
  "libc",
  "mlua-sys",
+ "nvim-test",
  "nvim-types",
  "thread-lock",
 ]

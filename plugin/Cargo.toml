@@ -8,3 +8,4 @@ libc = { workspace = true }
 thread-lock = { workspace = true }
 nvim-types =  { workspace = true }
 mlua-sys = { workspace = true }
+nvim-test = { workspace = true }

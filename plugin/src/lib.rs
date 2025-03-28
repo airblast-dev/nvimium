@@ -5,6 +5,9 @@ pub use nvim_types::IntoLua;
 #[doc(hidden)]
 pub use thread_lock::scoped;
 
+#[doc(hidden)]
+pub use nvim_test::test_pkg;
+
 /// The recommended way to define an entrypoint for a plugin
 ///
 /// The first argument is `luaopen_<yourfunc>` where `<yourfunc>` is your plugins entrypoint and
@@ -38,8 +41,7 @@ pub use thread_lock::scoped;
 macro_rules! plugin {
     ($open:ident, $ident:ident) => {
         #[cfg(test)]
-        pub const CDYLIB_TEST_PATH: ::std::sync::LazyLock<core::path::PathBuf> =
-            ::std::sync::LazyLock(::nvimium::test_cdylib::build_current_project);
+        $crate::test_pkg!();
         const _: () = const {
             const fn panic() -> ! {
                 ::core::panic!();

@@ -8,6 +8,7 @@ edition = "2024"
 nvim-types = { workspace = true }
 nvim-funcs = { workspace = true }
 nvim-test = { workspace = true }
+nvim-test-macro = { workspace = true, optional = true }
 macros = { workspace = true }
 plugin = { path = "./plugin" }
 
@@ -39,4 +40,4 @@ lto = true
 codegen-units = 1
 
 [features]
-testing = ["nvim-funcs/testing"]
+testing = ["nvim-funcs/testing", "dep:nvim-test-macro"]
