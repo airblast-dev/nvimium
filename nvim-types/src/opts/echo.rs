@@ -4,7 +4,7 @@ use crate::Boolean;
 
 builder!(
     #[repr(C)]
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, Default)]
     pub struct EchoOpts {
         err: Boolean,
         verbose: Boolean,
