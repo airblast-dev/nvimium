@@ -1123,7 +1123,7 @@ mod string_fmt {
         assert_eq!(s, "hi-bye-5");
 
         let mut s = String::new();
-        write!(s, "{}-{}-{}", 1, 2 ,3).unwrap();
+        write!(s, "{}-{}-{}", 1, 2, 3).unwrap();
         assert_eq!(s, "1-2-3");
     }
 }
