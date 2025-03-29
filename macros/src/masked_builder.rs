@@ -76,8 +76,7 @@ macro_rules! masked_builder {
                 f.debug_struct(stringify!($ident))
                     $(
                         .field(stringify!($field), {
-                            base_mask <<= 1;
-                            if self.mask & base_mask == base_mask {
+                            let ret = if self.mask & base_mask == base_mask {
                                 ( unsafe { self.$field.assume_init_ref() } as &dyn ::core::fmt::Debug )
                             } else {
                                 $field = if true {
@@ -90,7 +89,9 @@ macro_rules! masked_builder {
                                     $crate::masked_builder::Uninit::new(self.$field)
                                 };
                                 &$field as &dyn ::core::fmt::Debug
-                            }
+                            };
+                            base_mask <<= 1;
+                            ret
                         })
                     )*
                     .finish()
@@ -247,11 +248,11 @@ mod tests {
             c: MaybeUninit::new(true),
         };
         c.a(20_u32);
-        assert_eq!(c.mask, 2);
+        assert_eq!(c.mask, 1);
         c.b("hello");
-        assert_eq!(c.mask, 6 | (2 << 1));
+        assert_eq!(c.mask, 1 | 2);
         c.c(false);
-        assert_eq!(c.mask, 14 | (2 << 2));
+        assert_eq!(c.mask, 1 | 2 | 4);
 
         unsafe {
             assert!(!c.c.assume_init());
@@ -275,13 +276,13 @@ mod tests {
         };
 
         c.a(5_u32);
-        assert_eq!(c.mask, 2);
+        assert_eq!(c.mask, 1);
         c.b(6_u64);
-        assert_eq!(c.mask, 2 | 4);
+        assert_eq!(c.mask, 1 | 2);
         c.c("HAHAHA".to_owned());
         unsafe {
             assert_eq!(c.c.assume_init_ref(), "HAHAHA");
-            assert_eq!(c.mask, 2 | 4 | 8);
+            assert_eq!(c.mask, 1 | 2 | 4);
 
             assert_eq!(c.a.assume_init(), 5_u32);
             assert_eq!(c.b.assume_init(), 6_u64);
