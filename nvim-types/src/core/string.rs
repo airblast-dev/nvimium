@@ -347,6 +347,14 @@ impl std::io::Write for String {
     }
 }
 
+impl std::fmt::Write for String {
+    fn write_str(&mut self, s: &str) -> std::fmt::Result {
+        self.reserve(s.len());
+        self.push(s);
+        Ok(())
+    }
+}
+
 impl Hash for String {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         state.write(self.as_slice_with_null());
@@ -1113,6 +1121,10 @@ mod string_fmt {
         s.write_fmt(format_args!("{}-{}-{}", "hi", "bye", 5))
             .unwrap();
         assert_eq!(s, "hi-bye-5");
+
+        let mut s = String::new();
+        write!(s, "{}-{}-{}", 1, 2 ,3).unwrap();
+        assert_eq!(s, "1-2-3");
     }
 }
 
