@@ -271,7 +271,8 @@ impl String {
         };
 
         // SAFETY: the values have been initialized above, it is now safe to set the new length.
-        unsafe { self.set_len(self.len() + slice.len()) };
+        let new_len = self.len() + slice.len();
+        unsafe { self.set_len(new_len) };
     }
 }
 
