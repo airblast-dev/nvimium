@@ -78,7 +78,7 @@ pub fn nvim_del_var<S: AsThinString>(var: S) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_echo<'a, S: AsThinString>(
+pub fn nvim_echo<'a>(
     chunks: &'a Array,
     history: Boolean,
     opts: &'a EchoOpts,
