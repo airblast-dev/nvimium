@@ -1,13 +1,14 @@
-use nvim_types::{Integer, call_site::Channel, string::ThinString};
+use nvim_types::{call_site::Channel, error::Error};
 
 unsafe extern "C" {
-    pub fn nvim_error_event<'a>(chan: Channel, error_type: Integer, message: ThinString<'a>);
+    pub fn nvim_error_event(chan: Channel, err: Error);
 }
 
 #[cfg(feature = "testing")]
 mod testing {
     use nvim_types::call_site::Channel;
-    use nvim_types::string::String;
+    use nvim_types::error::Error;
+    use nvim_types::string::{String, ThinString};
     use thread_lock::unlock;
 
     use crate::wrappers::global::nvim_exec;
@@ -17,7 +18,8 @@ mod testing {
     #[nvim_test_macro::nvim_test(exit_call = nvim_exec)]
     fn test_nvim_error_event() {
         use nvim_types::string::AsThinString;
+        let err = Error::validation(ThinString::from_null_terminated(b"Hello World\0"));
 
-        unsafe { super::nvim_error_event(Channel::LUA_INTERNAL_CALL, 1, c"Hello".as_thinstr()) };
+        unsafe { super::nvim_error_event(Channel::LUA_INTERNAL_CALL, err) };
     }
 }
