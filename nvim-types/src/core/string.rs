@@ -170,7 +170,7 @@ impl String {
     /// Allocates for cap + 1 to make the [`String`] null terminated.
     pub fn with_capacity(cap: usize) -> Self {
         let ptr = unsafe { xmalloc(cap + 1) }.as_ptr() as *mut c_char;
-        unsafe { ptr.write(0) };
+        unsafe { ptr.write_volatile(0) };
         Self {
             len: 0,
             data: ptr,

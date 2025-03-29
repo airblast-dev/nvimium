@@ -83,6 +83,6 @@ pub unsafe fn xmemcpyz<T>(src: *const T, dst: *mut T, len: usize) {
     let byte_len = len.checked_mul(size_of::<T>()).unwrap();
     unsafe {
         libc::memcpy(dst as *mut c_void, src as *const c_void, byte_len);
-        dst.byte_add(byte_len).cast::<c_char>().write(0);
+        dst.byte_add(byte_len).cast::<c_char>().write_volatile(0);
     }
 }
