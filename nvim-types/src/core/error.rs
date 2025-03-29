@@ -30,7 +30,7 @@ impl Debug for Error {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[repr(i64)]
+#[repr(C)]
 enum ErrorType {
     None = -1,
     Exception,
