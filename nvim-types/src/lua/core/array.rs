@@ -1,11 +1,8 @@
-use mlua_sys::{
-    lua_checkstack, lua_createtable, lua_pushboolean, lua_pushinteger, lua_pushnil, lua_pushnumber,
-    lua_rawseti,
-};
+use mlua_sys::{lua_checkstack, lua_createtable, lua_rawseti};
 
-use crate::{array::Array, object::Object};
+use crate::array::Array;
 
-use super::{FromLua, IntoLua};
+use super::IntoLua;
 
 impl IntoLua for Array {
     unsafe fn push(&self, l: *mut mlua_sys::lua_State) {
