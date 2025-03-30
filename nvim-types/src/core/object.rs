@@ -10,7 +10,6 @@ use super::{
     Boolean, Float, Integer,
     borrowed::Borrowed,
     buffer::Buffer,
-    kvec::KVec,
     lua_ref::LuaRef,
     string::{OwnedThinString, ThinString},
     tab_page::TabPage,
