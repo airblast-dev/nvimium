@@ -66,18 +66,6 @@ impl Clone for Object {
 }
 
 impl Object {
-    // Discriminant values
-    pub(crate) const D_NILL: u32 = 0;
-    pub(crate) const D_BOOL: u32 = 1;
-    pub(crate) const D_INTEGER: u32 = 2;
-    pub(crate) const D_FLOAT: u32 = 3;
-    pub(crate) const D_STRING: u32 = 4;
-    pub(crate) const D_ARRAY: u32 = 5;
-    pub(crate) const D_DICT: u32 = 6;
-    pub(crate) const D_LUAREF: u32 = 7;
-    pub(crate) const D_BUFFER: u32 = 8;
-    pub(crate) const D_WINDOW: u32 = 9;
-    pub(crate) const D_TABPAGE: u32 = 10;
     pub fn into_bool(self) -> Option<Boolean> {
         match self {
             Object::Bool(b) => Some(b),
@@ -319,4 +307,19 @@ impl<'a> From<&'a Object> for Borrowed<'a, Object> {
     fn from(value: &'a Object) -> Self {
         Borrowed::new(value)
     }
+}
+
+#[repr(u32)]
+pub enum ObjectTag {
+    Null = 0,
+    Bool,
+    Integer,
+    Float,
+    String,
+    Array,
+    Dict,
+    LuaRef,
+    Buffer,
+    Window,
+    TabPage,
 }
