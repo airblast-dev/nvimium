@@ -6,7 +6,7 @@ use nvim_types::{
     call_site::Channel,
     dictionary::Dictionary,
     error::Error,
-    func_types::keymap_mode::KeyMapMode,
+    func_types::{echo::Echo, keymap_mode::KeyMapMode},
     namespace::NameSpace,
     object::Object,
     opts::{
@@ -46,12 +46,14 @@ unsafe extern "C" {
     pub fn nvim_del_var<'a>(var_name: ThinString<'a>, err: *mut Error);
     // TODO: Array<Array<[String; 2]>>
     pub fn nvim_echo<'a>(
-        chunks: Borrowed<'a, Array>,
+        chunks: Borrowed<'a, Echo>,
         history: bool,
         opts: *const EchoOpts,
         err: *mut Error,
     );
+    #[deprecated]
     pub fn nvim_err_write<'a>(s: ThinString<'a>);
+    #[deprecated]
     pub fn nvim_err_writeln<'a>(s: ThinString<'a>);
     pub fn nvim_eval_statusline<'a>(
         s: ThinString<'a>,
