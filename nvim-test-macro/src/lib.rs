@@ -28,7 +28,7 @@ pub fn nvim_test(
             #func
             let func: fn() -> () = #orig_ident;
             func();
-            #exit_call(String::from("qall!"), false).unwrap();
+            #exit_call(String::from("qall!"), &Default::default()).unwrap();
             return 0;
         }
     }
@@ -157,7 +157,7 @@ mod stuff {
     pub fn get_exit_call(t: proc_macro::TokenStream) -> proc_macro::TokenStream {
         if t.is_empty() {
             quote! {
-                ::nvimium::nvim_funcs::nvim_exec
+                ::nvimium::nvim_funcs::nvim_exec2
             }
             .into()
         } else {

@@ -630,20 +630,10 @@ pub fn nvim_strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
         Ok(len) => Ok(unsafe{len.assume_init()})
     }
 }
-
-pub fn nvim_exec<S: AsThinString>(src: S, output: Boolean) -> Result<(), Error> {
-    call_check();
-    unsafe {
-        tri! {
-            let mut err;
-            global::nvim_exec(Channel::LUA_INTERNAL_CALL, src.as_thinstr(), output, &mut err),
-        }
-    }
-}
-
 #[cfg(feature = "testing")]
 mod tests {
     use super::*;
+    use crate::wrappers::vimscript::nvim_exec2;
     use nvim_types::string::String;
     use thread_lock::unlock;
 
@@ -652,7 +642,7 @@ mod tests {
     //
     // only exclusion is when multithreading may being tested
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec)]
+    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
     pub fn test_nvim_create_current_buf() {
         let buf = nvim_get_current_buf();
         assert_eq!(buf.as_int(), 1);
@@ -660,7 +650,7 @@ mod tests {
         assert_eq!(buf.as_int(), 2);
     }
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec)]
+    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
     pub fn test_nvim_get_color_map() {
         let map = nvim_get_color_map();
         let color = map
@@ -673,7 +663,7 @@ mod tests {
         assert_eq!([255, 0, 0], color);
     }
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec)]
+    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
     pub fn test_nvim_strwidth() {
         let width = nvim_strwidth(c"".as_thinstr()).unwrap();
         assert_eq!(0, width);

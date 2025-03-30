@@ -4,8 +4,11 @@ use nvim_types::{
     Arena,
     array::Array,
     borrowed::Borrowed,
+    call_site::Channel,
+    dictionary::Dictionary,
     error::Error,
     object::{Object, ObjectRef},
+    opts::echo::EchoOpts,
     string::ThinString,
 };
 
@@ -25,4 +28,11 @@ unsafe extern "C" {
         err: *mut Error,
     ) -> MaybeUninit<Object>;
     pub fn nvim_command<'a>(command: ThinString<'a>, err: *mut Error);
+    pub fn nvim_eval<'a>(eval: ThinString<'a>, err: *mut Error) -> MaybeUninit<Object>;
+    pub fn nvim_exec2<'a>(
+        chan: Channel,
+        exec: ThinString<'a>,
+        opts: *const EchoOpts,
+        err: *mut Error,
+    ) -> MaybeUninit<Dictionary>;
 }

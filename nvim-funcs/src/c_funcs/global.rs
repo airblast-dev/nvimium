@@ -216,20 +216,4 @@ unsafe extern "C" {
     pub fn nvim_set_var<'a>(name: ThinString<'a>, obj: Borrowed<'a, Object>, err: *mut Error);
     pub fn nvim_set_vvar<'a>(name: ThinString<'a>, obj: Borrowed<'a, Object>, err: *mut Error);
     pub fn nvim_strwidth<'a>(name: ThinString<'a>, err: *mut Error) -> MaybeUninit<Integer>;
-
-    // these should come later
-    // TODO: use proper opts type
-    pub fn nvim_exec2<'a>(
-        channel_id: Channel,
-        src: ThinString<'a>,
-        opts: Dictionary,
-        err: *mut Error,
-    );
-    // TODO: use proper opts type
-    pub fn nvim_exec<'a>(
-        channel_id: Channel,
-        src: ThinString<'a>,
-        output: Boolean,
-        err: *mut Error,
-    );
 }

@@ -9,3 +9,4 @@ pub mod select_popupmenu_item;
 pub mod set_client_info;
 pub mod set_hl;
 pub mod set_keymap;
+pub mod exec;
