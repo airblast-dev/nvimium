@@ -39,7 +39,7 @@ impl ColorMap {
                 object: color_value,
             } = d.0.swap_remove(i);
             let name = color_name.leak();
-            let Some(value) = color_value.clone().to_int() else {
+            let Some(value) = color_value.clone().into_int() else {
                 // should be impossible to reach but better than a panic
                 continue;
             };
