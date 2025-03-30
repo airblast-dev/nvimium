@@ -34,3 +34,11 @@ pub fn nvim_call_function<S: AsThinString>(func: S, args: &Array) -> Result<Obje
         Ok(obj) => Ok(unsafe{ obj.assume_init() })
     }
 }
+
+pub fn nvim_command<S: AsThinString>(command: S) -> Result<(), Error> {
+    call_check();
+    tri! {
+        let mut err;
+        unsafe { vimscript::nvim_command(command.as_thinstr(), &mut err) }
+    }
+}

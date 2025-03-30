@@ -11,7 +11,7 @@ use nvim_types::{
 
 unsafe extern "C" {
     pub fn nvim_call_dict_function<'a>(
-        dict: ObjectRef<'a ,ThinString<'a>>,
+        dict: ObjectRef<'a, ThinString<'a>>,
         func: ThinString<'a>,
         args: Borrowed<'a, Array>,
         arena: *mut Arena,
@@ -24,4 +24,5 @@ unsafe extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
+    pub fn nvim_command<'a>(command: ThinString<'a>, err: *mut Error);
 }
