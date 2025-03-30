@@ -1,6 +1,6 @@
 use super::HandleT;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct NameSpace(HandleT);
 

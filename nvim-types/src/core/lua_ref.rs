@@ -3,7 +3,7 @@ use mlua_sys::{LUA_NOREF, LUA_REGISTRYINDEX, luaL_unref};
 use super::LuaRefT;
 
 #[repr(transparent)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct LuaRef(LuaRefT);
 
 impl LuaRef {

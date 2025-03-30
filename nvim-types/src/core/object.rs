@@ -3,15 +3,21 @@ use std::fmt::Debug;
 use crate::{array::Array, dictionary::Dictionary};
 
 use super::{
-    Boolean, Float, Integer, borrowed::Borrowed, buffer::Buffer, lua_ref::LuaRef,
-    string::OwnedThinString, tab_page::TabPage, window::Window,
+    Boolean, Float, Integer,
+    borrowed::Borrowed,
+    buffer::Buffer,
+    kvec::KVec,
+    lua_ref::LuaRef,
+    string::{OwnedThinString, ThinString},
+    tab_page::TabPage,
+    window::Window,
 };
 
 // For layout rules see https://rust-lang.github.io/rfcs/2195-really-tagged-unions.html
 // Annoyingly isn't in any other official documentation :|
 //
 // For the enum values see src/nvim/api/private/defs.h 0.10.0 l:93
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq)]
 #[repr(C, u32)]
 pub enum Object {
     #[default]

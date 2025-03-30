@@ -1,6 +1,6 @@
 use super::HLGroupIDT;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct HlGroupId(HLGroupIDT);
 

@@ -1,7 +1,7 @@
 use super::HandleT;
 
 #[repr(transparent)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Window(HandleT);
 
 impl Window {

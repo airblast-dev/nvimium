@@ -5,7 +5,7 @@ use crate::{kvec::KVec, object::Object, string::String};
 use super::{borrowed::Borrowed, string::OwnedThinString};
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct KeyValuePair {
     pub key: OwnedThinString,
     pub object: Object,
@@ -44,7 +44,7 @@ impl From<(Object, String)> for KeyValuePair {
 }
 
 #[repr(transparent)]
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq)]
 pub struct Dictionary(pub KVec<KeyValuePair>);
 
 impl Clone for Dictionary {
