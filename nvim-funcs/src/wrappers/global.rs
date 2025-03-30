@@ -10,7 +10,7 @@ use nvim_types::{
     call_site::Channel,
     dictionary::Dictionary,
     error::Error,
-    func_types::{feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
+    func_types::{echo::Echo, feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
     namespace::NameSpace,
     object::Object,
     opts::{
@@ -78,11 +78,7 @@ pub fn nvim_del_var<S: AsThinString>(var: S) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_echo<'a>(
-    chunks: &'a Array,
-    history: Boolean,
-    opts: &'a EchoOpts,
-) -> Result<(), Error> {
+pub fn nvim_echo<'a>(chunks: &'a Echo, history: Boolean, opts: &'a EchoOpts) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -92,14 +88,22 @@ pub fn nvim_echo<'a>(
     }
 }
 
+#[deprecated]
 pub fn nvim_err_write<S: AsThinString>(s: S) {
     call_check();
-    unsafe { global::nvim_err_write(s.as_thinstr()) };
+    #[allow(deprecated)]
+    unsafe {
+        global::nvim_err_write(s.as_thinstr())
+    };
 }
 
+#[deprecated]
 pub fn nvim_err_writeln<S: AsThinString>(s: S) {
     call_check();
-    unsafe { global::nvim_err_writeln(s.as_thinstr()) };
+    #[allow(deprecated)]
+    unsafe {
+        global::nvim_err_writeln(s.as_thinstr())
+    };
 }
 pub fn nvim_eval_statusline<S: AsThinString>(
     s: S,
