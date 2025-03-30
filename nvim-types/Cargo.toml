@@ -9,3 +9,4 @@ libc = { workspace = true }
 panics = { workspace = true }
 macros = { workspace = true }
 mlua-sys = { workspace = true }
+sptr = "0.3.2"
