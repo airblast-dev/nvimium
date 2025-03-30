@@ -940,6 +940,17 @@ unsafe impl AsThinString for CStr {
     }
 }
 
+unsafe impl AsThinString for &CStr {
+    fn as_thinstr(&self) -> ThinString<'_> {
+        let len = self.count_bytes();
+        ThinString {
+            len,
+            data: self.as_ptr() as *const c_char,
+            __p: PhantomData,
+        }
+    }
+}
+
 unsafe impl AsThinString for CString {
     fn as_thinstr(&self) -> ThinString<'_> {
         let len = self.count_bytes();
