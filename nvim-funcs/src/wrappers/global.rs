@@ -674,6 +674,86 @@ mod tests {
     }
 
     #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
+    pub fn test_nvim_set_get_delete_keymap() {
+        // this test is kind of hacky
+        //
+        // any mapping result is only evaluated after yielding execution so instead we attempt to
+        // create a mapping then delete it. if deleting the keymap fails it means the keymap wasn't
+        // set/doesn't exist
+        let keymaps = nvim_get_keymap(KeyMapMode::MODE_OP_PENDING);
+
+        // we dont actually have to do this but this ensures that there isn't an already existing
+        // keymap removing the risk of false positives
+        let found = keymaps
+            .0
+            .into_iter()
+            .filter_map(|d| d.into_dict())
+            .any(|d| {
+                let Some(lhs) = d.get(c"lhs".as_thinstr()) else {
+                    return false;
+                };
+                let Some(rhs) = d.get(c"rhs".as_thinstr()) else {
+                    return false;
+                };
+                let Some(nowait) = d.get(c"nowait".as_thinstr()) else {
+                    return false;
+                };
+
+                nowait == &Object::Integer(1)
+                    && lhs
+                        == &Object::String(OwnedThinString::from(
+                            c"aasdsadasdasdasdasdas".as_thinstr(),
+                        ))
+                    && rhs
+                        == &Object::String(OwnedThinString::from(
+                            c":lua vim.api.nvim_set_current_line('HELLOO')".as_thinstr(),
+                        ))
+            });
+        assert!(!found);
+        nvim_set_keymap(
+            KeyMapMode::MODE_OP_PENDING,
+            c"aasdsadasdasdasdasdas",
+            c":lua vim.api.nvim_set_current_line('HELLOO')",
+            SetKeymapOpts::default().noawait(true),
+        )
+        .unwrap();
+        let keymaps = nvim_get_keymap(KeyMapMode::MODE_OP_PENDING);
+        let found = keymaps
+            .0
+            .into_iter()
+            .filter_map(|d| d.into_dict())
+            .any(|d| {
+                let Some(lhs) = d.get(c"lhs".as_thinstr()) else {
+                    return false;
+                };
+                let Some(rhs) = d.get(c"rhs".as_thinstr()) else {
+                    return false;
+                };
+                let Some(nowait) = d.get(c"nowait".as_thinstr()) else {
+                    return false;
+                };
+
+                nowait == &Object::Integer(1)
+                    && lhs
+                        == &Object::String(OwnedThinString::from(
+                            c"aasdsadasdasdasdasdas".as_thinstr(),
+                        ))
+                    && rhs
+                        == &Object::String(OwnedThinString::from(
+                            c":lua vim.api.nvim_set_current_line('HELLOO')".as_thinstr(),
+                        ))
+            });
+        assert!(found);
+        let res = nvim_del_keymap(KeyMapMode::MODE_OP_PENDING, c"aasdsadasdasdasdasdas");
+        assert!(res.is_ok());
+
+        // intentionally test a bad value as this should fail if the delete above succeedes
+        let err =
+            nvim_del_keymap(KeyMapMode::MODE_OP_PENDING, c"aasdsadasdasdasdasdas").unwrap_err();
+        assert!(format!("{:?}", err) == r##"Exception: "E31: No such mapping""##)
+    }
+
+    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
     pub fn test_nvim_strwidth() {
         let width = nvim_strwidth(c"".as_thinstr()).unwrap();
         assert_eq!(0, width);
