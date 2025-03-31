@@ -25,7 +25,7 @@ impl<T> Default for KVec<T> {
 
 impl<T: Debug> Debug for KVec<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.as_slice())
+        f.debug_list().entries(self.as_slice().iter()).finish()
     }
 }
 
