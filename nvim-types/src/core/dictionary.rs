@@ -162,10 +162,3 @@ impl<'a> From<&'a Dictionary> for Borrowed<'a, Dictionary> {
         Borrowed::new(value)
     }
 }
-
-#[cfg(test)]
-mod dict {
-
-    #[test]
-    fn get() {}
-}
