@@ -158,6 +158,10 @@ pub fn nvim_get_color_by_name<S: AsThinString>(name: S) -> Option<Integer> {
     Some(i).filter(|i| *i != -1)
 }
 
+/// Gets the full color map from Neovim
+///
+/// After the first call to this function the [`ColorMap`] is cached to avoid allocations on each
+/// call.
 pub fn nvim_get_color_map() -> ColorMap {
     call_check();
     if !ColorMap::is_loaded() {
