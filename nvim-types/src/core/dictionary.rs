@@ -49,6 +49,7 @@ where
     }
 }
 
+// TODO: impl Dict PartialEq to be unordered
 #[repr(transparent)]
 #[derive(Default, Debug, PartialEq)]
 pub struct Dictionary(pub KVec<KeyValuePair>);
