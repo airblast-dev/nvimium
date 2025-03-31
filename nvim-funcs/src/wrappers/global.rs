@@ -758,14 +758,28 @@ mod tests {
     }
 
     #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
-    pub fn test_nvim_set_get_var() {
+    pub fn test_nvim_set_get_del_var() {
         let var = Object::Dict(Dictionary::from_iter([
-            (c"apples".as_thinstr().into(), Object::Integer(22)),
-            (c"oranges".as_thinstr().into(), Object::Bool(true)),
+            ("apples", Object::Integer(22)),
+            ("oranges", Object::Bool(true)),
         ]));
         nvim_set_var(c"apple_count", &var).unwrap();
         let ret_var = nvim_get_var(c"apple_count").unwrap();
-        panic!("{ret_var:?}");
+
+        let expected = Dictionary::from_iter([
+            ("oranges", Object::Bool(true)),
+            ("apples", Object::Integer(22)),
+        ]);
+
+        assert_eq!(ret_var, Object::Dict(expected));
+
+        nvim_del_var(c"apple_count").unwrap();
+
+        let ret_var = nvim_get_var(c"apple_count").unwrap_err();
+        assert_eq!(format!("{ret_var:?}"), r##"Validation: "Key not found: apple_count""##);
+
+        let ret_var = nvim_del_var(c"apple_count").unwrap_err();
+        assert_eq!(format!("{ret_var:?}"), r##"Validation: "Key not found: apple_count""##);
     }
 
     #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
