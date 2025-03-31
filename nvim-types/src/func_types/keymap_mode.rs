@@ -11,6 +11,7 @@ macro_rules! fast_th {
 // also in a few other places but this function is the actual check call
 // src/nvim/mapping.c 0.10.0 l:973
 impl KeyMapMode {
+    fast_th!(EMPTY, c"");
     fast_th!(INSERT, c"i");
     fast_th!(CMD_INSERT, c"l");
     fast_th!(CMD, c"c");
