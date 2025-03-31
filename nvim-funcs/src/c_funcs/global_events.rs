@@ -17,7 +17,6 @@ mod testing {
     // is wrong
     #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
     fn test_nvim_error_event() {
-        use nvim_types::string::AsThinString;
         let err = Error::validation(ThinString::from_null_terminated(b"Hello World\0"));
 
         unsafe { super::nvim_error_event(Channel::LUA_INTERNAL_CALL, err) };
