@@ -887,9 +887,12 @@ unsafe impl Send for OwnedThinString {}
 
 impl Drop for OwnedThinString {
     fn drop(&mut self) {
-        debug_assert!(!self.0.as_ptr().is_null());
-        unsafe { debug_assert_eq!(*self.0.data.add(self.0.len()), 0) };
-        unsafe { xfree(&mut (self.0.data as *mut c_void), self.0.len() + 1) }
+        if self.0.as_ptr().is_null() {
+            assert_eq!(self.0.len(), 0);
+        } else {
+            unsafe { assert_eq!(*self.0.data.add(self.0.len()), 0) };
+            unsafe { xfree(&mut (self.0.data as *mut c_void), self.0.len() + 1) }
+        }
     }
 }
 
