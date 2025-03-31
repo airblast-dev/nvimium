@@ -25,8 +25,11 @@ impl Clone for KeyValuePair {
     }
 }
 
-impl From<(String, Object)> for KeyValuePair {
-    fn from((key, object): (String, Object)) -> Self {
+impl<S> From<(S, Object)> for KeyValuePair
+where
+    OwnedThinString: From<S>,
+{
+    fn from((key, object): (S, Object)) -> Self {
         Self {
             key: OwnedThinString::from(key),
             object,
@@ -34,8 +37,11 @@ impl From<(String, Object)> for KeyValuePair {
     }
 }
 
-impl From<(Object, String)> for KeyValuePair {
-    fn from((object, key): (Object, String)) -> Self {
+impl<S> From<(Object, S)> for KeyValuePair
+where
+    OwnedThinString: From<S>,
+{
+    fn from((object, key): (Object, S)) -> Self {
         Self {
             key: OwnedThinString::from(key),
             object,
