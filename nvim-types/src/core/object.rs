@@ -47,7 +47,7 @@ impl Clone for Object {
             Self::String(s) => Self::String(s.clone()),
             Self::Array(a) => Self::Array(a.clone()),
             Self::Dict(d) => Self::Dict(d.clone()),
-            Self::LuaRef(_) => todo!("add proper clone to lua state once lua support is added"),
+            Self::LuaRef(lr) => Self::LuaRef(lr.clone()),
             Self::Buffer(b) => Self::Buffer(*b),
             Self::Window(w) => Self::Window(*w),
             Self::TabPage(t) => Self::TabPage(*t),
