@@ -638,7 +638,7 @@ pub fn nvim_strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
 mod tests {
     use super::*;
     use crate::wrappers::vimscript::nvim_exec2;
-    use nvim_types::string::String;
+    use nvim_types::{opts::exec::ExecOpts, string::String};
     use thread_lock::unlock;
 
     // calling `thread_lock::unlock` is safe as every test is spawned as a process with independent

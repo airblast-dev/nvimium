@@ -1,6 +1,5 @@
 use nvim_types::{
-    Boolean, array::Array, call_site::Channel, dictionary::Dictionary, error::Error,
-    object::Object, opts::echo::EchoOpts, string::AsThinString,
+    array::Array, call_site::Channel, dictionary::Dictionary, error::Error, object::Object, opts::{echo::EchoOpts, exec::ExecOpts}, string::AsThinString, Boolean
 };
 use thread_lock::call_check;
 
@@ -57,7 +56,7 @@ pub fn nvim_eval<S: AsThinString>(eval: S) -> Result<Object, Error> {
 }
 
 // TODO: replace dictionary with dedicated struct?
-pub fn nvim_exec2<S: AsThinString>(exec: S, opts: &EchoOpts) -> Result<Dictionary, Error> {
+pub fn nvim_exec2<S: AsThinString>(exec: S, opts: &ExecOpts) -> Result<Dictionary, Error> {
     tri! {
         let mut err;
         unsafe{ vimscript::nvim_exec2(Channel::LUA_INTERNAL_CALL, exec.as_thinstr(), opts, &mut err) },

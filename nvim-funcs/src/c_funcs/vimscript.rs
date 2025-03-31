@@ -1,15 +1,7 @@
 use std::mem::MaybeUninit;
 
 use nvim_types::{
-    Arena, Boolean,
-    array::Array,
-    borrowed::Borrowed,
-    call_site::Channel,
-    dictionary::Dictionary,
-    error::Error,
-    object::{Object, ObjectRef},
-    opts::echo::EchoOpts,
-    string::ThinString,
+    array::Array, borrowed::Borrowed, call_site::Channel, dictionary::Dictionary, error::Error, object::{Object, ObjectRef}, opts::{echo::EchoOpts, exec::ExecOpts}, string::ThinString, Arena, Boolean
 };
 
 unsafe extern "C" {
@@ -35,7 +27,7 @@ unsafe extern "C" {
     pub fn nvim_exec2<'a>(
         chan: Channel,
         exec: ThinString<'a>,
-        opts: *const EchoOpts,
+        opts: *const ExecOpts,
         err: *mut Error,
     ) -> MaybeUninit<Dictionary>;
     pub fn nvim_parse_expression<'a>(
