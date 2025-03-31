@@ -651,6 +651,16 @@ mod tests {
     }
 
     #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
+    pub fn test_nvim_set_get_del_current_line() {
+        nvim_set_current_line(c"Hello World!").unwrap();
+        let l = nvim_get_current_line().unwrap();
+        assert_eq!(l, "Hello World!");
+        nvim_del_current_line().unwrap();
+        let l = nvim_get_current_line().unwrap();
+        assert_eq!(l, "");
+    }
+
+    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
     pub fn test_nvim_get_color_map() {
         let map = nvim_get_color_map();
         let color = map
