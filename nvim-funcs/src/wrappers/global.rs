@@ -758,6 +758,17 @@ mod tests {
     }
 
     #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
+    pub fn test_nvim_set_get_var() {
+        let var = Object::Dict(Dictionary::from_iter([
+            (c"apples".as_thinstr().into(), Object::Integer(22)),
+            (c"oranges".as_thinstr().into(), Object::Bool(true)),
+        ]));
+        nvim_set_var(c"apple_count", &var).unwrap();
+        let ret_var = nvim_get_var(c"apple_count").unwrap();
+        panic!("{ret_var:?}");
+    }
+
+    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
     pub fn test_nvim_strwidth() {
         let width = nvim_strwidth(c"".as_thinstr()).unwrap();
         assert_eq!(0, width);
