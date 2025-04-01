@@ -29,7 +29,7 @@ pub fn nvim_test(
         #[cfg_attr(not(test), unsafe(no_mangle))]
         #[allow(non_snake_case)]
         #[doc(hidden)]
-        pub extern "C" fn #cdylib_ident(state: *mut ()) -> libc::c_int {
+        pub extern "C" fn #cdylib_ident(state: *mut ()) -> ::std::ffi::c_int {
             let _th = unsafe { nvim_test::thread_lock::unlock() };
             let panic_out_th = nvim_funcs::global::nvim_get_var(c"NVIMIUM_PANIC_LOG_FILE").unwrap().into_string().unwrap();
             let panic_out_path = ::std::path::PathBuf::from(::std::string::String::from_utf8(panic_out_th.as_thinstr().as_slice().to_vec()).unwrap());
