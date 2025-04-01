@@ -1,6 +1,6 @@
 use macros::masked_builder;
 
-use crate::{string::ThinString, Boolean, Integer};
+use crate::{Boolean, Integer, string::ThinString};
 
 masked_builder!(
     #[repr(C)]

@@ -1,4 +1,4 @@
-use crate::{dictionary::Dictionary, kvec::KVec, string::OwnedThinString, Integer};
+use crate::{Integer, dictionary::Dictionary, kvec::KVec, string::OwnedThinString};
 
 #[derive(Debug)]
 pub struct EvalStatusLineDict {
@@ -15,7 +15,11 @@ pub struct HighlightItem {
 
 impl EvalStatusLineDict {
     pub fn from_c_func_ret(mut d: Dictionary) -> Self {
-        let s = d.remove_skip_key_drop("str").unwrap().into_string().unwrap();
+        let s = d
+            .remove_skip_key_drop("str")
+            .unwrap()
+            .into_string()
+            .unwrap();
         let width = d.remove_skip_key_drop("width").unwrap().into_int().unwrap();
         let Some(highlights) = d
             .remove_skip_key_drop("highlights")

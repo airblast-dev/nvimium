@@ -1,5 +1,6 @@
 use core::mem::MaybeUninit;
 use nvim_types::{
+    Arena, Boolean, Integer,
     array::Array,
     borrowed::Borrowed,
     buffer::Buffer,
@@ -18,7 +19,6 @@ use nvim_types::{
     string::{OwnedThinString, ThinString},
     tab_page::TabPage,
     window::Window,
-    Arena, Boolean, Integer,
 };
 use std::mem::ManuallyDrop;
 

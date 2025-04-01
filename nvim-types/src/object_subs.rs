@@ -1,6 +1,6 @@
 use macros::one_of_objects;
 
-use crate::{object::Object, string::OwnedThinString, Integer};
+use crate::{Integer, object::Object, string::OwnedThinString};
 
 one_of_objects! {
     #[doc(hidden)]

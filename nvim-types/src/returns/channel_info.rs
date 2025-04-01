@@ -1,6 +1,6 @@
 use crate::{
-    array::Array, buffer::Buffer, dictionary::Dictionary, object::Object, string::OwnedThinString,
-    Integer,
+    Integer, array::Array, buffer::Buffer, dictionary::Dictionary, object::Object,
+    string::OwnedThinString,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -74,7 +74,10 @@ impl ChannelInfo {
             .cloned()
             .map(|obj| obj.into_string().unwrap())
             .clone();
-        let buffer = d.get("buffer").cloned().map(|obj| obj.into_buffer().unwrap());
+        let buffer = d
+            .get("buffer")
+            .cloned()
+            .map(|obj| obj.into_buffer().unwrap());
         let client = d.get("client").cloned().map(|obj| obj.into_dict().unwrap());
 
         Self {

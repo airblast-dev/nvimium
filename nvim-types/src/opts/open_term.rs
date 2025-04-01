@@ -1,6 +1,6 @@
 use macros::masked_builder;
 
-use crate::{lua_ref::LuaRef, Boolean};
+use crate::{Boolean, lua_ref::LuaRef};
 
 // TODO: replace with manual builder
 masked_builder! {

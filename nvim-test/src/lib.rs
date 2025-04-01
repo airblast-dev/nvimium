@@ -68,7 +68,6 @@ pub fn test_body(dylib_path: &Path, func_name: &str) -> Result<(), String> {
     Ok(())
 }
 
-
 /// Builds and stores a path to the test cdylib
 ///
 /// Internally uses [`std::sync::LazyLock`] to reuse the same built binary and only initialize it

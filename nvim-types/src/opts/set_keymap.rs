@@ -1,6 +1,6 @@
 use macros::masked_builder;
 
-use crate::{lua_ref::LuaRef, string::ThinString, Boolean};
+use crate::{Boolean, lua_ref::LuaRef, string::ThinString};
 
 masked_builder! {
     #[repr(C)]

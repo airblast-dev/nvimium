@@ -1,4 +1,4 @@
-use crate::{string::OwnedThinString, Boolean};
+use crate::{Boolean, string::OwnedThinString};
 
 #[derive(Clone, Debug)]
 pub struct Mode {
