@@ -6,20 +6,30 @@ pub fn nvim_test(
     t1: proc_macro::TokenStream,
     t2: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-
     use proc_macro2::TokenStream;
     use quote::{format_ident, quote};
     use stuff::{get_exit_call, test_hook};
-    use syn::{spanned::Spanned, ItemFn};
+    use syn::{ItemFn, spanned::Spanned};
 
     let mut func: ItemFn = syn::parse_macro_input!(t2 as ItemFn);
 
-    let fs = func.span()
+    let fs = func.span();
     let start = fs.start();
     let end = fs.end();
-    let hook_func = test_hook(&func);
+    let byte_range = fs.byte_range();
+    let cdylib_ident = format_ident!(
+        "_____{}_{}_ls{}_sc{}_bs{}_le{}_ce{}_be{}",
+        func.sig.ident,
+        "TEST_FUNC",
+        start.line,
+        start.column,
+        byte_range.start,
+        end.line,
+        end.column,
+        byte_range.end
+    );
+    let hook_func = test_hook(&func.sig.ident, &cdylib_ident);
     // generate an extremely ugly name to minimize collision chances
-    let cdylib_ident = format_ident!("_____{}_{}_ls{}_sc{}_le{}_ce{}", func.sig.ident, "TEST_FUNC", start.line, start.column, end.line, end.column);
     let exit_call: TokenStream = get_exit_call(t1).into();
     let orig_ident = &func.sig.ident;
     let orig_attrs = core::mem::take(&mut func.attrs);
@@ -52,9 +62,9 @@ pub fn nvim_test(
 #[cfg(feature = "testing")]
 mod stuff {
     use proc_macro2::TokenStream;
-    use quote::{format_ident, quote};
+    use quote::quote;
     use syn::{
-        Ident, ItemFn, Path, Token,
+        Ident, Path, Token,
         parse::{Parse, ParseStream},
     };
 
@@ -64,12 +74,10 @@ mod stuff {
         }
     }
 
-    pub fn test_hook(func: &ItemFn) -> TokenStream {
-        let ident = &func.sig.ident;
-        let cdylib_ident = format_ident!("{}_{}", func.sig.ident, "TEST_FUNC");
+    pub fn test_hook(real_ident: &Ident, cdylib_ident: &Ident) -> TokenStream {
         let dylib_path = cdylib_path();
         quote! {
-            fn #ident() {
+            fn #real_ident() {
                 if let Err(err) = nvim_test::test_body(&*#dylib_path, stringify!(#cdylib_ident)) {
                     panic!("{}", err);
                 }
