@@ -776,10 +776,27 @@ mod tests {
         nvim_del_var(c"apple_count").unwrap();
 
         let ret_var = nvim_get_var(c"apple_count").unwrap_err();
-        assert_eq!(format!("{ret_var:?}"), r##"Validation: "Key not found: apple_count""##);
+        assert_eq!(
+            format!("{ret_var:?}"),
+            r##"Validation: "Key not found: apple_count""##
+        );
 
         let ret_var = nvim_del_var(c"apple_count").unwrap_err();
-        assert_eq!(format!("{ret_var:?}"), r##"Validation: "Key not found: apple_count""##);
+        assert_eq!(
+            format!("{ret_var:?}"),
+            r##"Validation: "Key not found: apple_count""##
+        );
+    }
+
+    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
+    pub fn test_nvim_echo() {
+        nvim_echo(&Echo::message(c"Hello!"), true, &EchoOpts::default()).unwrap();
+        let mut opts = ExecOpts::default();
+        let output = nvim_exec2(c":messages", opts.output(true)).unwrap();
+        assert_eq!(
+            output.get(c"output".as_thinstr()).unwrap(),
+            &Object::String(OwnedThinString::from("Hello!"))
+        );
     }
 
     #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
