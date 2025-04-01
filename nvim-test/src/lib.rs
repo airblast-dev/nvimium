@@ -41,6 +41,7 @@ pub fn test_body(dylib_path: &Path, func_name: &str) -> Result<(), String> {
     // not required but some tests end up writing to stderr without an actual error so just pass a
     // pipe
     cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
     let mut err_file = NamedTempFile::new().unwrap();
     cmd.arg("--headless")
         .arg("--clean")
