@@ -828,6 +828,18 @@ impl PartialEq<&str> for OwnedThinString {
     }
 }
 
+impl PartialEq<CStr> for OwnedThinString {
+    fn eq(&self, other: &CStr) -> bool {
+        self.as_thinstr() == other.as_thinstr()
+    }
+}
+
+impl PartialEq<&CStr> for OwnedThinString {
+    fn eq(&self, other: &&CStr) -> bool {
+        self.as_thinstr() == other.as_thinstr()
+    }
+}
+
 impl PartialEq<OwnedThinString> for str {
     fn eq(&self, other: &OwnedThinString) -> bool {
         self.as_bytes() == other.0.as_slice()
@@ -849,6 +861,18 @@ impl PartialEq<OwnedThinString> for [u8] {
 impl PartialEq<OwnedThinString> for &[u8] {
     fn eq(&self, other: &OwnedThinString) -> bool {
         *self == other.0.as_slice()
+    }
+}
+
+impl PartialEq<OwnedThinString> for CStr {
+    fn eq(&self, other: &OwnedThinString) -> bool {
+        self.as_thinstr() == other.as_thinstr()
+    }
+}
+
+impl PartialEq<OwnedThinString> for &CStr {
+    fn eq(&self, other: &OwnedThinString) -> bool {
+        self.as_thinstr() == other.as_thinstr()
     }
 }
 
