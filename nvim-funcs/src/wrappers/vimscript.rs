@@ -60,6 +60,7 @@ pub fn nvim_exec2<S: AsThinString>(exec: S, opts: &ExecOpts) -> Result<Dictionar
     tri! {
         let mut err;
         unsafe{ vimscript::nvim_exec2(Channel::LUA_INTERNAL_CALL, exec.as_thinstr(), opts, &mut err) },
+        // uses PUT (allocating conversion) for the key string
         Ok(d) => Ok(unsafe{ d.assume_init() })
     }
 }
