@@ -14,3 +14,11 @@ nvimium = { path = "../../" }
 # You should only enable this when testing, but it is set as the default here for better readability in editors.
 default = ["testing"]
 testing = ["nvimium/testing"]
+
+# Recommended release profile for size and performance
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+# opt-level = 3 gets very bloated, don't use it unless you have measured a significant performance difference
+opt-level = "z"
