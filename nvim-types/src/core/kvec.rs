@@ -1,8 +1,10 @@
-use std::fmt::Debug;
-use std::iter::FusedIterator;
-use std::mem::{self, MaybeUninit};
-use std::num::NonZeroUsize;
-use std::ops::{Deref, DerefMut};
+use core::{
+    fmt::Debug,
+    iter::FusedIterator,
+    mem::{self, MaybeUninit},
+    num::NonZeroUsize,
+    ops::{Deref, DerefMut},
+};
 
 use panics::slice_error;
 use utils::{xfree, xmalloc, xrealloc};
@@ -24,7 +26,7 @@ impl<T> Default for KVec<T> {
 }
 
 impl<T: Debug> Debug for KVec<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_list().entries(self.as_slice().iter()).finish()
     }
 }
@@ -53,7 +55,7 @@ impl<T> KVec<T> {
         self.slice_check();
 
         // SAFETY: self has at least one element stored this means self.ptr is non null
-        unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
+        unsafe { core::slice::from_raw_parts(self.ptr, self.len) }
     }
 
     #[inline]
@@ -64,7 +66,7 @@ impl<T> KVec<T> {
         self.slice_check();
 
         // SAFETY: self has at least one element stored this means self.ptr is non null
-        unsafe { std::slice::from_raw_parts_mut(self.ptr, self.len) }
+        unsafe { core::slice::from_raw_parts_mut(self.ptr, self.len) }
     }
 
     /// Returns the uninitialized but allocated space for `T`
@@ -79,7 +81,7 @@ impl<T> KVec<T> {
 
         // SAFETY: self has at least one element stored this means self.ptr is non null
         unsafe {
-            std::slice::from_raw_parts_mut(
+            core::slice::from_raw_parts_mut(
                 self.ptr.add(self.len).cast::<MaybeUninit<T>>(),
                 self.capacity - self.len(),
             )
@@ -546,7 +548,9 @@ const _: () = assert!(
 
 #[cfg(test)]
 mod tests {
-    use std::num::NonZeroUsize;
+    use core::num::NonZeroUsize;
+
+    use alloc::string::String;
 
     type KVec = super::KVec<String>;
 

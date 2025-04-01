@@ -1,4 +1,4 @@
-use std::{
+use core::{
     ffi::CStr,
     fmt::{Debug, Display},
 };
@@ -19,7 +19,7 @@ pub struct Error {
 }
 
 impl Debug for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let cs = if !self.msg.is_null() {
             unsafe { CStr::from_ptr(self.msg.cast()) }
         } else {
@@ -68,9 +68,9 @@ impl Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "Error: {:?}", self)
     }
 }
 
-impl std::error::Error for Error {}
+impl core::error::Error for Error {}

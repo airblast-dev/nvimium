@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 // arena_alloc_block for allocating
 #[repr(C)]
@@ -11,7 +11,7 @@ pub struct Arena {
 
 impl Arena {
     pub const EMPTY: Arena = Arena {
-        cur_blk: std::ptr::null_mut(),
+        cur_blk: core::ptr::null_mut(),
         pos: 0,
         size: 0,
     };

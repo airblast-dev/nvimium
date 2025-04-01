@@ -1,8 +1,7 @@
-use std::{
-    ffi::{CStr, c_char},
-    sync::OnceLock,
-};
+use core::ffi::{CStr, c_char};
+use std::sync::OnceLock;
 
+use alloc::boxed::Box;
 use mlua_sys::{
     LUA_REGISTRYINDEX, lua_State, lua_checkstack, lua_newuserdata, lua_pop, lua_pushcclosure,
     lua_pushcfunction, lua_rawgeti, lua_setfield, lua_setmetatable, lua_touserdata,

@@ -1,4 +1,9 @@
-use std::{marker::PhantomData, sync::OnceLock};
+use core::{
+    marker::PhantomData,
+    sync::atomic::{AtomicPtr, Ordering},
+};
+
+use utils::xmalloc;
 
 use crate::{
     dictionary::{Dictionary, KeyValuePair},
@@ -13,9 +18,12 @@ use crate::{
 /// lookups as we store the colors sorted by their names which allows for a binary search.
 /// (neovim actually returns the values sorted as is but this isn't a guarantee so we ensure that
 /// it is sorted ourselves)
-static COLOR_MAP: OnceLock<KVec<(ThinString<'static>, [u8; 3])>> = OnceLock::new();
+static COLOR_MAP: AtomicPtr<KVec<(ThinString<'static>, [u8; 3])>> =
+    AtomicPtr::new(core::ptr::null_mut());
 
-/// A
+/// Neovim's color map
+///
+/// Often used when creating a Highlight group.
 #[derive(Clone, Debug)]
 pub struct ColorMap {
     /// Marker only used to mark to dissallow initialization from external sources.
@@ -47,9 +55,13 @@ impl ColorMap {
             kv.push((name, rgb));
         }
 
-        kv.as_mut_slice()
-            .sort_unstable_by(|c1, c2| c1.partial_cmp(c2).expect("non ascii color name"));
-        let _ = COLOR_MAP.set(kv);
+        if COLOR_MAP.load(Ordering::SeqCst).is_null() {
+            kv.as_mut_slice()
+                .sort_unstable_by(|c1, c2| c1.partial_cmp(c2).expect("non ascii color name"));
+            let kv_ptr = unsafe { xmalloc::<KVec<(ThinString<'static>, [u8; 3])>>(1) };
+            unsafe { kv_ptr.write(kv) };
+            COLOR_MAP.store(kv_ptr.as_ptr(), Ordering::SeqCst);
+        }
         Self::initialized()
     }
 
@@ -57,7 +69,7 @@ impl ColorMap {
     ///
     /// If the return value is true [`ColorMap::initialized`] is guaranteed to be panic free.
     pub fn is_loaded() -> bool {
-        COLOR_MAP.get().is_some()
+        !COLOR_MAP.load(Ordering::SeqCst).is_null()
     }
 
     /// Returns an initialized [`ColorMap`]
@@ -66,7 +78,7 @@ impl ColorMap {
     ///
     /// If the internal color map is not initialized via [`ColorMap::from_c_func_ret`]
     pub fn initialized() -> Self {
-        assert!(COLOR_MAP.get().is_some());
+        assert!(Self::is_loaded());
         Self { p: PhantomData }
     }
 
@@ -74,9 +86,7 @@ impl ColorMap {
     where
         ThinString<'a>: PartialOrd<N>,
     {
-        let map = COLOR_MAP
-            .get()
-            .expect("uninitialized ColorMap, this is most likely an internal bug inside nvimium");
+        let map = unsafe { COLOR_MAP.load(Ordering::SeqCst).as_ref().unwrap_unchecked() };
         // validate that name is something we can compare against
         // else return None early
         ThinString::from_null_terminated(c"".to_bytes_with_nul()).partial_cmp(&name)?;

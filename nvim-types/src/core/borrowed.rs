@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, mem::ManuallyDrop};
+use core::{marker::PhantomData, mem::ManuallyDrop};
 
 #[repr(transparent)]
 pub struct Borrowed<'a, T>(ManuallyDrop<T>, PhantomData<&'a T>);

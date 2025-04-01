@@ -1,3 +1,5 @@
+extern crate alloc;
+
 pub mod arena;
 mod core;
 pub mod func_types;

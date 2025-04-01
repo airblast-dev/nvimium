@@ -19,14 +19,14 @@ mod closure;
 pub mod core;
 mod fn_ptr;
 
+use ::core::any::Any;
 pub use core::{FromLua, IntoLua};
-use std::any::Any;
 
 use mlua_sys::lua_State;
 
 use crate::lua_ref::LuaRef;
 
-static mut L: *mut lua_State = std::ptr::null_mut();
+static mut L: *mut lua_State = ::core::ptr::null_mut();
 
 #[cfg(target_pointer_width = "32")]
 type LuaInteger = i32;

@@ -1,4 +1,4 @@
-use std::{fmt::Debug, marker::PhantomData, mem::ManuallyDrop};
+use core::{fmt::Debug, marker::PhantomData, mem::ManuallyDrop};
 
 use libc::size_t;
 
@@ -393,7 +393,7 @@ impl<'a> From<&'a Array> for ObjectRef<'a, Array> {
 #[cfg(test)]
 mod tests {
 
-    use std::mem::{ManuallyDrop, transmute};
+    use core::mem::{ManuallyDrop, transmute};
 
     use crate::{array::Array, kvec::KVec, string::ThinString};
 

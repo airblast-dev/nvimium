@@ -34,14 +34,16 @@
 //! function, as the functions will have trait bounds to convert things where needed. That said,
 //! functions may still limit what kind of string can be passed.
 
-use std::{
-    ffi::{CStr, CString, c_char, c_void},
+use core::{
+    ffi::{CStr, c_char, c_void},
     fmt::Debug,
     hash::Hash,
     marker::PhantomData,
     num::NonZeroUsize,
-    ops::Deref,
 };
+use std::ops::Deref;
+
+use alloc::ffi::CString;
 
 use libc::size_t;
 use panics::not_null_terminated;
@@ -251,7 +253,7 @@ impl String {
         //
         // use as_thinstr for null pointer check
         let th: ThinString<'static> = unsafe { core::mem::transmute(self.as_thinstr()) };
-        std::mem::forget(self);
+        core::mem::forget(self);
         th
     }
 
@@ -363,8 +365,8 @@ impl Hash for String {
 }
 
 impl Debug for String {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let l = std::string::String::from_utf8_lossy(self.as_thinstr().as_slice());
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let l = alloc::string::String::from_utf8_lossy(self.as_thinstr().as_slice());
         let mut ds = f.debug_struct("String");
 
         ds.field("data", &self.data)
@@ -443,19 +445,19 @@ impl PartialEq<OwnedThinString> for String {
 }
 
 impl PartialOrd for String {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         self.as_thinstr().partial_cmp(&other.as_thinstr())
     }
 }
 
 impl PartialOrd<ThinString<'_>> for String {
-    fn partial_cmp(&self, other: &ThinString<'_>) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &ThinString<'_>) -> Option<core::cmp::Ordering> {
         self.as_thinstr().partial_cmp(other)
     }
 }
 
 impl PartialOrd<OwnedThinString> for String {
-    fn partial_cmp(&self, other: &OwnedThinString) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &OwnedThinString) -> Option<core::cmp::Ordering> {
         self.as_thinstr().partial_cmp(&other.as_thinstr())
     }
 }
@@ -464,8 +466,8 @@ unsafe impl Sync for String {}
 unsafe impl Send for String {}
 
 const _: () = assert!(
-    std::mem::size_of::<usize>() + std::mem::size_of::<ThinString>()
-        == std::mem::size_of::<String>()
+    core::mem::size_of::<usize>() + core::mem::size_of::<ThinString>()
+        == core::mem::size_of::<String>()
 );
 
 impl Drop for String {
@@ -546,7 +548,7 @@ impl<'a> ThinString<'a> {
         if ptr.is_null() {
             return &[];
         }
-        unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len) }
+        unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len) }
     }
 
     // Returns a slice of the buffers bytes with a null byte
@@ -556,7 +558,7 @@ impl<'a> ThinString<'a> {
         if ptr.is_null() {
             return &[0];
         }
-        unsafe { std::slice::from_raw_parts(ptr, self.len + 1) }
+        unsafe { core::slice::from_raw_parts(ptr, self.len + 1) }
     }
 
     /// Initialize a [`ThinString`] from raw bytes
@@ -589,8 +591,8 @@ impl<'a> ThinString<'a> {
 }
 
 impl Debug for ThinString<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let l = std::string::String::from_utf8_lossy(self.as_slice());
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let l = alloc::string::String::from_utf8_lossy(self.as_slice());
         let mut ds = f.debug_struct("ThinString<'_>");
         ds.field("data", &self.data)
             .field("len", &self.len)
@@ -654,7 +656,7 @@ impl PartialEq<OwnedThinString> for ThinString<'_> {
 }
 
 impl PartialOrd for ThinString<'_> {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         let s1 = core::str::from_utf8(self.as_thinstr().as_slice()).ok()?;
         let s2 = core::str::from_utf8(other.as_thinstr().as_slice()).ok()?;
         s1.partial_cmp(s2)
@@ -662,13 +664,13 @@ impl PartialOrd for ThinString<'_> {
 }
 
 impl PartialOrd<String> for ThinString<'_> {
-    fn partial_cmp(&self, other: &String) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &String) -> Option<core::cmp::Ordering> {
         self.partial_cmp(&other.as_thinstr())
     }
 }
 
 impl PartialOrd<OwnedThinString> for ThinString<'_> {
-    fn partial_cmp(&self, other: &OwnedThinString) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &OwnedThinString) -> Option<core::cmp::Ordering> {
         self.partial_cmp(&other.as_thinstr())
     }
 }
@@ -889,19 +891,19 @@ impl PartialEq<String> for OwnedThinString {
 }
 
 impl PartialOrd for OwnedThinString {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         self.as_thinstr().partial_cmp(&other.as_thinstr())
     }
 }
 
 impl PartialOrd<String> for OwnedThinString {
-    fn partial_cmp(&self, other: &String) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &String) -> Option<core::cmp::Ordering> {
         self.as_thinstr().partial_cmp(&other.as_thinstr())
     }
 }
 
 impl PartialOrd<ThinString<'_>> for OwnedThinString {
-    fn partial_cmp(&self, other: &ThinString<'_>) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &ThinString<'_>) -> Option<core::cmp::Ordering> {
         self.as_thinstr().partial_cmp(other)
     }
 }

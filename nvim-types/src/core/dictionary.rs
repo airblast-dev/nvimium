@@ -1,4 +1,4 @@
-use std::ops::{Deref, DerefMut};
+use core::ops::{Deref, DerefMut};
 
 use crate::{kvec::KVec, object::Object};
 
@@ -156,7 +156,7 @@ where
     }
 }
 
-const _: () = assert!(24 == std::mem::size_of::<Dictionary>());
+const _: () = assert!(24 == core::mem::size_of::<Dictionary>());
 
 impl<'a> From<&'a Dictionary> for Borrowed<'a, Dictionary> {
     fn from(value: &'a Dictionary) -> Self {
