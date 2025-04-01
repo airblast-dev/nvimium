@@ -634,11 +634,16 @@ pub fn nvim_strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
         Ok(len) => Ok(unsafe{len.assume_init()})
     }
 }
+
 #[cfg(feature = "testing")]
 mod tests {
     use crate::{self as nvim_funcs, vimscript::nvim_exec2};
     use nvim_types::{
-        dictionary::Dictionary, func_types::{echo::Echo, keymap_mode::KeyMapMode}, object::Object, opts::{echo::EchoOpts, exec::ExecOpts, set_keymap::SetKeymapOpts}, string::{AsThinString, OwnedThinString, String}
+        dictionary::Dictionary,
+        func_types::{echo::Echo, keymap_mode::KeyMapMode},
+        object::Object,
+        opts::{echo::EchoOpts, exec::ExecOpts, set_keymap::SetKeymapOpts},
+        string::{AsThinString, OwnedThinString, String},
     };
 
     // calling `thread_lock::unlock` is safe as every test is spawned as a process with independent
@@ -763,7 +768,7 @@ mod tests {
             ("apples", Object::Integer(22)),
             ("oranges", Object::Bool(true)),
         ]));
-       super:: nvim_set_var(c"apple_count", &var).unwrap();
+        super::nvim_set_var(c"apple_count", &var).unwrap();
         let ret_var = super::nvim_get_var(c"apple_count").unwrap();
 
         let expected = Dictionary::from_iter([
@@ -775,7 +780,7 @@ mod tests {
 
         super::nvim_del_var(c"apple_count").unwrap();
 
-        let ret_var =super:: nvim_get_var(c"apple_count").unwrap_err();
+        let ret_var = super::nvim_get_var(c"apple_count").unwrap_err();
         assert_eq!(
             format!("{ret_var:?}"),
             r##"Validation: "Key not found: apple_count""##

@@ -1,4 +1,4 @@
-const TEST_IDENT: &str = "TEST_FUNC";
+//! See nvim-test workspace for information on whats happening in this section
 
 #[cfg(feature = "testing")]
 #[proc_macro_attribute]
@@ -14,17 +14,26 @@ pub fn nvim_test(
     let mut func: ItemFn = syn::parse_macro_input!(t2 as ItemFn);
 
     let hook_func = test_hook(&func);
-    let cdylib_ident = format_ident!("{}_{}", func.sig.ident, TEST_IDENT);
+    let cdylib_ident = format_ident!("{}_{}", func.sig.ident, "TEST_FUNC");
     let exit_call: TokenStream = get_exit_call(t1).into();
     let orig_ident = &func.sig.ident;
     let orig_attrs = core::mem::take(&mut func.attrs);
+
     quote! {
-        #hook_func
+        #[cfg(test)]
         #( #orig_attrs )*
-        #[unsafe(no_mangle)]
+        #[test]
+        #hook_func
+        // HACK: we cant remove the function without bogus unused imports
+        // so just remove the no_mangle.
+        #[cfg_attr(not(test), unsafe(no_mangle))]
         #[allow(non_snake_case)]
+        #[doc(hidden)]
         pub extern "C" fn #cdylib_ident(state: *mut ()) -> libc::c_int {
             let _th = unsafe { nvim_test::thread_lock::unlock() };
+            let panic_out_th = nvim_funcs::global::nvim_get_var(c"NVIMIUM_PANIC_LOG_FILE").unwrap().into_string().unwrap();
+            let panic_out_path = ::std::path::PathBuf::from(::std::string::String::from_utf8(panic_out_th.as_thinstr().as_slice().to_vec()).unwrap());
+            nvim_test::set_test_panic_hook(panic_out_path);
             #func
             let func: fn() -> () = #orig_ident;
             func();
@@ -38,101 +47,23 @@ pub fn nvim_test(
 #[cfg(feature = "testing")]
 mod stuff {
     use proc_macro2::TokenStream;
-    use quote::{ToTokens, format_ident, quote};
+    use quote::{format_ident, quote};
     use syn::{
-        Abi, Attribute, FnArg, Ident, ItemFn, Path, ReturnType, Token,
+        Ident, ItemFn, Path, Token,
         parse::{Parse, ParseStream},
-        punctuated::Punctuated,
-        spanned::Spanned,
-        token::Comma,
     };
 
-    use crate::TEST_IDENT;
     pub fn cdylib_path() -> TokenStream {
         quote! {
             crate::CDYLIB_TEST_PATH
         }
     }
 
-    pub fn validate_test_func(func: &ItemFn) -> Result<(), TokenStream> {
-        validate_test_func_abi(func.sig.abi.as_ref())?;
-        validate_test_func_args(&func.sig.inputs)?;
-        validate_test_func_ret(&func.sig.output)?;
-        validate_test_func_attributes(&func.attrs)?;
-
-        Ok(())
-    }
-
-    fn validate_test_func_abi(abi: Option<&Abi>) -> Result<(), TokenStream> {
-        let err = match abi.as_ref() {
-            Some(Abi { name, .. }) => match name {
-                Some(name) => {
-                    if name.value() != "C" {
-                        compile_error("unsupported extern kind in test function")
-                    } else {
-                        return Ok(());
-                    }
-                }
-
-                None => compile_error("test function must be declared with extern \"C\""),
-            },
-            None => compile_error("test function must be declared with extern token"),
-        };
-
-        Err(err)
-    }
-
-    fn validate_test_func_args(args: &Punctuated<FnArg, Comma>) -> Result<(), TokenStream> {
-        if args.is_empty() {
-            Ok(())
-        } else {
-            Err(compile_error("test function cannot take arguments"))
-        }
-    }
-
-    fn validate_test_func_ret(ret: &ReturnType) -> Result<(), TokenStream> {
-        Ok(())
-    }
-
-    fn validate_test_func_attributes(attrs: &[Attribute]) -> Result<(), TokenStream> {
-        let err_fn = || {
-            compile_error(
-                "test function must be declared with the `#[unsafe(no_mangle)]` attribute",
-            )
-        };
-        let Some(attr) = attrs.iter().find(|attr| {
-            attr.path()
-                .is_ident(&Ident::new("unsafe", attr.path().span()))
-        }) else {
-            return Err(err_fn());
-        };
-
-        let mut no_mangle = false;
-        attr.parse_nested_meta(|meta| {
-            no_mangle = meta.path.is_ident(&Ident::new("no_mangle", attr.span()));
-            Ok(())
-        })
-        .map_err(|err| err.into_compile_error())?;
-
-        if !no_mangle {
-            return Err(err_fn());
-        }
-
-        Ok(())
-    }
-
-    fn compile_error(s: &str) -> TokenStream {
-        quote! {
-            ::std::compile_error!(#s)
-        }
-    }
-
     pub fn test_hook(func: &ItemFn) -> TokenStream {
         let ident = &func.sig.ident;
-        let cdylib_ident = format_ident!("{}_{}", func.sig.ident, TEST_IDENT);
+        let cdylib_ident = format_ident!("{}_{}", func.sig.ident, "TEST_FUNC");
         let dylib_path = cdylib_path();
         quote! {
-            #[test]
             fn #ident() {
                 if let Err(err) = nvim_test::test_body(&*#dylib_path, stringify!(#cdylib_ident)) {
                     panic!("{}", err);
@@ -142,7 +73,6 @@ mod stuff {
     }
 
     struct AttributeArgs {
-        with: Ident,
         path: Path,
     }
     impl Parse for AttributeArgs {
@@ -151,13 +81,13 @@ mod stuff {
             assert_eq!(with.to_string(), "exit_call");
             let _: Token![=] = input.parse()?;
             let path = input.parse()?;
-            Ok(Self { with, path })
+            Ok(Self { path })
         }
     }
     pub fn get_exit_call(t: proc_macro::TokenStream) -> proc_macro::TokenStream {
         if t.is_empty() {
             quote! {
-                nvim_funcs::vimscript::nvim_exec2(c":qall!", &Default::default())
+                nvim_funcs::vimscript::nvim_exec2(c":qall!", &Default::default()).unwrap()
             }
             .into()
         } else {

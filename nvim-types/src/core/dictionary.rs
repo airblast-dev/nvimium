@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::{kvec::KVec, object::Object, string::String};
+use crate::{kvec::KVec, object::Object};
 
 use super::{borrowed::Borrowed, string::OwnedThinString};
 

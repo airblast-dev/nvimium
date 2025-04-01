@@ -12,7 +12,6 @@ thread-lock = { workspace = true }
 
 [features]
 testing = ["nvim-test/testing"]
-default = ["testing"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

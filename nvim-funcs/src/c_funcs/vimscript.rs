@@ -1,7 +1,15 @@
 use std::mem::MaybeUninit;
 
 use nvim_types::{
-    array::Array, borrowed::Borrowed, call_site::Channel, dictionary::Dictionary, error::Error, object::{Object, ObjectRef}, opts::{echo::EchoOpts, exec::ExecOpts}, string::ThinString, Arena, Boolean
+    Arena, Boolean,
+    array::Array,
+    borrowed::Borrowed,
+    call_site::Channel,
+    dictionary::Dictionary,
+    error::Error,
+    object::{Object, ObjectRef},
+    opts::exec::ExecOpts,
+    string::ThinString,
 };
 
 unsafe extern "C" {

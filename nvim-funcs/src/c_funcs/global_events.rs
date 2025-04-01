@@ -9,7 +9,7 @@ mod testing {
     use crate as nvim_funcs;
     use nvim_types::call_site::Channel;
     use nvim_types::error::Error;
-    use nvim_types::string::{String, ThinString};
+    use nvim_types::string::ThinString;
 
     // we actually cant test if this succedes but if the test fails or hangs we can tell something
     // is wrong

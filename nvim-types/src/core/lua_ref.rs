@@ -1,7 +1,5 @@
 use std::marker::PhantomData;
 
-use mlua_sys::{LUA_NOREF, LUA_REGISTRYINDEX, luaL_unref};
-
 use super::LuaRefT;
 
 #[repr(transparent)]

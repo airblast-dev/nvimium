@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::iter::FusedIterator;
 use std::mem::{self, MaybeUninit};
 use std::num::NonZeroUsize;
-use std::ops::{Deref, DerefMut, RangeBounds};
+use std::ops::{Deref, DerefMut};
 
 use panics::slice_error;
 use utils::{xfree, xmalloc, xrealloc};
@@ -517,28 +517,6 @@ impl<T> IntoIterator for KVec<T> {
 
         iter
     }
-}
-
-#[inline]
-fn range_bound_to_range<T, R: RangeBounds<usize>>(
-    kv: &KVec<T>,
-    r: R,
-) -> Option<std::ops::Range<usize>> {
-    use std::ops::Bound;
-    let start = match r.start_bound() {
-        Bound::Unbounded => 0,
-        Bound::Included(i) => *i,
-        Bound::Excluded(i) => i.saturating_add(1),
-    };
-    let end = match r.end_bound() {
-        Bound::Unbounded => kv.len,
-        Bound::Included(i) => *i,
-        Bound::Excluded(i) => i.saturating_sub(1),
-    };
-    if (start < kv.len()) || (start <= end) || (end < kv.len()) {
-        return Some(start..end);
-    }
-    None
 }
 
 impl<T> Drop for KVec<T> {
