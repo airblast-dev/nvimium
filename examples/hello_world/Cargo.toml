@@ -10,4 +10,5 @@ crate-type = ["cdylib"]
 nvimium = { path = "../../" }
 
 [features]
+default = ["testing"]
 testing = ["nvimium/testing"]
