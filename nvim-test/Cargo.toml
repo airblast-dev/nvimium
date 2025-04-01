@@ -5,6 +5,8 @@ edition = "2024"
 
 [dependencies]
 test-cdylib = { path = "../../test-cdylib/", optional = true }
+thread-lock = { workspace = true }
+nvim-test-macro = { workspace = true }
 
 [features]
-testing = ["dep:test-cdylib"]
+testing = ["dep:test-cdylib", "nvim-test-macro/testing"]

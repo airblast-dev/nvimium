@@ -7,12 +7,12 @@ edition = "2024"
 libc = { workspace = true }
 nvim-types = { workspace = true }
 macros = { workspace = true }
-nvim-test-macro = { workspace = true }
 nvim-test = { workspace = true }
 thread-lock = { workspace = true }
 
 [features]
-testing = ["nvim-test-macro/testing", "nvim-test/testing"]
+testing = ["nvim-test/testing"]
+default = ["testing"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

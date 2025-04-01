@@ -117,7 +117,6 @@ dependencies = [
  "libc",
  "macros",
  "nvim-test",
- "nvim-test-macro",
  "nvim-types",
  "thread-lock",
 ]
@@ -126,7 +125,9 @@ dependencies = [
 name = "nvim-test"
 version = "0.1.0"
 dependencies = [
+ "nvim-test-macro",
  "test-cdylib",
+ "thread-lock",
 ]
 
 [[package]]

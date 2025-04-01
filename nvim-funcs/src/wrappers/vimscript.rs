@@ -1,5 +1,6 @@
 use nvim_types::{
-    array::Array, call_site::Channel, dictionary::Dictionary, error::Error, object::Object, opts::{echo::EchoOpts, exec::ExecOpts}, string::AsThinString, Boolean
+    Boolean, array::Array, call_site::Channel, dictionary::Dictionary, error::Error,
+    object::Object, opts::exec::ExecOpts, string::AsThinString,
 };
 use thread_lock::call_check;
 
@@ -80,9 +81,9 @@ pub fn nvim_parse_expression<S: AsThinString, S1: AsThinString>(
 
 #[cfg(feature = "testing")]
 mod tests {
+    use crate as nvim_funcs;
     use crate::wrappers::global::{nvim_feedkeys, nvim_list_bufs, nvim_set_current_buf};
 
-    use super::nvim_exec2;
     use nvim_types::{
         array::Array,
         buffer::Buffer,
@@ -92,9 +93,8 @@ mod tests {
         object::Object,
         string::{OwnedThinString, String},
     };
-    use thread_lock::unlock;
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
+    #[nvim_test::nvim_test]
     pub fn nvim_call_function() {
         nvim_set_current_buf(Buffer::new(1)).unwrap();
         nvim_feedkeys(
@@ -118,7 +118,7 @@ mod tests {
         );
     }
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
+    #[nvim_test::nvim_test]
     pub fn nvim_command() {
         let arr = nvim_list_bufs();
         assert_eq!(arr.len(), 1);
@@ -127,7 +127,7 @@ mod tests {
         assert_eq!(arr.len(), 2);
     }
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
+    #[nvim_test::nvim_test]
     pub fn nvim_eval() {
         let expr = cr###"#{blue: "#0000ff", red: "#ff0000"}"###;
         let res = super::nvim_eval(expr).unwrap().into_dict().unwrap();

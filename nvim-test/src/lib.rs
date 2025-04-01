@@ -3,6 +3,9 @@ use std::{
     process::{Command, Output},
 };
 
+pub use thread_lock;
+pub use nvim_test_macro::*;
+
 #[cfg(feature = "testing")]
 #[doc(hidden)]
 pub use test_cdylib;

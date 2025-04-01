@@ -636,37 +636,37 @@ pub fn nvim_strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
 }
 #[cfg(feature = "testing")]
 mod tests {
-    use super::*;
-    use crate::wrappers::vimscript::nvim_exec2;
-    use nvim_types::{opts::exec::ExecOpts, string::String};
-    use thread_lock::unlock;
+    use crate::{self as nvim_funcs, vimscript::nvim_exec2};
+    use nvim_types::{
+        dictionary::Dictionary, func_types::{echo::Echo, keymap_mode::KeyMapMode}, object::Object, opts::{echo::EchoOpts, exec::ExecOpts, set_keymap::SetKeymapOpts}, string::{AsThinString, OwnedThinString, String}
+    };
 
     // calling `thread_lock::unlock` is safe as every test is spawned as a process with independent
     // threads
     //
     // only exclusion is when multithreading may being tested
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
-    pub fn test_nvim_create_current_buf() {
-        let buf = nvim_get_current_buf();
+    #[nvim_test::nvim_test]
+    pub fn nvim_create_current_buf() {
+        let buf = super::nvim_get_current_buf();
         assert_eq!(buf.as_int(), 1);
-        let buf = nvim_create_buf(true, true).unwrap();
+        let buf = super::nvim_create_buf(true, true).unwrap();
         assert_eq!(buf.as_int(), 2);
     }
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
-    pub fn test_nvim_set_get_del_current_line() {
-        nvim_set_current_line(c"Hello World!").unwrap();
-        let l = nvim_get_current_line().unwrap();
+    #[nvim_test::nvim_test]
+    pub fn nvim_set_get_del_current_line() {
+        super::nvim_set_current_line(c"Hello World!").unwrap();
+        let l = super::nvim_get_current_line().unwrap();
         assert_eq!(l, "Hello World!");
-        nvim_del_current_line().unwrap();
-        let l = nvim_get_current_line().unwrap();
+        super::nvim_del_current_line().unwrap();
+        let l = super::nvim_get_current_line().unwrap();
         assert_eq!(l, "");
     }
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
-    pub fn test_nvim_get_color_map() {
-        let map = nvim_get_color_map();
+    #[nvim_test::nvim_test]
+    pub fn nvim_get_color_map() {
+        let map = super::nvim_get_color_map();
         let color = map
             .get_with_name(String::from("Blue").as_thinstr())
             .expect("color not found");
@@ -677,14 +677,14 @@ mod tests {
         assert_eq!([255, 0, 0], color);
     }
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
-    pub fn test_nvim_set_get_delete_keymap() {
+    #[nvim_test::nvim_test]
+    pub fn nvim_set_get_delete_keymap() {
         // this test is kind of hacky
         //
         // any mapping result is only evaluated after yielding execution so instead we attempt to
         // create a mapping then delete it. if deleting the keymap fails it means the keymap wasn't
         // set/doesn't exist
-        let keymaps = nvim_get_keymap(KeyMapMode::MODE_OP_PENDING);
+        let keymaps = super::nvim_get_keymap(KeyMapMode::MODE_OP_PENDING);
 
         // we dont actually have to do this but this ensures that there isn't an already existing
         // keymap removing the risk of false positives
@@ -714,14 +714,14 @@ mod tests {
                         ))
             });
         assert!(!found);
-        nvim_set_keymap(
+        super::nvim_set_keymap(
             KeyMapMode::MODE_OP_PENDING,
             c"aasdsadasdasdasdasdas",
             c":lua vim.api.nvim_set_current_line('HELLOO')",
             SetKeymapOpts::default().noawait(true),
         )
         .unwrap();
-        let keymaps = nvim_get_keymap(KeyMapMode::MODE_OP_PENDING);
+        let keymaps = super::nvim_get_keymap(KeyMapMode::MODE_OP_PENDING);
         let found = keymaps
             .0
             .into_iter()
@@ -748,23 +748,23 @@ mod tests {
                         ))
             });
         assert!(found);
-        let res = nvim_del_keymap(KeyMapMode::MODE_OP_PENDING, c"aasdsadasdasdasdasdas");
+        let res = super::nvim_del_keymap(KeyMapMode::MODE_OP_PENDING, c"aasdsadasdasdasdasdas");
         assert!(res.is_ok());
 
         // intentionally test a bad value as this should fail if the delete above succeedes
-        let err =
-            nvim_del_keymap(KeyMapMode::MODE_OP_PENDING, c"aasdsadasdasdasdasdas").unwrap_err();
+        let err = super::nvim_del_keymap(KeyMapMode::MODE_OP_PENDING, c"aasdsadasdasdasdasdas")
+            .unwrap_err();
         assert!(format!("{:?}", err) == r##"Exception: "E31: No such mapping""##)
     }
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
-    pub fn test_nvim_set_get_del_var() {
+    #[nvim_test::nvim_test]
+    pub fn nvim_set_get_del_var() {
         let var = Object::Dict(Dictionary::from_iter([
             ("apples", Object::Integer(22)),
             ("oranges", Object::Bool(true)),
         ]));
-        nvim_set_var(c"apple_count", &var).unwrap();
-        let ret_var = nvim_get_var(c"apple_count").unwrap();
+       super:: nvim_set_var(c"apple_count", &var).unwrap();
+        let ret_var = super::nvim_get_var(c"apple_count").unwrap();
 
         let expected = Dictionary::from_iter([
             ("oranges", Object::Bool(true)),
@@ -773,24 +773,24 @@ mod tests {
 
         assert_eq!(ret_var, Object::Dict(expected));
 
-        nvim_del_var(c"apple_count").unwrap();
+        super::nvim_del_var(c"apple_count").unwrap();
 
-        let ret_var = nvim_get_var(c"apple_count").unwrap_err();
+        let ret_var =super:: nvim_get_var(c"apple_count").unwrap_err();
         assert_eq!(
             format!("{ret_var:?}"),
             r##"Validation: "Key not found: apple_count""##
         );
 
-        let ret_var = nvim_del_var(c"apple_count").unwrap_err();
+        let ret_var = super::nvim_del_var(c"apple_count").unwrap_err();
         assert_eq!(
             format!("{ret_var:?}"),
             r##"Validation: "Key not found: apple_count""##
         );
     }
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
-    pub fn test_nvim_echo() {
-        nvim_echo(&Echo::message(c"Hello!"), true, &EchoOpts::default()).unwrap();
+    #[nvim_test::nvim_test]
+    pub fn nvim_echo() {
+        super::nvim_echo(&Echo::message(c"Hello!"), true, &EchoOpts::default()).unwrap();
         let mut opts = ExecOpts::default();
         let output = nvim_exec2(c":messages", opts.output(true)).unwrap();
         assert_eq!(
@@ -799,11 +799,11 @@ mod tests {
         );
     }
 
-    #[nvim_test_macro::nvim_test(exit_call = nvim_exec2)]
-    pub fn test_nvim_strwidth() {
-        let width = nvim_strwidth(c"".as_thinstr()).unwrap();
+    #[nvim_test::nvim_test]
+    pub fn nvim_strwidth() {
+        let width = super::nvim_strwidth(c"".as_thinstr()).unwrap();
         assert_eq!(0, width);
-        let width = nvim_strwidth(c"Hello".as_thinstr()).unwrap();
+        let width = super::nvim_strwidth(c"Hello".as_thinstr()).unwrap();
         assert_eq!(5, width);
     }
 }

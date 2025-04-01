@@ -24,7 +24,7 @@ pub fn nvim_test(
         #[unsafe(no_mangle)]
         #[allow(non_snake_case)]
         pub extern "C" fn #cdylib_ident(state: *mut ()) -> libc::c_int {
-            let _th = unsafe { unlock() };
+            let _th = unsafe { nvim_test::thread_lock::unlock() };
             #func
             let func: fn() -> () = #orig_ident;
             func();
@@ -134,7 +134,7 @@ mod stuff {
         quote! {
             #[test]
             fn #ident() {
-                if let Err(err) = ::nvim_test::test_body(&*#dylib_path, stringify!(#cdylib_ident)) {
+                if let Err(err) = nvim_test::test_body(&*#dylib_path, stringify!(#cdylib_ident)) {
                     panic!("{}", err);
                 }
             }
@@ -157,7 +157,7 @@ mod stuff {
     pub fn get_exit_call(t: proc_macro::TokenStream) -> proc_macro::TokenStream {
         if t.is_empty() {
             quote! {
-                ::nvimium::nvim_funcs::nvim_exec2
+                nvim_funcs::vimscript::nvim_exec2
             }
             .into()
         } else {
