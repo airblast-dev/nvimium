@@ -10,5 +10,6 @@ crate-type = ["cdylib"]
 nvimium = { path = "../../" }
 
 [features]
+# You will definitely want to add a testing feature gate to avoid terrible compile times
 default = ["testing"]
 testing = ["nvimium/testing"]
