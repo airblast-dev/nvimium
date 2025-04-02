@@ -17,6 +17,7 @@ pub fn nvim_test(
     let start = fs.start();
     let end = fs.end();
     let byte_range = fs.byte_range();
+    // generate an extremely ugly name to minimize collision chances
     let cdylib_ident = format_ident!(
         "_____{}_{}_ls{}_sc{}_bs{}_le{}_ce{}_be{}",
         func.sig.ident,
@@ -29,7 +30,6 @@ pub fn nvim_test(
         byte_range.end
     );
     let hook_func = test_hook(&func.sig.ident, &cdylib_ident);
-    // generate an extremely ugly name to minimize collision chances
     let exit_call: TokenStream = get_exit_call(t1).into();
     let orig_ident = &func.sig.ident;
     let orig_attrs = core::mem::take(&mut func.attrs);
