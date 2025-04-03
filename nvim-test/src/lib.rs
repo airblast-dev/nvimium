@@ -10,7 +10,7 @@
 // A test file is required in order to test some functions as they write to `stderr`. Instead we
 // are required to replace the default panic hook with our own where the hook writes the panic info
 // to file that is unrelated to neovim.
-use std::{fs::File, io::Write, panic::set_hook, path::PathBuf};
+use std::{backtrace::Backtrace, fs::File, io::Write, panic::set_hook, path::PathBuf};
 
 #[cfg(feature = "testing")]
 mod testing_imports {
@@ -29,6 +29,9 @@ pub use thread_lock;
 #[doc(hidden)]
 pub use test_cdylib;
 
+// track_caller gives us a better line col value
+// in a panic message it allows to be read as at function xy, a panic at xy occured
+#[track_caller]
 #[cfg(feature = "testing")]
 pub fn test_body(dylib_path: &Path, func_name: &str) -> Result<(), String> {
     use std::{io::Read, process::Stdio};
@@ -60,7 +63,7 @@ pub fn test_body(dylib_path: &Path, func_name: &str) -> Result<(), String> {
 
     // the file should only contain something if there was a panic
     if !panic_out.is_empty() {
-        panic!("FILE_NAME={:?}\n{}", err_file.path().to_str(), panic_out);
+        panic!("{}", panic_out);
     }
 
     assert!(status.success());
@@ -98,10 +101,9 @@ macro_rules! test_pkg {
 #[track_caller]
 pub fn set_test_panic_hook(p: PathBuf) {
     set_hook(Box::new(move |pi| {
-        let Ok(mut err_file) = File::options().write(true).open(&p) else {
-            return;
-        };
+        let mut err_file = File::options().append(true).open(&p).unwrap();
         writeln!(err_file, "{}", pi).unwrap();
+        writeln!(err_file, "{}", Backtrace::force_capture()).unwrap();
         err_file.flush().unwrap();
     }));
 }
