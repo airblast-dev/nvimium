@@ -9,7 +9,7 @@ pub fn nvim_test(
     use proc_macro2::TokenStream;
     use quote::{format_ident, quote, quote_spanned};
     use stuff::{get_exit_call, test_hook};
-    use syn::{ItemFn, parse_quote_spanned, spanned::Spanned};
+    use syn::{ItemFn, spanned::Spanned};
 
     let mut func: ItemFn = syn::parse_macro_input!(t2 as ItemFn);
 
