@@ -7,9 +7,9 @@ pub fn nvim_test(
     t2: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     use proc_macro2::TokenStream;
-    use quote::{format_ident, quote};
+    use quote::{format_ident, quote, quote_spanned};
     use stuff::{get_exit_call, test_hook};
-    use syn::{ItemFn, spanned::Spanned};
+    use syn::{ItemFn, parse_quote_spanned, spanned::Spanned};
 
     let mut func: ItemFn = syn::parse_macro_input!(t2 as ItemFn);
 
@@ -33,7 +33,7 @@ pub fn nvim_test(
     let exit_call: TokenStream = get_exit_call(t1).into();
     let orig_ident = &func.sig.ident;
     let orig_attrs = core::mem::take(&mut func.attrs);
-
+    let sp_quote = quote_spanned! {fs => #func};
     quote! {
         #[cfg(test)]
         #( #orig_attrs )*
@@ -45,14 +45,15 @@ pub fn nvim_test(
         #[allow(non_snake_case)]
         #[doc(hidden)]
         pub extern "C" fn #cdylib_ident(state: *mut ()) -> ::std::ffi::c_int {
-            let _th = unsafe { nvim_test::thread_lock::unlock() };
-            let panic_out_th = nvim_funcs::global::nvim_get_var(c"NVIMIUM_PANIC_LOG_FILE").unwrap().into_string().unwrap();
-            let panic_out_path = ::std::path::PathBuf::from(::std::string::String::from_utf8(panic_out_th.as_thinstr().as_slice().to_vec()).unwrap());
-            nvim_test::set_test_panic_hook(panic_out_path);
-            #func
-            let func: fn() -> () = #orig_ident;
-            func();
-            #exit_call;
+            unsafe { nvim_test::thread_lock::scoped(|_: ()| {
+                let panic_out_th = nvim_funcs::global::nvim_get_var(c"NVIMIUM_PANIC_LOG_FILE").unwrap().into_string().unwrap();
+                let panic_out_path = ::std::path::PathBuf::from(::std::string::String::from_utf8(panic_out_th.as_thinstr().as_slice().to_vec()).unwrap());
+                nvim_test::set_test_panic_hook(panic_out_path);
+                #sp_quote
+                let _: fn() -> () = #orig_ident;
+                #orig_ident();
+                #exit_call;
+            }, ()) }
             return 0;
         }
     }
