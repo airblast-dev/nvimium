@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-nvalloc = { workspace = true }
 libc = { workspace = true }
 panics = { workspace = true }
 macros = { workspace = true }
+thread-lock = { workspace = true }
 mlua-sys = { workspace = true }
 sptr = "0.3.2"

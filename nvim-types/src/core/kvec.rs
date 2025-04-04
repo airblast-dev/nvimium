@@ -7,7 +7,7 @@ use core::{
 };
 use std::ffi::c_void;
 
-use nvalloc::{xfree, xmalloc, xrealloc};
+use crate::nvalloc::{xfree, xmalloc, xrealloc};
 use panics::slice_error;
 
 unsafe impl<T> Sync for KVec<T> where T: Sync {}

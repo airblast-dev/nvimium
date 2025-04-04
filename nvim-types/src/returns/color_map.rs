@@ -2,8 +2,11 @@ use core::{
     marker::PhantomData,
     sync::atomic::{AtomicPtr, Ordering},
 };
+use std::ffi::c_void;
 
-use nvalloc::xmalloc;
+use libc::{c_char, c_int, qsort, strcmp};
+
+use crate::nvalloc::xmalloc;
 
 use crate::{
     dictionary::{Dictionary, KeyValuePair},

@@ -1,3 +1,4 @@
+#[cfg(not(any(miri, feature = "testing", test)))]
 mod nvdefs;
 
 use std::{
@@ -7,7 +8,9 @@ use std::{
 };
 
 use libc::{c_char, malloc, size_t};
+#[cfg(not(any(miri, feature = "testing", test)))]
 use nvdefs::{E_OUTOFMEM, preserve_exit, try_to_free_memory};
+use panics::alloc_failed;
 use thread_lock::can_call;
 
 struct AllocLock;
@@ -53,12 +56,18 @@ pub unsafe fn xmalloc(size: size_t, count: size_t) -> NonNull<c_void> {
     }
     let _lock = wait_lock();
 
+    #[allow(unused_mut)]
     let mut ptr = unsafe { malloc(real_size) };
+    #[cfg(not(any(miri, feature = "testing", test)))]
     if ptr.is_null() && can_call() {
         unsafe {
             try_to_free_memory();
             ptr = malloc(real_size);
         }
+    }
+
+    if ptr.is_null() {
+        alloc_failed();
     }
 
     NonNull::new(ptr).unwrap()
@@ -87,6 +96,7 @@ pub unsafe fn xrealloc(
 
         // we couldnt allocate memory and execution is yielded to us
         // tell neovim to free up some memory and try allocating again
+        #[cfg(not(any(miri, feature = "testing", test)))]
         if new_ptr.is_null() && can_call() {
             try_to_free_memory();
             new_ptr = libc::realloc(ptr, real_size);
@@ -96,6 +106,10 @@ pub unsafe fn xrealloc(
             if new_ptr.is_null() {
                 preserve_exit(E_OUTOFMEM);
             }
+        }
+
+        if new_ptr.is_null() {
+            alloc_failed()
         }
 
         new_ptr
