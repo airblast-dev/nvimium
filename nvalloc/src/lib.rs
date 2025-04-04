@@ -10,17 +10,25 @@ use libc::{c_char, malloc, size_t};
 use nvdefs::{E_OUTOFMEM, preserve_exit, try_to_free_memory};
 use thread_lock::can_call;
 
+struct AllocLock;
+impl Drop for AllocLock {
+    fn drop(&mut self) {
+        release();
+    }
+}
 static ALLOC_LOCK: AtomicBool = AtomicBool::new(false);
 
 #[inline(always)]
-pub fn wait_lock() {
-  while ALLOC_LOCK.swap(true, Ordering::SeqCst) {
-      cold();
-      #[cold]
-      #[inline(never)]
-      fn cold() {}
-      core::hint::spin_loop();
-  }
+pub fn wait_lock() -> AllocLock {
+    while ALLOC_LOCK.swap(true, Ordering::SeqCst) {
+        cold();
+        #[cold]
+        #[inline(never)]
+        fn cold() {}
+        core::hint::spin_loop();
+    }
+
+    AllocLock
 }
 
 #[inline(always)]
@@ -43,7 +51,7 @@ pub unsafe fn xmalloc(size: size_t, count: size_t) -> NonNull<c_void> {
         cold();
         return NonNull::dangling();
     }
-    wait_lock();
+    let _lock = wait_lock();
 
     let mut ptr = unsafe { malloc(real_size) };
     if ptr.is_null() && can_call() {
@@ -52,7 +60,7 @@ pub unsafe fn xmalloc(size: size_t, count: size_t) -> NonNull<c_void> {
             ptr = malloc(real_size);
         }
     }
-    release();
+
     NonNull::new(ptr).unwrap()
 }
 
@@ -64,7 +72,7 @@ pub unsafe fn xrealloc(
 ) -> NonNull<c_void> {
     let real_size = real_size(size, new_cap);
 
-    wait_lock();
+    let _lock = wait_lock();
     if real_size == 0 {
         if old_cap != 0 {
             unsafe {
@@ -83,7 +91,7 @@ pub unsafe fn xrealloc(
             try_to_free_memory();
             new_ptr = libc::realloc(ptr, real_size);
 
-            // we already tried to recover some memory but failed, preserve all files and whatever else 
+            // we already tried to recover some memory but failed, preserve all files and whatever else
             // the function does so there is no data loss
             if new_ptr.is_null() {
                 preserve_exit(E_OUTOFMEM);
@@ -92,8 +100,6 @@ pub unsafe fn xrealloc(
 
         new_ptr
     };
-
-    release();
 
     NonNull::new(ptr).unwrap()
 }
