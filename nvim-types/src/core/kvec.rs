@@ -5,9 +5,10 @@ use core::{
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
 };
+use std::ffi::c_void;
 
+use nvalloc::{xfree, xmalloc, xrealloc};
 use panics::slice_error;
-use utils::{xfree, xmalloc, xrealloc};
 
 unsafe impl<T> Sync for KVec<T> where T: Sync {}
 unsafe impl<T> Send for KVec<T> where T: Send {}
@@ -146,7 +147,7 @@ impl<T> KVec<T> {
     /// This function is guaranteed to at least allocate for `capacity` elements.
     pub fn with_capacity(capacity: usize) -> Self {
         // We shouldn't be storing ZST's in any use case, but if we do, just return a dangling pointer.
-        let ptr: *mut T = unsafe { xmalloc::<T>(capacity) }.as_ptr();
+        let ptr = unsafe { xmalloc(size_of::<T>(), capacity) }.as_ptr() as *mut T;
 
         Self {
             len: 0,
@@ -227,7 +228,15 @@ impl<T> KVec<T> {
     #[inline(always)]
     fn realloc(&mut self, new_capacity: usize) {
         if self.capacity() != new_capacity {
-            self.ptr = unsafe { xrealloc(self.ptr, self.capacity(), new_capacity) }.as_ptr();
+            self.ptr = unsafe {
+                xrealloc(
+                    self.ptr as *mut c_void,
+                    size_of::<T>(),
+                    self.capacity(),
+                    new_capacity,
+                )
+            }
+            .as_ptr() as *mut T;
         }
         self.capacity = new_capacity;
     }
@@ -500,7 +509,7 @@ impl<T> Drop for Iter<T> {
                 )
                 .drop_in_place();
             }
-            xfree(&mut self.start_ptr, self.capacity);
+            xfree(self.start_ptr as *mut c_void, self.capacity);
         }
     }
 }
@@ -535,7 +544,7 @@ impl<T> Drop for KVec<T> {
             // null
             if cap > 0 {
                 core::ptr::slice_from_raw_parts_mut(self.as_ptr(), len).drop_in_place();
-                xfree(&mut self.ptr, cap);
+                xfree(self.ptr as *mut c_void, cap);
             }
         }
     }

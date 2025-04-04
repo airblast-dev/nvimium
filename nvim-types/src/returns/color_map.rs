@@ -3,7 +3,7 @@ use core::{
     sync::atomic::{AtomicPtr, Ordering},
 };
 
-use utils::xmalloc;
+use nvalloc::xmalloc;
 
 use crate::{
     dictionary::{Dictionary, KeyValuePair},
@@ -58,9 +58,10 @@ impl ColorMap {
         if COLOR_MAP.load(Ordering::SeqCst).is_null() {
             kv.as_mut_slice()
                 .sort_unstable_by(|c1, c2| c1.partial_cmp(c2).expect("non ascii color name"));
-            let kv_ptr = unsafe { xmalloc::<KVec<(ThinString<'static>, [u8; 3])>>(1) };
+            let kv_ptr = unsafe { xmalloc(size_of::<KVec<(ThinString<'static>, [u8; 3])>>(), 1) }
+                .as_ptr() as *mut KVec<(ThinString<'static>, [u8; 3])>;
             unsafe { kv_ptr.write(kv) };
-            COLOR_MAP.store(kv_ptr.as_ptr(), Ordering::SeqCst);
+            COLOR_MAP.store(kv_ptr, Ordering::SeqCst);
         }
         Self::initialized()
     }

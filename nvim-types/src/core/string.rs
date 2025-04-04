@@ -46,8 +46,8 @@ use std::ops::Deref;
 use alloc::ffi::CString;
 
 use libc::size_t;
+use nvalloc::{xfree, xmalloc, xmemcpyz, xmemdupz, xrealloc};
 use panics::not_null_terminated;
-use utils::{xfree, xmalloc, xmemcpyz, xmemdupz, xrealloc};
 
 static EMPTY: ThinString<'static> = ThinString::from_null_terminated(c"".to_bytes_with_nul());
 
@@ -171,13 +171,14 @@ impl String {
     ///
     /// Allocates for cap + 1 to make the [`String`] null terminated.
     pub fn with_capacity(cap: usize) -> Self {
-        let ptr = unsafe { xmalloc(cap + 1) }.as_ptr() as *mut c_char;
+        let cap = cap.checked_add(1).unwrap();
+        let ptr = unsafe { xmalloc(size_of::<c_char>(), cap) }.as_ptr() as *mut c_char;
         unsafe { ptr.write_volatile(0) };
         Self {
             len: 0,
             data: ptr,
 
-            capacity: unsafe { NonZeroUsize::new_unchecked(cap.saturating_add(1)) },
+            capacity: unsafe { NonZeroUsize::new_unchecked(cap) },
         }
     }
 
@@ -225,7 +226,14 @@ impl String {
     }
 
     fn realloc(&mut self, new_capacity: NonZeroUsize) {
-        let ptr = unsafe { xrealloc(self.data, self.capacity().get(), new_capacity.get()) };
+        let ptr = unsafe {
+            xrealloc(
+                self.data as *mut c_void,
+                size_of::<c_char>(),
+                self.capacity().get(),
+                new_capacity.get(),
+            )
+        };
         self.data = ptr.as_ptr() as *mut c_char;
         self.capacity = new_capacity;
     }
@@ -266,9 +274,10 @@ impl String {
         self.reserve_exact(slice.len());
         unsafe {
             xmemcpyz(
-                slice.as_ptr(),
-                self.as_mut_ptr().add(self.len()),
+                self.as_mut_ptr().add(self.len()) as *mut c_void,
+                slice.as_ptr() as *mut c_void,
                 slice.len(),
+                size_of::<c_char>(),
             )
         };
 
@@ -475,7 +484,7 @@ impl Drop for String {
         debug_assert!(!self.data.is_null());
         unsafe { debug_assert_eq!(*self.data.add(self.len()), 0) };
         let cap = self.capacity().get();
-        unsafe { xfree(&mut self.data, cap) };
+        unsafe { xfree(self.data as *mut c_void, cap) };
     }
 }
 
@@ -749,19 +758,34 @@ impl Clone for OwnedThinString {
         let src = source.as_thinstr().as_slice().as_ptr() as *const c_char;
         if self.0.len() >= source.0.len() {
             let dst = self.0.as_ptr() as *mut c_char;
-            unsafe { xmemcpyz(src, dst, source.0.len()) };
+            unsafe {
+                xmemcpyz(
+                    dst as *mut c_void,
+                    src.cast(),
+                    source.0.len(),
+                    size_of::<c_char>(),
+                )
+            };
             self.0.len = source.0.len();
         } else {
-            let dst = self.as_thinstr().as_slice().as_ptr() as *mut c_char;
+            let dst = self.as_thinstr().as_slice().as_ptr() as *mut c_void;
             let res = unsafe {
                 xrealloc(
                     dst,
                     self.as_thinstr().len() + 1,
                     source.as_thinstr().len() + 1,
+                    size_of::<c_char>(),
                 )
             };
-            unsafe { xmemcpyz(src, res.as_ptr(), source.as_thinstr().len()) };
-            self.0.data = res.as_ptr();
+            unsafe {
+                xmemcpyz(
+                    res.as_ptr(),
+                    src.cast(),
+                    source.as_thinstr().len(),
+                    size_of::<c_char>(),
+                )
+            };
+            self.0.data = res.cast().as_ptr();
         }
     }
 }
@@ -791,7 +815,7 @@ impl OwnedThinString {
 impl<'a> From<ThinString<'a>> for OwnedThinString {
     fn from(th: ThinString<'a>) -> Self {
         let source = th.as_ptr();
-        let dst = unsafe { xmemdupz(source, th.len()) };
+        let dst = unsafe { xmemdupz(source as *const c_void, th.len(), size_of::<c_char>()) };
 
         Self(unsafe { ThinString::new(th.len(), dst.as_ptr() as *mut c_char) })
     }
@@ -917,7 +941,7 @@ impl Drop for OwnedThinString {
             assert_eq!(self.0.len(), 0);
         } else {
             unsafe { assert_eq!(*self.0.data.add(self.0.len()), 0) };
-            unsafe { xfree(&mut (self.0.data as *mut c_void), self.0.len() + 1) }
+            unsafe { xfree(self.0.data as *mut c_void, self.0.len() + 1) }
         }
     }
 }

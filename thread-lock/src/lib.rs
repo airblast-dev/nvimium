@@ -76,6 +76,10 @@ pub fn call_check() {
     }
 }
 
+pub fn can_call() -> bool {
+    HAS_ACCESS.get()
+}
+
 impl Drop for ThLock {
     fn drop(&mut self) {
         // the drop call is actually just a best effort to disable the lock, in user code 

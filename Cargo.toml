@@ -17,15 +17,15 @@ mlua-sys = { version = "0.6.7", features = ["lua51"] }
 libc = { version = "0.2.169", default-features = false }
 thread-lock = { path = "./thread-lock/" }
 panics = { path = "./panics" }
+nvalloc = { path = "./nvalloc" }
 nvim-types = { path = "./nvim-types/" }
 nvim-funcs = { path = "./nvim-funcs/" }
 nvim-test = { path = "./nvim-test/" }
-utils = { path = "./utils" }
 macros = { path = "./macros/" }
 nvim-test-macro = { path = "./nvim-test-macro", default-features = false }
 
 [workspace]
-members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros" , "nvim-test", "utils", "thread-lock"]
+members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros" , "nvim-test", "thread-lock", "nvalloc"]
 exclude = ["examples"]
 
 [dev-dependencies]
