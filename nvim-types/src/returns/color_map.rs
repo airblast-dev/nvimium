@@ -4,9 +4,9 @@ use core::{
 };
 use std::ffi::c_void;
 
-use libc::{c_char, c_int, qsort, strcmp};
+use libc::{bsearch, c_char, c_int, qsort, strcmp};
 
-use crate::nvalloc::xmalloc;
+use crate::{nvalloc::xmalloc, string::AsThinString};
 
 use crate::{
     dictionary::{Dictionary, KeyValuePair},
@@ -59,10 +59,34 @@ impl ColorMap {
         }
 
         if COLOR_MAP.load(Ordering::SeqCst).is_null() {
+            #[cfg(miri)]
             kv.as_mut_slice()
                 .sort_unstable_by(|c1, c2| c1.partial_cmp(c2).expect("non ascii color name"));
             let kv_ptr = unsafe { xmalloc(size_of::<KVec<(ThinString<'static>, [u8; 3])>>(), 1) }
                 .as_ptr() as *mut KVec<(ThinString<'static>, [u8; 3])>;
+            // shrinks binary size by 6kb depending on the project
+            #[cfg(not(miri))]
+            {
+                unsafe {
+                    qsort(
+                        kv.as_mut_ptr() as *mut c_void,
+                        kv.len(),
+                        size_of::<(ThinString, [u8; 3])>(),
+                        Some(qs_th),
+                    );
+                };
+                unsafe extern "C" fn qs_th(p1: *const c_void, p2: *const c_void) -> c_int {
+                    unsafe {
+                        let a = (p1 as *const (ThinString, [u8; 3]))
+                            .as_ref()
+                            .unwrap_unchecked();
+                        let b = (p2 as *const (ThinString, [u8; 3]))
+                            .as_ref()
+                            .unwrap_unchecked();
+                        strcmp(a.0.as_ptr() as *const c_char, b.0.as_ptr() as *const c_char)
+                    }
+                }
+            }
             unsafe { kv_ptr.write(kv) };
             COLOR_MAP.store(kv_ptr, Ordering::SeqCst);
         }
@@ -86,21 +110,66 @@ impl ColorMap {
         Self { p: PhantomData }
     }
 
-    pub fn get_with_name<'a, N>(&self, name: N) -> Option<[u8; 3]>
+    pub fn get_with_name<N>(&self, name: N) -> Option<[u8; 3]>
     where
-        ThinString<'a>: PartialOrd<N>,
+        N: AsThinString,
     {
+        // SAFETY: callers can only call this method if the color map is initialized
         let map = unsafe { COLOR_MAP.load(Ordering::SeqCst).as_ref().unwrap_unchecked() };
         // validate that name is something we can compare against
         // else return None early
-        ThinString::from_null_terminated(c"".to_bytes_with_nul()).partial_cmp(&name)?;
-        let idx = map
-            .binary_search_by(|(s1, _)| {
-                // cannot panic validated above
-                s1.partial_cmp(&name).unwrap()
-            })
-            .ok()?;
-        Some(map[idx].1)
+        let key = name.as_thinstr();
+        #[cfg(not(miri))]
+        {
+            let item = unsafe {
+                bsearch(
+                    &raw const key as *const c_void,
+                    map.as_ptr() as *const c_void,
+                    map.len(),
+                    size_of::<(ThinString, [u8; 3])>(),
+                    Some(bs),
+                )
+            };
+            unsafe extern "C" fn bs(p1: *const c_void, p2: *const c_void) -> c_int {
+                let p1 = unsafe {
+                    (p1 as *const (ThinString, [u8; 3]))
+                        .as_ref()
+                        .unwrap_unchecked()
+                        .0
+                };
+                let p2 = unsafe {
+                    (p2 as *const (ThinString, [u8; 3]))
+                        .as_ref()
+                        .unwrap_unchecked()
+                        .0
+                };
+                unsafe { strcmp(p1.as_ptr() as *const c_char, p2.as_ptr() as *const c_char) }
+            }
+            if item.is_null() {
+                None
+            } else {
+                Some(
+                    unsafe {
+                        (item as *const (ThinString, [u8; 3]))
+                            .as_ref()
+                            .unwrap_unchecked()
+                    }
+                    .1,
+                )
+            }
+        }
+        #[cfg(miri)]
+        {
+            ThinString::from_null_terminated(c"".to_bytes_with_nul()).partial_cmp(&key)?;
+
+            let idx = map
+                .binary_search_by(|(s1, _)| {
+                    // cannot panic validated above
+                    s1.partial_cmp(&key).unwrap()
+                })
+                .ok()?;
+            Some(map[idx].1)
+        }
     }
 }
 
