@@ -105,6 +105,7 @@ pub fn nvim_err_writeln<S: AsThinString>(s: S) {
         global::nvim_err_writeln(s.as_thinstr())
     };
 }
+
 pub fn nvim_eval_statusline<S: AsThinString>(
     s: S,
     opts: &EvalStatusLineOpts,
@@ -114,7 +115,7 @@ pub fn nvim_eval_statusline<S: AsThinString>(
         let mut err;
         unsafe { global::nvim_eval_statusline(s.as_thinstr(), opts, core::ptr::null_mut(), &mut err) },
         Ok(ret) => {
-            let ret = unsafe { ret.assume_init() };
+            let ret = unsafe { ManuallyDrop::new( ret.assume_init() ) };
             Ok(EvalStatusLineDict::from_c_func_ret(ret))
         }
     }

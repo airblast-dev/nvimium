@@ -1,4 +1,6 @@
-use crate::{Integer, dictionary::Dictionary, kvec::KVec, string::OwnedThinString};
+use std::mem::ManuallyDrop;
+
+use crate::{Integer, array::Array, dictionary::Dictionary, kvec::KVec, string::OwnedThinString};
 
 #[derive(Debug)]
 pub struct EvalStatusLineDict {
@@ -10,11 +12,11 @@ pub struct EvalStatusLineDict {
 #[derive(Debug)]
 pub struct HighlightItem {
     pub start: Integer,
-    pub group: OwnedThinString,
+    pub groups: Array,
 }
 
 impl EvalStatusLineDict {
-    pub fn from_c_func_ret(mut d: Dictionary) -> Self {
+    pub fn from_c_func_ret(mut d: ManuallyDrop<Dictionary>) -> Self {
         let s = d
             .remove_skip_key_drop("str")
             .unwrap()
@@ -37,21 +39,24 @@ impl EvalStatusLineDict {
             .map(|ob| {
                 let mut d = ob.into_dict().unwrap();
                 let start = d.remove_skip_key_drop("start").unwrap().into_int().unwrap();
-                let group = d
-                    .remove_skip_key_drop("group")
+                let groups = d
+                    .remove_skip_key_drop("groups")
                     .unwrap()
-                    .into_string()
+                    .into_array()
                     .unwrap();
-                let hi = HighlightItem {
+
+                // deprecated value
+                d.remove_skip_key_drop("group");
+
+                HighlightItem {
                     start,
                     // how long a group value may live is undefined, so we clone the value to an
                     // OwnedThinString to ensure the value can live as long as needed
-                    group: group.clone(),
-                };
-                core::mem::forget(group);
-                hi
+                    groups,
+                }
             })
             .collect();
+
 
         Self {
             chars: s,
