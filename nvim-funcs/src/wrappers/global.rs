@@ -643,8 +643,12 @@ mod tests {
         dictionary::Dictionary,
         func_types::{echo::Echo, keymap_mode::KeyMapMode},
         object::Object,
-        opts::{echo::EchoOpts, exec::ExecOpts, set_keymap::SetKeymapOpts},
+        opts::{
+            echo::EchoOpts, eval_statusline::EvalStatusLineOpts, exec::ExecOpts,
+            set_keymap::SetKeymapOpts,
+        },
         string::{AsThinString, OwnedThinString, String},
+        window::Window,
     };
 
     // calling `thread_lock::unlock` is safe as every test is spawned as a process with independent
@@ -803,6 +807,29 @@ mod tests {
             output.get(c"output".as_thinstr()).unwrap(),
             &Object::String(OwnedThinString::from("Hello!"))
         );
+    }
+
+    #[nvim_test::nvim_test]
+    pub fn nvim_eval_statusline() {
+        // TODO: I think this needs to be tested through callbacks?
+        // neovim receives the options but for some reason ignores some of them in tests
+        let res =
+            super::nvim_eval_statusline(c"Hello", EvalStatusLineOpts::default().fill_char(c"a"))
+                .unwrap();
+
+        assert_eq!(res.chars, "Hello");
+        assert_eq!(res.width, 5);
+        assert!(res.highlights.is_none());
+
+        // see the TODO above
+        //
+        // since some of the options are ignored for some reason, test what we can test for
+        let err = super::nvim_eval_statusline(
+            c"123",
+            EvalStatusLineOpts::default().winid(Window::new(999)),
+        )
+        .unwrap_err();
+        assert_eq!("Error: Exception: \"unknown winid 999\"", err.to_string());
     }
 
     #[nvim_test::nvim_test]
