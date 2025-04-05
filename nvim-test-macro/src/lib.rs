@@ -86,16 +86,12 @@ mod stuff {
         }
     }
 
-    struct AttributeArgs {
-        path: Path,
-    }
+    struct AttributeArgs;
     impl Parse for AttributeArgs {
         fn parse(input: ParseStream) -> syn::Result<Self> {
             let with: Ident = input.parse()?;
-            assert_eq!(with.to_string(), "exit_call");
-            let _: Token![=] = input.parse()?;
-            let path = input.parse()?;
-            Ok(Self { path })
+            assert_eq!(with.to_string(), "no_exit");
+            Ok(Self)
         }
     }
     pub fn get_exit_call(t: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -105,9 +101,11 @@ mod stuff {
             }
             .into()
         } else {
-            let args: AttributeArgs = syn::parse_macro_input!(t as AttributeArgs);
-            let path = args.path;
-            quote! { #path() }.into()
+            let _: AttributeArgs = syn::parse_macro_input!(t as AttributeArgs);
+            quote! { 
+                #[allow(unused)]
+                (|| {})()
+            }.into()
         }
     }
 }
