@@ -640,8 +640,13 @@ pub fn nvim_strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
 mod tests {
     use crate::{self as nvim_funcs, vimscript::nvim_exec2};
     use nvim_types::{
+        array::Array,
         dictionary::Dictionary,
-        func_types::{echo::Echo, keymap_mode::KeyMapMode},
+        func_types::{
+            echo::Echo,
+            feedkeys::{FeedKeysMode, FeedKeysModeKind},
+            keymap_mode::KeyMapMode,
+        },
         object::Object,
         opts::{
             echo::EchoOpts, eval_statusline::EvalStatusLineOpts, exec::ExecOpts,
@@ -830,6 +835,46 @@ mod tests {
         )
         .unwrap_err();
         assert_eq!("Error: Exception: \"unknown winid 999\"", err.to_string());
+    }
+
+    #[nvim_test::nvim_test]
+    pub fn nvim_exec_lua() {
+        let res = super::nvim_exec_lua(
+            c"vim.api.nvim_create_buf(true, true)\nreturn 12",
+            &Array::default(),
+        )
+        .unwrap();
+        assert_eq!(res, Object::Integer(12));
+        assert_eq!(super::nvim_list_bufs().len(), 2);
+    }
+
+    #[nvim_test::nvim_test(no_exit)]
+    pub fn nvim_feedkeys() {
+        // this test is kind of a hack
+        //
+        // nvim_feedkeys doesnt actually write to the buffer, but rather flushes it in the next
+        // tick
+        // this means we cannot read the buffer by calling nvim_get_current_line or any other
+        // method
+        // instead we set a keymap that matches the keys we have fed, once the string is "typed"
+        // into the buffer the keymap triggers and exits neovim
+        super::nvim_feedkeys(
+            c"i123",
+            &FeedKeysMode::from([FeedKeysModeKind::Typed]),
+            false,
+        );
+        super::nvim_set_keymap(
+            KeyMapMode::INSERT,
+            c"3",
+            c"<Esc>:qall!<CR>",
+            &SetKeymapOpts::default(),
+        )
+        .unwrap();
+        //super::nvim_exec_lua(
+        //    c"vim.keymap.set('i', '3', function() vim.cmd([[qall!]]) end)",
+        //    &Array::default(),
+        //)
+        //.unwrap();
     }
 
     #[nvim_test::nvim_test]
