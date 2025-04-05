@@ -11,10 +11,10 @@ use nvim_types::{
     namespace::NameSpace,
     object::Object,
     opts::{
-        echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
-        get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts, paste::PastePhase,
-        select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind, set_hl::SetHlOpts,
-        set_keymap::SetKeymapOpts,
+        context::ContextOpts, echo::EchoOpts, eval_statusline::EvalStatusLineOpts,
+        get_hl::GetHlOpts, get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts,
+        paste::PastePhase, select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind,
+        set_hl::SetHlOpts, set_keymap::SetKeymapOpts,
     },
     string::{OwnedThinString, ThinString},
     tab_page::TabPage,
@@ -79,6 +79,11 @@ unsafe extern "C" {
     // the color names returned are not owned, to avoid freeing a const value deal with the
     // deallocation of the Dictionary manually
     pub fn nvim_get_color_map(arena: *mut Arena) -> ManuallyDrop<Dictionary>;
+    pub fn nvim_get_context<'a>(
+        opts: *const ContextOpts,
+        arena: *mut Arena,
+        err: *mut Error,
+    ) -> MaybeUninit<Dictionary>;
     pub fn nvim_get_current_buf() -> Buffer;
     pub fn nvim_get_current_line(
         arena: *mut Arena,

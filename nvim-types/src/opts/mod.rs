@@ -1,4 +1,5 @@
 pub mod echo;
+pub mod context;
 pub mod eval_statusline;
 pub mod exec;
 pub mod get_hl;

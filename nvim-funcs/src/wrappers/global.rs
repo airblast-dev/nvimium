@@ -3,29 +3,14 @@ use std::{mem::ManuallyDrop, ops::DerefMut};
 
 use macros::tri;
 use nvim_types::{
-    Boolean, Integer,
-    array::Array,
-    borrowed::Borrowed,
-    buffer::Buffer,
-    call_site::Channel,
-    dictionary::Dictionary,
-    error::Error,
-    func_types::{echo::Echo, feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
-    namespace::NameSpace,
-    object::Object,
-    opts::{
-        echo::EchoOpts, eval_statusline::EvalStatusLineOpts, get_hl::GetHlOpts,
-        get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts, paste::PastePhase,
-        select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind, set_hl::SetHlOpts,
-        set_keymap::SetKeymapOpts,
-    },
-    returns::{
-        channel_info::ChannelInfo, color_map::ColorMap, eval_statusline::EvalStatusLineDict,
-        get_mode::Mode,
-    },
-    string::{AsThinString, OwnedThinString},
-    tab_page::TabPage,
-    window::Window,
+    array::Array, borrowed::Borrowed, buffer::Buffer, call_site::Channel, dictionary::Dictionary, error::Error, func_types::{echo::Echo, feedkeys::FeedKeysMode, keymap_mode::KeyMapMode}, namespace::NameSpace, object::Object, opts::{
+        context::ContextOpts, echo::EchoOpts, eval_statusline::EvalStatusLineOpts,
+        get_hl::GetHlOpts, get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts,
+        paste::PastePhase, select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind,
+        set_hl::SetHlOpts, set_keymap::SetKeymapOpts,
+    }, returns::{
+        channel_info::ChannelInfo, color_map::ColorMap, context::Context, eval_statusline::EvalStatusLineDict, get_mode::Mode
+    }, string::{AsThinString, OwnedThinString}, tab_page::TabPage, window::Window, Boolean, Integer
 };
 use thread_lock::call_check;
 
@@ -172,6 +157,19 @@ pub fn nvim_get_color_map() -> ColorMap {
         cm
     } else {
         ColorMap::initialized()
+    }
+}
+
+pub fn nvim_get_context(opts: &ContextOpts) -> Result<Context, Error> {
+    tri! {
+        let mut err;
+        unsafe { global::nvim_get_context(opts, core::ptr::null_mut(), &mut err) },
+        Ok(d) => Ok(unsafe {
+            let mut d = ManuallyDrop::new(d.assume_init());
+            let ctx = Context::from_c_func_ret(&mut d);
+            ManuallyDrop::into_inner(d);
+            ctx
+        })
     }
 }
 
@@ -870,6 +868,12 @@ mod tests {
         //    &Array::default(),
         //)
         //.unwrap();
+    }
+
+    #[nvim_test::nvim_test]
+    pub fn nvim_get_color_by_name() {
+        let color = super::nvim_get_color_by_name(c"Blue").unwrap();
+        assert_eq!(color, 255);
     }
 
     #[nvim_test::nvim_test]
