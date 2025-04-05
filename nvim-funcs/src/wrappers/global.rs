@@ -139,11 +139,6 @@ pub fn nvim_feedkeys<S: AsThinString>(keys: S, mode: &FeedKeysMode, escape_ks: B
     }
 }
 
-pub fn nvim_get_api_info() -> Borrowed<'static, Array> {
-    call_check();
-    unsafe { global::nvim_get_api_info(Channel::LUA_INTERNAL_CALL, core::ptr::null_mut()) }
-}
-
 pub fn nvim_get_chan_info(channel_id: Channel, chan: Integer) -> Result<ChannelInfo, Error> {
     call_check();
     tri! {

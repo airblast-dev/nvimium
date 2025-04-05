@@ -1,6 +1,6 @@
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug)]
-pub struct Channel(u64);
+pub struct Channel(i64);
 
 impl Channel {
     // Simplified version of src/nvim/api/private/defs.h 0.10.0 l:42
@@ -10,7 +10,11 @@ impl Channel {
     pub const VIML_INTERNAL_CALL: Channel = Channel(Self::INTERNAL_CALL_MASK.0);
     pub const LUA_INTERNAL_CALL: Channel = Channel(Self::VIML_INTERNAL_CALL.0 + 1);
 
-    pub const fn as_int(self) -> u64 {
+    pub const fn new(chan: i64) -> Self {
+        Self(chan)
+    }
+
+    pub const fn as_int(self) -> i64 {
         self.0
     }
 }

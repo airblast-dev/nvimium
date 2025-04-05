@@ -69,7 +69,6 @@ unsafe extern "C" {
     ) -> MaybeUninit<Object>;
     pub fn nvim_feedkeys<'a>(keys: ThinString<'a>, mode: ThinString<'a>, escape_ks: Boolean);
     /// Returns a shared value, caller must clone to mutate the value
-    pub fn nvim_get_api_info(channel_id: Channel, arena: *mut Arena) -> Borrowed<'static, Array>;
     pub fn nvim_get_chan_info(
         channel_id: Channel,
         chan: Integer,
