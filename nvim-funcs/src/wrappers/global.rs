@@ -176,6 +176,7 @@ pub fn nvim_get_color_map() -> ColorMap {
 }
 
 pub fn nvim_get_context(opts: &ContextOpts) -> Result<Context, Error> {
+    call_check();
     tri! {
         let mut err;
         unsafe { global::nvim_get_context(opts, core::ptr::null_mut(), &mut err) },
