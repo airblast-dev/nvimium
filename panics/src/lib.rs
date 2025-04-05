@@ -1,26 +1,7 @@
-// TODO: add more recovery/abort functions
-//
-// see [`alloc_failed`] for example usage
-unsafe extern "C" {
-    /// Neovim's custom abort
-    ///
-    /// Does some cleanup and logging before crashing.
-    /// Generally preferred over a segfault.
-    ///
-    /// # Safety
-    ///
-    /// err_msg should only point to null, or a string terminated with a null byte.
-    fn preserve_exit(err_msg: *const libc::c_char) -> !;
-}
-
 #[cold]
 #[inline(never)]
 #[track_caller]
 pub fn alloc_failed() -> ! {
-    const E_OUTOFMEM: *const libc::c_char = c"E41: Out of memory!".as_ptr();
-
-    // TODO: add this back in once testing stuff are ironed out
-    unsafe { preserve_exit(E_OUTOFMEM) }
     panic!("unable to allocate memory")
 }
 
