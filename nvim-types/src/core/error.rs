@@ -3,9 +3,9 @@ use core::{
     fmt::{Debug, Display},
 };
 
-use libc::c_char;
+use libc::{c_char, strlen};
 
-use super::string::{String, ThinString};
+use super::string::{AsThinString, String, ThinString};
 
 // Any platform that uses more than a byte as `c_char` limits the API in a few places.
 // TODO: Rather than to limit the API for niche systems find an alternative if possible.
@@ -74,3 +74,8 @@ impl Display for Error {
 }
 
 impl core::error::Error for Error {}
+unsafe impl AsThinString for Error {
+    fn as_thinstr(&self) -> ThinString<'_> {
+        unsafe { ThinString::new(strlen(self.msg), self.msg) }
+    }
+}
