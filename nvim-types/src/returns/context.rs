@@ -1,5 +1,6 @@
 use crate::{array::Array, dictionary::Dictionary};
 
+#[derive(Debug)]
 pub struct Context {
     pub regs: Array,
     pub jumps: Array,

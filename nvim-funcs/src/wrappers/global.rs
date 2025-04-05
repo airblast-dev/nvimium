@@ -3,14 +3,29 @@ use std::{mem::ManuallyDrop, ops::DerefMut};
 
 use macros::tri;
 use nvim_types::{
-    array::Array, borrowed::Borrowed, buffer::Buffer, call_site::Channel, dictionary::Dictionary, error::Error, func_types::{echo::Echo, feedkeys::FeedKeysMode, keymap_mode::KeyMapMode}, namespace::NameSpace, object::Object, opts::{
+    Boolean, Integer,
+    array::Array,
+    borrowed::Borrowed,
+    buffer::Buffer,
+    call_site::Channel,
+    dictionary::Dictionary,
+    error::Error,
+    func_types::{echo::Echo, feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
+    namespace::NameSpace,
+    object::Object,
+    opts::{
         context::ContextOpts, echo::EchoOpts, eval_statusline::EvalStatusLineOpts,
         get_hl::GetHlOpts, get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts,
         paste::PastePhase, select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind,
         set_hl::SetHlOpts, set_keymap::SetKeymapOpts,
-    }, returns::{
-        channel_info::ChannelInfo, color_map::ColorMap, context::Context, eval_statusline::EvalStatusLineDict, get_mode::Mode
-    }, string::{AsThinString, OwnedThinString}, tab_page::TabPage, window::Window, Boolean, Integer
+    },
+    returns::{
+        channel_info::ChannelInfo, color_map::ColorMap, context::Context,
+        eval_statusline::EvalStatusLineDict, get_mode::Mode,
+    },
+    string::{AsThinString, OwnedThinString},
+    tab_page::TabPage,
+    window::Window,
 };
 use thread_lock::call_check;
 
@@ -632,6 +647,7 @@ pub fn nvim_strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
 #[cfg(feature = "testing")]
 mod tests {
     use crate::{self as nvim_funcs, vimscript::nvim_exec2};
+    use libc::{c_char, strstr};
     use nvim_types::{
         array::Array,
         dictionary::Dictionary,
@@ -640,10 +656,11 @@ mod tests {
             feedkeys::{FeedKeysMode, FeedKeysModeKind},
             keymap_mode::KeyMapMode,
         },
+        kvec::KVec,
         object::Object,
         opts::{
-            echo::EchoOpts, eval_statusline::EvalStatusLineOpts, exec::ExecOpts,
-            set_keymap::SetKeymapOpts,
+            context::ContextOpts, echo::EchoOpts, eval_statusline::EvalStatusLineOpts,
+            exec::ExecOpts, set_keymap::SetKeymapOpts,
         },
         string::{AsThinString, OwnedThinString, String},
         window::Window,
@@ -683,6 +700,35 @@ mod tests {
             .get_with_name(String::from("Red").as_thinstr())
             .expect("color not found");
         assert_eq!([255, 0, 0], color);
+    }
+
+    #[nvim_test::nvim_test]
+    pub fn nvim_get_context() {
+        let ctx = super::nvim_get_context(ContextOpts::default().list(Array(KVec::from_iter(
+            [OwnedThinString::from("gvars")].map(Object::String),
+        ))))
+        .unwrap();
+
+        // I have no idea how to actually test this properly as the exact gvars can change
+        // order.
+        //
+        // As part of the test system NVIMIUM_PANIC_LOG_FILE global variable is set, so it has to be
+        // stored somewhere in the gvars value
+        let gvars = ctx.gvars.0;
+        let found = gvars
+            .into_iter()
+            .filter_map(Object::into_string)
+            .any(|s| unsafe {
+                !core::ptr::eq(
+                    strstr(
+                        s.as_thinstr().as_ptr() as *const c_char,
+                        c"NVIMIUM_PANIC_LOG_FILE".as_ptr() as *const c_char,
+                    ),
+                    core::ptr::null(),
+                )
+            });
+
+        assert!(found);
     }
 
     #[nvim_test::nvim_test]
