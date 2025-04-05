@@ -121,6 +121,7 @@ impl ColorMap {
         let key = name.as_thinstr();
         #[cfg(not(miri))]
         {
+            let key = (key, [0; 3]);
             let item = unsafe {
                 bsearch(
                     &raw const key as *const c_void,
