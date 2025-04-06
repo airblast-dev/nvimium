@@ -516,7 +516,12 @@ pub fn nvim_select_popupmenu_item(
     }
 }
 
-pub fn nvim_set_client_info<S: AsThinString>(
+/// See neovim API documentation
+///
+/// # Safety
+/// This function is only safe to call through RPC under specific circumstances, still a wrapper 
+/// is provided in case you are able to provide guarantees that it is safe to call by other means
+pub unsafe fn nvim_set_client_info<S: AsThinString>(
     name: S,
     version: Borrowed<'_, Dictionary>,
     kind: ClientKind,
