@@ -1,40 +1,11 @@
-error[E0277]: the trait bound `nvim_types::array::Array: Into<_>` is not satisfied
- --> tests/fails/types/borrowed_lifetimes.rs:8:51
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `nvim_types`
+ --> tests/fails/types/borrowed_lifetimes.rs:3:5
   |
-8 |         let borrowed: Borrowed<'_, Array> = array.into();
-  |                                                   ^^^^ the trait `Into<_>` is not implemented for `nvim_types::array::Array`
+3 | use nvim_types::{array::Array, borrowed::Borrowed};
+  |     ^^^^^^^^^^ use of unresolved module or unlinked crate `nvim_types`
   |
-  = note: required for `nvim_types::array::Array` to implement `Into<nvim_types::borrowed::Borrowed<'_, nvim_types::array::Array>>`
-help: consider borrowing here
+help: there is a crate or module with a similar name
   |
-8 |         let borrowed: Borrowed<'_, Array> = (&array).into();
-  |                                             ++     +
-
-warning: unused variable: `mut_array`
-  --> tests/fails/types/borrowed_lifetimes.rs:14:13
-   |
-14 |         let mut_array = array.deref_mut();
-   |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_mut_array`
-   |
-   = note: `#[warn(unused_variables)]` on by default
-
-error[E0596]: cannot borrow `array` as mutable, as it is not declared as mutable
-  --> tests/fails/types/borrowed_lifetimes.rs:14:25
-   |
-14 |         let mut_array = array.deref_mut();
-   |                         ^^^^^ cannot borrow as mutable
-   |
-help: consider changing this to be mutable
-   |
-12 |         let mut array = Array::default();
-   |             +++
-
-error[E0502]: cannot borrow `array` as mutable because it is also borrowed as immutable
-  --> tests/fails/types/borrowed_lifetimes.rs:14:25
-   |
-13 |         let borrowed: Borrowed<'_, Array> = (&array).into();
-   |                                             -------- immutable borrow occurs here
-14 |         let mut_array = array.deref_mut();
-   |                         ^^^^^^^^^^^^^^^^^ mutable borrow occurs here
-15 |         borrowed.as_ref();
-   |         -------- immutable borrow later used here
+3 - use nvim_types::{array::Array, borrowed::Borrowed};
+3 + use nvim_test::{array::Array, borrowed::Borrowed};
+  |

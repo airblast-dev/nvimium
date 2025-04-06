@@ -1,88 +1,35 @@
-error[E0505]: cannot move out of `s` because it is borrowed
- --> tests/fails/types/thinstring_lifetime.rs:6:14
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `nvim_types`
+ --> tests/fails/types/thinstring_lifetime.rs:1:5
   |
-4 |     fn string(s: String) {
-  |               - binding `s` declared here
-5 |         let th = s.as_thinstr();
-  |                  - borrow of `s` occurs here
-6 |         drop(s);
-  |              ^ move out of `s` occurs here
-7 |         dbg!(th);
-  |              -- borrow later used here
+1 | use nvim_types::string::{AsThinString, OwnedThinString, String};
+  |     ^^^^^^^^^^ use of unresolved module or unlinked crate `nvim_types`
   |
-help: consider cloning the value if the performance cost is acceptable
+help: there is a crate or module with a similar name
   |
-5 |         let th = s.clone().as_thinstr();
-  |                   ++++++++
+1 - use nvim_types::string::{AsThinString, OwnedThinString, String};
+1 + use nvim_test::string::{AsThinString, OwnedThinString, String};
+  |
 
-error[E0505]: cannot move out of `ow` because it is borrowed
-  --> tests/fails/types/thinstring_lifetime.rs:12:14
+error[E0599]: no method named `as_thinstr` found for struct `CString` in the current scope
+  --> tests/fails/types/thinstring_lifetime.rs:17:21
    |
-10 |     fn owned(ow: OwnedThinString) {
-   |              -- binding `ow` declared here
-11 |         let th = ow.as_thinstr();
-   |                  -- borrow of `ow` occurs here
-12 |         drop(ow);
-   |              ^^ move out of `ow` occurs here
-13 |         dbg!(th);
-   |              -- borrow later used here
-   |
-help: consider cloning the value if the performance cost is acceptable
-   |
-11 |         let th = ow.clone().as_thinstr();
-   |                    ++++++++
-
-error[E0505]: cannot move out of `cs` because it is borrowed
-  --> tests/fails/types/thinstring_lifetime.rs:18:14
-   |
-16 |     fn cstring(cs: std::ffi::CString) {
-   |                -- binding `cs` declared here
 17 |         let th = cs.as_thinstr();
-   |                  -- borrow of `cs` occurs here
-18 |         drop(cs);
-   |              ^^ move out of `cs` occurs here
-19 |         dbg!(th);
-   |              -- borrow later used here
+   |                     ^^^^^^^^^^
    |
-help: consider cloning the value if the performance cost is acceptable
+help: there is a method `as_c_str` with a similar name
    |
-17 |         let th = cs.clone().as_thinstr();
-   |                    ++++++++
+17 -         let th = cs.as_thinstr();
+17 +         let th = cs.as_c_str();
+   |
 
-error[E0505]: cannot move out of `cs` because it is borrowed
-  --> tests/fails/types/thinstring_lifetime.rs:25:14
+error[E0599]: no method named `as_thinstr` found for reference `&CStr` in the current scope
+  --> tests/fails/types/thinstring_lifetime.rs:24:23
    |
-22 |     fn cstr(cs: std::ffi::CString) {
-   |             -- binding `cs` declared here
-23 |         let cstr = cs.as_c_str();
-   |                    -- borrow of `cs` occurs here
 24 |         let th = cstr.as_thinstr();
-25 |         drop(cs);
-   |              ^^ move out of `cs` occurs here
-26 |         dbg!(th);
-   |              -- borrow later used here
+   |                       ^^^^^^^^^^
    |
-help: consider cloning the value if the performance cost is acceptable
+help: there is a method `as_ptr` with a similar name
    |
-23 |         let cstr = cs.clone().as_c_str();
-   |                      ++++++++
-
-error[E0502]: cannot borrow `s` as mutable because it is also borrowed as immutable
-  --> tests/fails/types/thinstring_lifetime.rs:31:9
+24 -         let th = cstr.as_thinstr();
+24 +         let th = cstr.as_ptr();
    |
-30 |         let th = s.as_thinstr();
-   |                  - immutable borrow occurs here
-31 |         s.reserve_exact(1);
-   |         ^^^^^^^^^^^^^^^^^^ mutable borrow occurs here
-32 |         dbg!(th);
-   |              -- immutable borrow later used here
-
-error[E0502]: cannot borrow `s` as mutable because it is also borrowed as immutable
-  --> tests/fails/types/thinstring_lifetime.rs:37:9
-   |
-36 |         let sl = s.as_thinstr().as_slice();
-   |                  - immutable borrow occurs here
-37 |         s.reserve_exact(1);
-   |         ^^^^^^^^^^^^^^^^^^ mutable borrow occurs here
-38 |         dbg!(sl);
-   |              -- immutable borrow later used here

@@ -6,26 +6,25 @@ license = "MIT OR Apache-2.0"
 
 
 [dependencies]
-nvim-types = { workspace = true }
-nvim-funcs = { workspace = true }
 nvim-test = { workspace = true }
 nvim-test-macro = { workspace = true, optional = true }
 macros = { workspace = true }
-plugin = { path = "./plugin" }
+libc = { workspace = true }
+mlua-sys = { workspace = true }
+thread-lock = { workspace = true }
+panics = { workspace = true }
 
 [workspace.dependencies]
 mlua-sys = { version = "0.6.7", features = ["lua51"] }
 libc = { version = "0.2.169", default-features = false }
 thread-lock = { path = "./thread-lock/" }
 panics = { path = "./panics" }
-nvim-types = { path = "./nvim-types/" }
-nvim-funcs = { path = "./nvim-funcs/" }
 nvim-test = { path = "./nvim-test/" }
 macros = { path = "./macros/" }
 nvim-test-macro = { path = "./nvim-test-macro", default-features = false }
 
 [workspace]
-members = [ "panics", "nvim-types", "nvim-funcs", "plugin", "macros" , "nvim-test", "thread-lock"]
+members = [ "panics", "macros" , "nvim-test", "thread-lock"]
 exclude = ["examples"]
 
 [dev-dependencies]
@@ -40,4 +39,4 @@ lto = true
 codegen-units = 1
 
 [features]
-testing = ["nvim-funcs/testing", "dep:nvim-test-macro"]
+testing = ["dep:nvim-test-macro"]

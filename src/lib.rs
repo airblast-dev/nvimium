@@ -1,7 +1,7 @@
-pub use nvim_funcs;
 pub use nvim_test;
-pub use nvim_types;
+pub mod nvim_types;
+pub use thread_lock;
 
 #[cfg(feature = "testing")]
 pub use nvim_test_macro;
-pub use plugin::plugin;
+pub mod plugin;
