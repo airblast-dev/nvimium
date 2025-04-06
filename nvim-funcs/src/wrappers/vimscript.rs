@@ -9,7 +9,7 @@ use crate::c_funcs::vimscript;
 use macros::tri;
 
 // TODO: add test
-pub fn nvim_call_dict_function<S1: AsThinString, S2: AsThinString>(
+pub fn call_dict_function<S1: AsThinString, S2: AsThinString>(
     dict: S1,
     func: S2,
     args: &Array,
@@ -30,7 +30,7 @@ pub fn nvim_call_dict_function<S1: AsThinString, S2: AsThinString>(
     }
 }
 
-pub fn nvim_call_function<S: AsThinString>(func: S, args: &Array) -> Result<Object, Error> {
+pub fn call_function<S: AsThinString>(func: S, args: &Array) -> Result<Object, Error> {
     call_check();
     tri! {
         let mut err;
@@ -39,7 +39,7 @@ pub fn nvim_call_function<S: AsThinString>(func: S, args: &Array) -> Result<Obje
     }
 }
 
-pub fn nvim_command<S: AsThinString>(command: S) -> Result<(), Error> {
+pub fn command<S: AsThinString>(command: S) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -47,7 +47,7 @@ pub fn nvim_command<S: AsThinString>(command: S) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_eval<S: AsThinString>(eval: S) -> Result<Object, Error> {
+pub fn eval<S: AsThinString>(eval: S) -> Result<Object, Error> {
     call_check();
     tri! {
         let mut err;
@@ -57,7 +57,7 @@ pub fn nvim_eval<S: AsThinString>(eval: S) -> Result<Object, Error> {
 }
 
 // TODO: replace dictionary with dedicated struct?
-pub fn nvim_exec2<S: AsThinString>(exec: S, opts: &ExecOpts) -> Result<Dictionary, Error> {
+pub fn exec2<S: AsThinString>(exec: S, opts: &ExecOpts) -> Result<Dictionary, Error> {
     tri! {
         let mut err;
         unsafe{ vimscript::nvim_exec2(Channel::LUA_INTERNAL_CALL, exec.as_thinstr(), opts, &mut err) },
@@ -66,7 +66,7 @@ pub fn nvim_exec2<S: AsThinString>(exec: S, opts: &ExecOpts) -> Result<Dictionar
     }
 }
 
-pub fn nvim_parse_expression<S: AsThinString, S1: AsThinString>(
+pub fn parse_expression<S: AsThinString, S1: AsThinString>(
     eval: S,
     flags: S1,
     highlight: Boolean,
@@ -86,7 +86,7 @@ pub fn nvim_parse_expression<S: AsThinString, S1: AsThinString>(
 #[cfg(feature = "testing")]
 mod tests {
     use crate as nvim_funcs;
-    use crate::wrappers::global::{nvim_feedkeys, nvim_list_bufs, nvim_set_current_buf};
+    use crate::wrappers::global::{feedkeys, list_bufs, set_current_buf};
 
     use nvim_types::{
         array::Array,
@@ -100,13 +100,13 @@ mod tests {
 
     #[nvim_test::nvim_test]
     pub fn nvim_call_function() {
-        nvim_set_current_buf(Buffer::new(1)).unwrap();
-        nvim_feedkeys(
+        set_current_buf(Buffer::new(1)).unwrap();
+        feedkeys(
             c"iHello\nabc\nBye",
             &FeedKeysMode::from([FeedKeysModeKind::Typed]),
             false,
         );
-        let res = super::nvim_call_function(
+        let res = super::call_function(
             c"string",
             &Array(KVec::from_iter([Object::Array(Array(KVec::from_iter(
                 (0..20).map(Object::Integer),
@@ -124,17 +124,17 @@ mod tests {
 
     #[nvim_test::nvim_test]
     pub fn nvim_command() {
-        let arr = nvim_list_bufs();
+        let arr = list_bufs();
         assert_eq!(arr.len(), 1);
-        super::nvim_command(c"new").unwrap();
-        let arr = nvim_list_bufs();
+        super::command(c"new").unwrap();
+        let arr = list_bufs();
         assert_eq!(arr.len(), 2);
     }
 
     #[nvim_test::nvim_test]
     pub fn nvim_eval() {
         let expr = cr###"#{blue: "#0000ff", red: "#ff0000"}"###;
-        let res = super::nvim_eval(expr).unwrap().into_dict().unwrap();
+        let res = super::eval(expr).unwrap().into_dict().unwrap();
         let expected = Dictionary::from_iter([
             (
                 String::from("blue"),
@@ -152,6 +152,6 @@ mod tests {
     pub fn nvim_parse_expression() {
         // TODO: add proper testing to ensure that we get the expected result
         let expr = c"echo  123";
-        super::nvim_parse_expression(expr, c"", false).unwrap();
+        super::parse_expression(expr, c"", false).unwrap();
     }
 }

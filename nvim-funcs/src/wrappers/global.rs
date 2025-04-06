@@ -32,7 +32,7 @@ use thread_lock::call_check;
 /// Create a new buffer
 ///
 /// Returns [`Option::None`] if creating the buffer fails.
-pub fn nvim_create_buf(listed: Boolean, scratch: Boolean) -> Result<Buffer, Error> {
+pub fn create_buf(listed: Boolean, scratch: Boolean) -> Result<Buffer, Error> {
     call_check();
     tri! {
         let mut err;
@@ -41,7 +41,7 @@ pub fn nvim_create_buf(listed: Boolean, scratch: Boolean) -> Result<Buffer, Erro
     }
 }
 
-pub fn nvim_del_current_line() -> Result<(), Error> {
+pub fn del_current_line() -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -49,7 +49,7 @@ pub fn nvim_del_current_line() -> Result<(), Error> {
     }
 }
 
-pub fn nvim_del_keymap<S: AsThinString>(map_mode: KeyMapMode, lhs: S) -> Result<(), Error> {
+pub fn del_keymap<S: AsThinString>(map_mode: KeyMapMode, lhs: S) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -57,7 +57,7 @@ pub fn nvim_del_keymap<S: AsThinString>(map_mode: KeyMapMode, lhs: S) -> Result<
     }
 }
 
-pub fn nvim_del_mark<S: AsThinString>(name: S) -> Result<Boolean, Error> {
+pub fn del_mark<S: AsThinString>(name: S) -> Result<Boolean, Error> {
     call_check();
     tri! {
         let mut err;
@@ -68,7 +68,7 @@ pub fn nvim_del_mark<S: AsThinString>(name: S) -> Result<Boolean, Error> {
     }
 }
 
-pub fn nvim_del_var<S: AsThinString>(var: S) -> Result<(), Error> {
+pub fn del_var<S: AsThinString>(var: S) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -78,7 +78,7 @@ pub fn nvim_del_var<S: AsThinString>(var: S) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_echo<'a>(chunks: &'a Echo, history: Boolean, opts: &'a EchoOpts) -> Result<(), Error> {
+pub fn echo<'a>(chunks: &'a Echo, history: Boolean, opts: &'a EchoOpts) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -89,7 +89,7 @@ pub fn nvim_echo<'a>(chunks: &'a Echo, history: Boolean, opts: &'a EchoOpts) -> 
 }
 
 #[deprecated]
-pub fn nvim_err_write<S: AsThinString>(s: S) {
+pub fn err_write<S: AsThinString>(s: S) {
     call_check();
     #[allow(deprecated)]
     unsafe {
@@ -98,7 +98,7 @@ pub fn nvim_err_write<S: AsThinString>(s: S) {
 }
 
 #[deprecated]
-pub fn nvim_err_writeln<S: AsThinString>(s: S) {
+pub fn err_writeln<S: AsThinString>(s: S) {
     call_check();
     #[allow(deprecated)]
     unsafe {
@@ -106,7 +106,7 @@ pub fn nvim_err_writeln<S: AsThinString>(s: S) {
     };
 }
 
-pub fn nvim_eval_statusline<S: AsThinString>(
+pub fn eval_statusline<S: AsThinString>(
     s: S,
     opts: &EvalStatusLineOpts,
 ) -> Result<EvalStatusLineDict, Error> {
@@ -121,7 +121,7 @@ pub fn nvim_eval_statusline<S: AsThinString>(
     }
 }
 
-pub fn nvim_exec_lua<S: AsThinString>(code: S, args: &Array) -> Result<Object, Error> {
+pub fn exec_lua<S: AsThinString>(code: S, args: &Array) -> Result<Object, Error> {
     call_check();
     tri! {
         let mut err;
@@ -132,14 +132,14 @@ pub fn nvim_exec_lua<S: AsThinString>(code: S, args: &Array) -> Result<Object, E
     }
 }
 
-pub fn nvim_feedkeys<S: AsThinString>(keys: S, mode: &FeedKeysMode, escape_ks: Boolean) {
+pub fn feedkeys<S: AsThinString>(keys: S, mode: &FeedKeysMode, escape_ks: Boolean) {
     call_check();
     unsafe {
         global::nvim_feedkeys(keys.as_thinstr(), mode.as_thinstr(), escape_ks);
     }
 }
 
-pub fn nvim_get_chan_info(channel_id: Channel, chan: Integer) -> Result<ChannelInfo, Error> {
+pub fn get_chan_info(channel_id: Channel, chan: Integer) -> Result<ChannelInfo, Error> {
     call_check();
     tri! {
         let mut err;
@@ -148,7 +148,7 @@ pub fn nvim_get_chan_info(channel_id: Channel, chan: Integer) -> Result<ChannelI
     }
 }
 
-pub fn nvim_get_color_by_name<S: AsThinString>(name: S) -> Option<Integer> {
+pub fn get_color_by_name<S: AsThinString>(name: S) -> Option<Integer> {
     call_check();
     let i = unsafe { global::nvim_get_color_by_name(name.as_thinstr()) };
     Some(i).filter(|i| *i != -1)
@@ -158,7 +158,7 @@ pub fn nvim_get_color_by_name<S: AsThinString>(name: S) -> Option<Integer> {
 ///
 /// After the first call to this function the [`ColorMap`] is cached to avoid allocations on each
 /// call.
-pub fn nvim_get_color_map() -> ColorMap {
+pub fn get_color_map() -> ColorMap {
     call_check();
     if !ColorMap::is_loaded() {
         #[cold]
@@ -175,7 +175,7 @@ pub fn nvim_get_color_map() -> ColorMap {
     }
 }
 
-pub fn nvim_get_context(opts: &ContextOpts) -> Result<Context, Error> {
+pub fn get_context(opts: &ContextOpts) -> Result<Context, Error> {
     call_check();
     tri! {
         let mut err;
@@ -189,12 +189,12 @@ pub fn nvim_get_context(opts: &ContextOpts) -> Result<Context, Error> {
     }
 }
 
-pub fn nvim_get_current_buf() -> Buffer {
+pub fn get_current_buf() -> Buffer {
     call_check();
     unsafe { global::nvim_get_current_buf() }
 }
 
-pub fn nvim_get_current_line() -> Result<OwnedThinString, Error> {
+pub fn get_current_line() -> Result<OwnedThinString, Error> {
     call_check();
     unsafe {
         tri! {
@@ -205,17 +205,17 @@ pub fn nvim_get_current_line() -> Result<OwnedThinString, Error> {
     }
 }
 
-pub fn nvim_get_current_tabpage() -> TabPage {
+pub fn get_current_tabpage() -> TabPage {
     call_check();
     unsafe { global::nvim_get_current_tabpage() }
 }
 
-pub fn nvim_get_current_win() -> Window {
+pub fn get_current_win() -> Window {
     call_check();
     unsafe { global::nvim_get_current_win() }
 }
 
-pub fn nvim_get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<Dictionary, Error> {
+pub fn get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<Dictionary, Error> {
     call_check();
     tri! {
         let mut err;
@@ -234,12 +234,12 @@ pub fn nvim_get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<Dictionary, Error>
     }
 }
 
-pub fn nvim_get_hl_id_by_name<S: AsThinString>(name: S) -> Integer {
+pub fn get_hl_id_by_name<S: AsThinString>(name: S) -> Integer {
     call_check();
     unsafe { global::nvim_get_hl_id_by_name(name.as_thinstr()) }
 }
 
-pub fn nvim_get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpace, Error> {
+pub fn get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpace, Error> {
     call_check();
     tri! {
         let mut err;
@@ -248,14 +248,14 @@ pub fn nvim_get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpace, Error> {
     }
 }
 
-pub fn nvim_get_keymap(mode: KeyMapMode) -> Array {
+pub fn get_keymap(mode: KeyMapMode) -> Array {
     call_check();
     let arr = unsafe { global::nvim_get_keymap(mode, core::ptr::null_mut()) };
     // TODO: fix memory leak, probably should create a specialized struct as well
     ManuallyDrop::into_inner(arr.clone())
 }
 
-pub fn nvim_get_mark<S: AsThinString>(name: S) -> Result<Array, Error> {
+pub fn get_mark<S: AsThinString>(name: S) -> Result<Array, Error> {
     call_check();
     tri! {
         let mut err;
@@ -269,7 +269,7 @@ pub fn nvim_get_mark<S: AsThinString>(name: S) -> Result<Array, Error> {
     }
 }
 
-pub fn nvim_get_mode() -> Mode {
+pub fn get_mode() -> Mode {
     call_check();
     let mut dict = unsafe { global::nvim_get_mode(core::ptr::null_mut()) };
     let mode = dict
@@ -296,7 +296,7 @@ pub fn nvim_get_mode() -> Mode {
     Mode { mode, blocking }
 }
 
-pub fn nvim_get_proc(pid: Integer) -> Result<Option<Dictionary>, Error> {
+pub fn get_proc(pid: Integer) -> Result<Option<Dictionary>, Error> {
     call_check();
     // TODO: might be multiple memory leaks here
     tri! {
@@ -314,7 +314,7 @@ pub fn nvim_get_proc(pid: Integer) -> Result<Option<Dictionary>, Error> {
     }
 }
 
-pub fn nvim_get_proc_children(pid: Integer) -> Result<Array, Error> {
+pub fn get_proc_children(pid: Integer) -> Result<Array, Error> {
     call_check();
     // TODO: might be multiple memory leaks here
     tri! {
@@ -327,7 +327,7 @@ pub fn nvim_get_proc_children(pid: Integer) -> Result<Array, Error> {
     }
 }
 
-pub fn nvim_get_runtime_file<S: AsThinString>(name: S, all: Boolean) -> Result<Array, Error> {
+pub fn get_runtime_file<S: AsThinString>(name: S, all: Boolean) -> Result<Array, Error> {
     call_check();
     // TODO: might be multiple memory leaks here
     tri! {
@@ -340,7 +340,7 @@ pub fn nvim_get_runtime_file<S: AsThinString>(name: S, all: Boolean) -> Result<A
     }
 }
 
-pub fn nvim_get_var<S: AsThinString>(name: S) -> Result<Object, Error> {
+pub fn get_var<S: AsThinString>(name: S) -> Result<Object, Error> {
     call_check();
     // TODO: might be multiple memory leaks here
     tri! {
@@ -353,7 +353,7 @@ pub fn nvim_get_var<S: AsThinString>(name: S) -> Result<Object, Error> {
     }
 }
 
-pub fn nvim_get_vvar<S: AsThinString>(name: S) -> Result<Object, Error> {
+pub fn get_vvar<S: AsThinString>(name: S) -> Result<Object, Error> {
     call_check();
     // TODO: might be multiple memory leaks here
     tri! {
@@ -366,12 +366,12 @@ pub fn nvim_get_vvar<S: AsThinString>(name: S) -> Result<Object, Error> {
     }
 }
 
-pub fn nvim_input<S: AsThinString>(keys: S) -> Integer {
+pub fn input<S: AsThinString>(keys: S) -> Integer {
     call_check();
     unsafe { global::nvim_input(Channel::LUA_INTERNAL_CALL, keys.as_thinstr()) }
 }
 
-pub fn nvim_input_mouse<S: AsThinString, S1: AsThinString, S2: AsThinString>(
+pub fn input_mouse<S: AsThinString, S1: AsThinString, S2: AsThinString>(
     button: S,
     action: S1,
     modifier: S2,
@@ -396,17 +396,17 @@ pub fn nvim_input_mouse<S: AsThinString, S1: AsThinString, S2: AsThinString>(
     }
 }
 
-pub fn nvim_list_bufs() -> Array {
+pub fn list_bufs() -> Array {
     call_check();
     unsafe { global::nvim_list_bufs(core::ptr::null_mut()) }
 }
 
-pub fn nvim_list_chans() -> Array {
+pub fn list_chans() -> Array {
     call_check();
     unsafe { global::nvim_list_chans(core::ptr::null_mut()) }
 }
 
-pub fn nvim_list_runtime_paths() -> Result<Array, Error> {
+pub fn list_runtime_paths() -> Result<Array, Error> {
     call_check();
     // TODO: might be multiple memory leaks here
     tri! {
@@ -419,12 +419,12 @@ pub fn nvim_list_runtime_paths() -> Result<Array, Error> {
     }
 }
 
-pub fn nvim_list_tabpages() -> Array {
+pub fn list_tabpages() -> Array {
     call_check();
     unsafe { global::nvim_list_tabpages(core::ptr::null_mut()) }
 }
 
-pub fn nvim_list_uis() -> Array {
+pub fn list_uis() -> Array {
     call_check();
     // TODO: might be multiple memory leaks here
     unsafe {
@@ -433,12 +433,12 @@ pub fn nvim_list_uis() -> Array {
     }
 }
 
-pub fn nvim_list_wins() -> Array {
+pub fn list_wins() -> Array {
     call_check();
     unsafe { global::nvim_list_wins(core::ptr::null_mut()) }
 }
 
-pub fn nvim_load_context(ctx: &Dictionary) -> Result<Object, Error> {
+pub fn load_context(ctx: &Dictionary) -> Result<Object, Error> {
     call_check();
     tri! {
         let mut err;
@@ -447,7 +447,7 @@ pub fn nvim_load_context(ctx: &Dictionary) -> Result<Object, Error> {
     }
 }
 
-pub fn nvim_open_term(buf: Buffer, opts: &OpenTermOpts) -> Result<Integer, Error> {
+pub fn open_term(buf: Buffer, opts: &OpenTermOpts) -> Result<Integer, Error> {
     call_check();
     tri! {
         let mut err;
@@ -456,11 +456,7 @@ pub fn nvim_open_term(buf: Buffer, opts: &OpenTermOpts) -> Result<Integer, Error
     }
 }
 
-pub fn nvim_paste<S: AsThinString>(
-    src: S,
-    crlf: Boolean,
-    phase: PastePhase,
-) -> Result<Boolean, Error> {
+pub fn paste<S: AsThinString>(src: S, crlf: Boolean, phase: PastePhase) -> Result<Boolean, Error> {
     call_check();
     tri! {
         let mut err;
@@ -478,7 +474,7 @@ pub fn nvim_paste<S: AsThinString>(
     }
 }
 
-pub fn nvim_put<S: AsThinString>(
+pub fn put<S: AsThinString>(
     arr: &Array,
     r#type: S,
     after: Boolean,
@@ -493,7 +489,7 @@ pub fn nvim_put<S: AsThinString>(
     }
 }
 
-pub fn nvim_replace_termcodes<S: AsThinString>(
+pub fn replace_termcodes<S: AsThinString>(
     s: S,
     from_part: Boolean,
     do_lt: Boolean,
@@ -503,7 +499,7 @@ pub fn nvim_replace_termcodes<S: AsThinString>(
     unsafe { global::nvim_replace_termcodes(s.as_thinstr(), from_part, do_lt, special) }
 }
 
-pub fn nvim_select_popupmenu_item(
+pub fn select_popupmenu_item(
     item: Integer,
     insert: Boolean,
     finish: Boolean,
@@ -519,9 +515,9 @@ pub fn nvim_select_popupmenu_item(
 /// See neovim API documentation
 ///
 /// # Safety
-/// This function is only safe to call through RPC under specific circumstances, still a wrapper 
+/// This function is only safe to call through RPC under specific circumstances, still a wrapper
 /// is provided in case you are able to provide guarantees that it is safe to call by other means
-pub unsafe fn nvim_set_client_info<S: AsThinString>(
+pub unsafe fn set_client_info<S: AsThinString>(
     name: S,
     version: Borrowed<'_, Dictionary>,
     kind: ClientKind,
@@ -545,7 +541,7 @@ pub unsafe fn nvim_set_client_info<S: AsThinString>(
     }
 }
 
-pub fn nvim_set_current_buf(buf: Buffer) -> Result<(), Error> {
+pub fn set_current_buf(buf: Buffer) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -553,7 +549,7 @@ pub fn nvim_set_current_buf(buf: Buffer) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_set_current_dir<S: AsThinString>(dir: S) -> Result<(), Error> {
+pub fn set_current_dir<S: AsThinString>(dir: S) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -561,7 +557,7 @@ pub fn nvim_set_current_dir<S: AsThinString>(dir: S) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_set_current_line<S: AsThinString>(line: S) -> Result<(), Error> {
+pub fn set_current_line<S: AsThinString>(line: S) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -569,7 +565,7 @@ pub fn nvim_set_current_line<S: AsThinString>(line: S) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_set_current_tabpage(page: TabPage) -> Result<(), Error> {
+pub fn set_current_tabpage(page: TabPage) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -577,7 +573,7 @@ pub fn nvim_set_current_tabpage(page: TabPage) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_set_current_win(win: Window) -> Result<(), Error> {
+pub fn set_current_win(win: Window) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -585,7 +581,7 @@ pub fn nvim_set_current_win(win: Window) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_set_hl<S: AsThinString>(ns: NameSpace, name: S, opts: &SetHlOpts) -> Result<(), Error> {
+pub fn set_hl<S: AsThinString>(ns: NameSpace, name: S, opts: &SetHlOpts) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -601,7 +597,7 @@ pub fn nvim_set_hl<S: AsThinString>(ns: NameSpace, name: S, opts: &SetHlOpts) ->
     }
 }
 
-pub fn nvim_set_hl_ns(ns: NameSpace) -> Result<(), Error> {
+pub fn set_hl_ns(ns: NameSpace) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -609,7 +605,7 @@ pub fn nvim_set_hl_ns(ns: NameSpace) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_set_hl_ns_fast(ns: NameSpace) -> Result<(), Error> {
+pub fn set_hl_ns_fast(ns: NameSpace) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -617,7 +613,7 @@ pub fn nvim_set_hl_ns_fast(ns: NameSpace) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_set_keymap<S: AsThinString, S1: AsThinString>(
+pub fn set_keymap<S: AsThinString, S1: AsThinString>(
     mode: KeyMapMode,
     lhs: S,
     rhs: S1,
@@ -630,7 +626,7 @@ pub fn nvim_set_keymap<S: AsThinString, S1: AsThinString>(
     }
 }
 
-pub fn nvim_set_var<S: AsThinString>(s: S, obj: &Object) -> Result<(), Error> {
+pub fn set_var<S: AsThinString>(s: S, obj: &Object) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -638,7 +634,7 @@ pub fn nvim_set_var<S: AsThinString>(s: S, obj: &Object) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_set_vvar<S: AsThinString>(s: S, obj: &Object) -> Result<(), Error> {
+pub fn set_vvar<S: AsThinString>(s: S, obj: &Object) -> Result<(), Error> {
     call_check();
     tri! {
         let mut err;
@@ -646,7 +642,7 @@ pub fn nvim_set_vvar<S: AsThinString>(s: S, obj: &Object) -> Result<(), Error> {
     }
 }
 
-pub fn nvim_strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
+pub fn strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
     call_check();
     tri! {
         let mut err;
@@ -657,7 +653,7 @@ pub fn nvim_strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
 
 #[cfg(feature = "testing")]
 mod tests {
-    use crate::{self as nvim_funcs, vimscript::nvim_exec2};
+    use crate::{self as nvim_funcs, vimscript::exec2};
     use libc::{c_char, strstr};
     use nvim_types::{
         array::Array,
@@ -684,41 +680,41 @@ mod tests {
 
     #[nvim_test::nvim_test]
     pub fn nvim_create_current_buf() {
-        let buf = super::nvim_get_current_buf();
+        let buf = super::get_current_buf();
         assert_eq!(buf.as_int(), 1);
-        let buf = super::nvim_create_buf(true, true).unwrap();
+        let buf = super::create_buf(true, true).unwrap();
         assert_eq!(buf.as_int(), 2);
     }
 
     #[nvim_test::nvim_test]
     pub fn nvim_get_set_current_tabpage() {
-        let tp = super::nvim_get_current_tabpage();
+        let tp = super::get_current_tabpage();
         assert_eq!(tp.as_int(), 1);
-        super::nvim_set_current_tabpage(tp).unwrap();
+        super::set_current_tabpage(tp).unwrap();
         // TODO: cant test as feedkeys is lazy
     }
 
     #[nvim_test::nvim_test]
     pub fn nvim_get_set_current_window() {
-        let w = super::nvim_get_current_win();
+        let w = super::get_current_win();
         assert_eq!(w.as_int(), 1000);
-        super::nvim_set_current_win(w).unwrap();
+        super::set_current_win(w).unwrap();
         // TODO: cant test as feedkeys is lazy
     }
 
     #[nvim_test::nvim_test]
     pub fn nvim_set_get_del_current_line() {
-        super::nvim_set_current_line(c"Hello World!").unwrap();
-        let l = super::nvim_get_current_line().unwrap();
+        super::set_current_line(c"Hello World!").unwrap();
+        let l = super::get_current_line().unwrap();
         assert_eq!(l, "Hello World!");
-        super::nvim_del_current_line().unwrap();
-        let l = super::nvim_get_current_line().unwrap();
+        super::del_current_line().unwrap();
+        let l = super::get_current_line().unwrap();
         assert_eq!(l, "");
     }
 
     #[nvim_test::nvim_test]
     pub fn nvim_get_color_map() {
-        let map = super::nvim_get_color_map();
+        let map = super::get_color_map();
         let color = map
             .get_with_name(String::from("Blue").as_thinstr())
             .expect("color not found");
@@ -731,7 +727,7 @@ mod tests {
 
     #[nvim_test::nvim_test]
     pub fn nvim_get_context() {
-        let ctx = super::nvim_get_context(ContextOpts::default().list(Array(KVec::from_iter(
+        let ctx = super::get_context(ContextOpts::default().list(Array(KVec::from_iter(
             [OwnedThinString::from("gvars")].map(Object::String),
         ))))
         .unwrap();
@@ -765,7 +761,7 @@ mod tests {
         // any mapping result is only evaluated after yielding execution so instead we attempt to
         // create a mapping then delete it. if deleting the keymap fails it means the keymap wasn't
         // set/doesn't exist
-        let keymaps = super::nvim_get_keymap(KeyMapMode::MODE_OP_PENDING);
+        let keymaps = super::get_keymap(KeyMapMode::MODE_OP_PENDING);
 
         // we dont actually have to do this but this ensures that there isn't an already existing
         // keymap removing the risk of false positives
@@ -795,14 +791,14 @@ mod tests {
                         ))
             });
         assert!(!found);
-        super::nvim_set_keymap(
+        super::set_keymap(
             KeyMapMode::MODE_OP_PENDING,
             c"aasdsadasdasdasdasdas",
             c":lua vim.api.nvim_set_current_line('HELLOO')",
             SetKeymapOpts::default().noawait(true),
         )
         .unwrap();
-        let keymaps = super::nvim_get_keymap(KeyMapMode::MODE_OP_PENDING);
+        let keymaps = super::get_keymap(KeyMapMode::MODE_OP_PENDING);
         let found = keymaps
             .0
             .into_iter()
@@ -829,12 +825,12 @@ mod tests {
                         ))
             });
         assert!(found);
-        let res = super::nvim_del_keymap(KeyMapMode::MODE_OP_PENDING, c"aasdsadasdasdasdasdas");
+        let res = super::del_keymap(KeyMapMode::MODE_OP_PENDING, c"aasdsadasdasdasdasdas");
         assert!(res.is_ok());
 
         // intentionally test a bad value as this should fail if the delete above succeedes
-        let err = super::nvim_del_keymap(KeyMapMode::MODE_OP_PENDING, c"aasdsadasdasdasdasdas")
-            .unwrap_err();
+        let err =
+            super::del_keymap(KeyMapMode::MODE_OP_PENDING, c"aasdsadasdasdasdasdas").unwrap_err();
         assert!(format!("{:?}", err) == r##"Exception: "E31: No such mapping""##)
     }
 
@@ -844,8 +840,8 @@ mod tests {
             ("apples", Object::Integer(22)),
             ("oranges", Object::Bool(true)),
         ]));
-        super::nvim_set_var(c"apple_count", &var).unwrap();
-        let ret_var = super::nvim_get_var(c"apple_count").unwrap();
+        super::set_var(c"apple_count", &var).unwrap();
+        let ret_var = super::get_var(c"apple_count").unwrap();
 
         let expected = Dictionary::from_iter([
             ("oranges", Object::Bool(true)),
@@ -854,15 +850,15 @@ mod tests {
 
         assert_eq!(ret_var, Object::Dict(expected));
 
-        super::nvim_del_var(c"apple_count").unwrap();
+        super::del_var(c"apple_count").unwrap();
 
-        let ret_var = super::nvim_get_var(c"apple_count").unwrap_err();
+        let ret_var = super::get_var(c"apple_count").unwrap_err();
         assert_eq!(
             format!("{ret_var:?}"),
             r##"Validation: "Key not found: apple_count""##
         );
 
-        let ret_var = super::nvim_del_var(c"apple_count").unwrap_err();
+        let ret_var = super::del_var(c"apple_count").unwrap_err();
         assert_eq!(
             format!("{ret_var:?}"),
             r##"Validation: "Key not found: apple_count""##
@@ -871,9 +867,9 @@ mod tests {
 
     #[nvim_test::nvim_test]
     pub fn nvim_echo() {
-        super::nvim_echo(&Echo::message(c"Hello!"), true, &EchoOpts::default()).unwrap();
+        super::echo(&Echo::message(c"Hello!"), true, &EchoOpts::default()).unwrap();
         let mut opts = ExecOpts::default();
-        let output = nvim_exec2(c":messages", opts.output(true)).unwrap();
+        let output = exec2(c":messages", opts.output(true)).unwrap();
         assert_eq!(
             output.get(c"output".as_thinstr()).unwrap(),
             &Object::String(OwnedThinString::from("Hello!"))
@@ -884,9 +880,8 @@ mod tests {
     pub fn nvim_eval_statusline() {
         // TODO: I think this needs to be tested through callbacks?
         // neovim receives the options but for some reason ignores some of them in tests
-        let res =
-            super::nvim_eval_statusline(c"Hello", EvalStatusLineOpts::default().fill_char(c"a"))
-                .unwrap();
+        let res = super::eval_statusline(c"Hello", EvalStatusLineOpts::default().fill_char(c"a"))
+            .unwrap();
 
         assert_eq!(res.chars, "Hello");
         assert_eq!(res.width, 5);
@@ -895,7 +890,7 @@ mod tests {
         // see the TODO above
         //
         // since some of the options are ignored for some reason, test what we can test for
-        let err = super::nvim_eval_statusline(
+        let err = super::eval_statusline(
             c"123",
             EvalStatusLineOpts::default().winid(Window::new(999)),
         )
@@ -905,13 +900,13 @@ mod tests {
 
     #[nvim_test::nvim_test]
     pub fn nvim_exec_lua() {
-        let res = super::nvim_exec_lua(
+        let res = super::exec_lua(
             c"vim.api.nvim_create_buf(true, true)\nreturn 12",
             &Array::default(),
         )
         .unwrap();
         assert_eq!(res, Object::Integer(12));
-        assert_eq!(super::nvim_list_bufs().len(), 2);
+        assert_eq!(super::list_bufs().len(), 2);
     }
 
     #[nvim_test::nvim_test(no_exit)]
@@ -924,12 +919,12 @@ mod tests {
         // method
         // instead we set a keymap that matches the keys we have fed, once the string is "typed"
         // into the buffer the keymap triggers and exits neovim
-        super::nvim_feedkeys(
+        super::feedkeys(
             c"i123",
             &FeedKeysMode::from([FeedKeysModeKind::Typed]),
             false,
         );
-        super::nvim_set_keymap(
+        super::set_keymap(
             KeyMapMode::INSERT,
             c"3",
             c"<Esc>:qall!<CR>",
@@ -945,15 +940,15 @@ mod tests {
 
     #[nvim_test::nvim_test]
     pub fn nvim_get_color_by_name() {
-        let color = super::nvim_get_color_by_name(c"Blue").unwrap();
+        let color = super::get_color_by_name(c"Blue").unwrap();
         assert_eq!(color, 255);
     }
 
     #[nvim_test::nvim_test]
     pub fn nvim_strwidth() {
-        let width = super::nvim_strwidth(c"".as_thinstr()).unwrap();
+        let width = super::strwidth(c"".as_thinstr()).unwrap();
         assert_eq!(0, width);
-        let width = super::nvim_strwidth(c"Hello".as_thinstr()).unwrap();
+        let width = super::strwidth(c"Hello".as_thinstr()).unwrap();
         assert_eq!(5, width);
     }
 }

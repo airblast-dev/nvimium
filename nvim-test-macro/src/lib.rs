@@ -46,7 +46,7 @@ pub fn nvim_test(
         #[doc(hidden)]
         pub extern "C" fn #cdylib_ident(state: *mut ()) -> ::std::ffi::c_int {
             unsafe { nvim_test::thread_lock::scoped(|_: ()| {
-                let panic_out_th = nvim_funcs::global::nvim_get_var(c"NVIMIUM_PANIC_LOG_FILE").unwrap().into_string().unwrap();
+                let panic_out_th = nvim_funcs::global::get_var(c"NVIMIUM_PANIC_LOG_FILE").unwrap().into_string().unwrap();
                 let panic_out_path = ::std::path::PathBuf::from(::std::string::String::from_utf8(panic_out_th.as_thinstr().as_slice().to_vec()).unwrap());
                 nvim_test::set_test_panic_hook(panic_out_path);
                 #sp_quote
@@ -65,7 +65,7 @@ mod stuff {
     use proc_macro2::TokenStream;
     use quote::quote;
     use syn::{
-        Ident, Path, Token,
+        Ident,
         parse::{Parse, ParseStream},
     };
 
@@ -97,15 +97,16 @@ mod stuff {
     pub fn get_exit_call(t: proc_macro::TokenStream) -> proc_macro::TokenStream {
         if t.is_empty() {
             quote! {
-                nvim_funcs::vimscript::nvim_exec2(c":qall!", &Default::default()).unwrap()
+                nvim_funcs::vimscript::exec2(c":qall!", &Default::default()).unwrap()
             }
             .into()
         } else {
             let _: AttributeArgs = syn::parse_macro_input!(t as AttributeArgs);
-            quote! { 
+            quote! {
                 #[allow(unused)]
                 (|| {})()
-            }.into()
+            }
+            .into()
         }
     }
 }

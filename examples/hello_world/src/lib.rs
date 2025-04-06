@@ -1,19 +1,19 @@
 use nvimium::{
-    nvim_funcs::global::nvim_echo,
+    nvim_funcs::global::echo,
     nvim_types::{func_types::echo::Echo, opts::echo::EchoOpts},
     plugin,
 };
 
 fn hello_world() {
-    let echo = Echo::message(c"Example Error message!");
+    let echo_msg = Echo::message(c"Example Error message!");
     let mut opts = EchoOpts::default();
     // once set neovim prints out the message with the error highlighting
     //
     // depending on the config the message will likely be displayed in red
     opts.err(true);
     // Both echo's have history as true so we can read it in testing.
-    nvim_echo(&echo, true, &opts).unwrap();
-    nvim_echo(
+    echo(&echo_msg, true, &opts).unwrap();
+    echo(
         &Echo::message(c"Just an everyday normal message."),
         true,
         &EchoOpts::default(),
@@ -27,7 +27,7 @@ plugin!(luaopen_hello_world, hello_world);
 #[cfg(feature = "testing")]
 mod tests {
     use nvimium::nvim_funcs;
-    use nvimium::nvim_funcs::vimscript::nvim_exec2;
+    use nvimium::nvim_funcs::vimscript::exec2;
     use nvimium::{
         nvim_test,
         nvim_types::{dictionary::KeyValuePair, opts::exec::ExecOpts},
@@ -37,7 +37,7 @@ mod tests {
     #[nvim_test::nvim_test]
     fn hello_world() {
         super::hello_world();
-        let mut result = nvim_exec2(c":messages", ExecOpts::default().output(true)).unwrap();
+        let mut result = exec2(c":messages", ExecOpts::default().output(true)).unwrap();
         let KeyValuePair { object, .. } = result.remove("output").unwrap();
         let output = object.into_string().unwrap();
 
