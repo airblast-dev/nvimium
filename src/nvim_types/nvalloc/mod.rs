@@ -1,3 +1,4 @@
+// enables error recovery for allocating functions
 #[cfg(not(any(miri, test)))]
 mod nvdefs;
 
@@ -8,6 +9,7 @@ use std::{
 };
 
 use libc::{c_char, malloc, size_t};
+
 #[cfg(not(any(miri, test)))]
 use nvdefs::{E_OUTOFMEM, preserve_exit, try_to_free_memory};
 use panics::alloc_failed;
@@ -23,6 +25,10 @@ impl Drop for AllocLock {
 }
 static ALLOC_LOCK: AtomicBool = AtomicBool::new(false);
 
+/// Acquires a lock to allocate
+///
+/// Improves platform support where the allocator is not thread safe, and allows us to call
+/// recovery function inside neovim safely.
 #[inline(always)]
 fn wait_lock() -> AllocLock {
     while ALLOC_LOCK.swap(true, Ordering::SeqCst) {
@@ -36,6 +42,10 @@ fn wait_lock() -> AllocLock {
     AllocLock
 }
 
+/// Manually releases the lock
+///
+/// It isn't a requirement to call this but it allows us to release the lock early allowing for
+/// shorter blocks in other threads.
 #[inline(always)]
 pub fn release() {
     ALLOC_LOCK.store(false, Ordering::SeqCst);
@@ -60,9 +70,11 @@ pub unsafe fn xmalloc(size: size_t, count: size_t) -> NonNull<c_void> {
 
     #[allow(unused_mut)]
     let mut ptr = unsafe { malloc(real_size) };
+    release();
     #[cfg(not(any(miri, test)))]
     if ptr.is_null() && can_call() {
         unsafe {
+            let _lock = wait_lock();
             try_to_free_memory();
             ptr = malloc(real_size);
         }
@@ -94,14 +106,19 @@ pub unsafe fn xrealloc(
     }
 
     let ptr = unsafe {
+        #[allow(unused_mut)]
         let mut new_ptr = libc::realloc(ptr, real_size);
+        release();
 
         // we couldnt allocate memory and execution is yielded to us
         // tell neovim to free up some memory and try allocating again
         #[cfg(not(any(miri, test)))]
         if new_ptr.is_null() && can_call() {
-            try_to_free_memory();
-            new_ptr = libc::realloc(ptr, real_size);
+            {
+                let _lock = wait_lock();
+                try_to_free_memory();
+                new_ptr = libc::realloc(ptr, real_size);
+            }
 
             // we already tried to recover some memory but failed, preserve all files and whatever else
             // the function does so there is no data loss

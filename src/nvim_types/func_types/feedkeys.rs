@@ -25,14 +25,19 @@ impl Display for FeedKeysModeKind {
 pub struct FeedKeysMode(String);
 
 impl FeedKeysMode {
+    /// Initialize a new [`FeedKeysMode`]
+    ///
+    /// The mode of the returned value is [`FeedKeysModeKind::Remap`].
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Push a mode kind to the current list of modes
     pub fn push(&mut self, mode: FeedKeysModeKind) {
         self.0.push([mode as u8]);
     }
 
+    /// Get a slice of the current modes as bytes
     pub fn as_bytes(&self) -> &[u8] {
         self.0.as_slice()
     }

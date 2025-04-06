@@ -39,7 +39,7 @@ enum ErrorType {
 
 impl Error {
     #[inline(always)]
-    pub const fn none() -> Self {
+    pub(crate) const fn none() -> Self {
         Self {
             kind: ErrorType::None,
             msg: core::ptr::null_mut(),
@@ -62,7 +62,7 @@ impl Error {
         s
     }
 
-    pub fn has_errored(&self) -> bool {
+    pub(crate) fn has_errored(&self) -> bool {
         self.kind != ErrorType::None
     }
 }

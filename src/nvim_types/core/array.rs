@@ -10,7 +10,7 @@ use super::borrowed::Borrowed;
 /// implementations via [`Deref`] to [`KVec`]. See its documentation instead.
 #[repr(transparent)]
 #[derive(Default, Debug, PartialEq)]
-pub struct Array(pub KVec<Object>);
+pub struct Array(pub(crate) KVec<Object>);
 
 impl Clone for Array {
     fn clone(&self) -> Self {
@@ -41,8 +41,15 @@ impl From<&[Object]> for Array {
     }
 }
 
+impl From<KVec<Object>> for Array {
+    fn from(value: KVec<Object>) -> Self {
+        Self(value)
+    }
+}
+
 impl Array {
-    pub(crate) fn into_kvec(self) -> KVec<Object> {
+    #[inline(always)]
+    pub fn into_kvec(self) -> KVec<Object> {
         self.0
     }
 }

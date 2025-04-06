@@ -1,5 +1,5 @@
 use crate::nvim_types::{
-    Integer, array::Array, buffer::Buffer, dictionary::Dictionary, object::Object,
+    Integer, Array, Buffer, Dict, Object,
     string::OwnedThinString,
 };
 
@@ -30,11 +30,11 @@ pub struct ChannelInfo {
     pub pty: Option<OwnedThinString>,
     pub buffer: Option<Buffer>,
     // TODO: same as argv field
-    pub client: Option<Dictionary>,
+    pub client: Option<Dict>,
 }
 
 impl ChannelInfo {
-    pub fn from_c_func_ret(d: &Dictionary) -> Self {
+    pub fn from_c_func_ret(d: &Dict) -> Self {
         let id = d
             .get("id")
             .cloned()

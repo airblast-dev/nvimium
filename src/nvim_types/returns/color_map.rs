@@ -9,7 +9,7 @@ use libc::{bsearch, c_char, c_int, qsort, strcmp};
 use crate::nvim_types::{nvalloc::xmalloc, string::AsThinString};
 
 use crate::nvim_types::{
-    dictionary::{Dictionary, KeyValuePair},
+    dictionary::{Dict, KeyValuePair},
     kvec::KVec,
     string::ThinString,
 };
@@ -41,7 +41,7 @@ impl ColorMap {
     /// for color names are stored in constants.
     ///
     /// This function is guaranteed to drain all values stored in the [`Dictionary`].
-    pub fn from_c_func_ret(d: &mut Dictionary) -> Self {
+    pub fn from_c_func_ret(d: &mut Dict) -> Self {
         let mut kv = KVec::with_capacity(d.len());
         for i in (0..d.len()).rev() {
             // TODO: replace with pop
@@ -177,16 +177,14 @@ impl ColorMap {
 #[cfg(test)]
 mod tests {
     use crate::nvim_types::{
-        dictionary::Dictionary,
-        object::Object,
-        string::{OwnedThinString, String},
+        Dict, Object, {OwnedThinString, String},
     };
 
     use super::ColorMap;
 
     #[test]
     fn color_map_from_c_func_ret() {
-        let mut dict = Dictionary::default();
+        let mut dict = Dict::default();
         let colors: [(OwnedThinString, Object); 3] =
             [("red", 255 << 16), ("green", 255 << 8), ("blue", 255)]
                 .map(|(s, c)| (OwnedThinString::from(String::from(s)), Object::Integer(c)));

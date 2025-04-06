@@ -11,11 +11,14 @@ impl LuaRef {
     ///
     /// # Safety
     ///
-    /// Passing an invalid key can result in UB in some cases.
-    pub unsafe fn new(key: LuaRefT) -> Self {
+    /// Passing an invalid key can result in UB in some cases the exact safety requirements depend
+    /// on where it will passed.
+    pub const unsafe fn new(key: LuaRefT) -> Self {
         Self(key, PhantomData)
     }
-    pub fn as_int(&self) -> LuaRefT {
+
+    /// Get the raw integer value of the [`LuaRef`]
+    pub const fn as_int(&self) -> LuaRefT {
         self.0
     }
 }

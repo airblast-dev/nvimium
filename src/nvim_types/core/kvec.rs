@@ -317,13 +317,15 @@ impl<T> KVec<T> {
         unsafe {
             let ptr = self.ptr.add(index);
             let rem = ptr.read();
+            #[cfg(miri)]
             core::ptr::copy(ptr.add(1), ptr, len - index - 1);
-            // TODO: perhaps add this back once miri supports it
-            //  libc::memmove(
-            //      ptr.cast(),
-            //      ptr.add(1).cast(),
-            //      (len - index - 1) * Self::T_SIZE,
-            //  );
+            // memmove is not supported by miri so we have to feature gate it
+            #[cfg(not(miri))]
+            libc::memmove(
+                ptr.cast(),
+                ptr.add(1).cast(),
+                (len - index - 1) * Self::T_SIZE,
+            );
 
             self.set_len(len - 1);
             rem
@@ -499,8 +501,6 @@ impl<T> FusedIterator for Iter<T> {}
 
 impl<T> Drop for Iter<T> {
     fn drop(&mut self) {
-        // construct a KVec to drop it
-
         unsafe {
             if !self.start_ptr.is_null() {
                 core::ptr::slice_from_raw_parts_mut(

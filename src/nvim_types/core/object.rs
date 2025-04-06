@@ -2,7 +2,7 @@ use core::{fmt::Debug, marker::PhantomData, mem::ManuallyDrop};
 
 use libc::size_t;
 
-use super::{array::Array, dictionary::Dictionary};
+use super::{array::Array, dictionary::Dict};
 
 use super::{
     Boolean, Float, Integer,
@@ -28,7 +28,7 @@ pub enum Object {
     Float(Float),
     String(OwnedThinString),
     Array(Array),
-    Dict(Dictionary),
+    Dict(Dict),
     LuaRef(LuaRef),
     Buffer(Buffer),
     Window(Window),
@@ -102,7 +102,7 @@ impl Object {
         }
     }
 
-    pub fn into_dict(self) -> Option<Dictionary> {
+    pub fn into_dict(self) -> Option<Dict> {
         match self {
             Self::Dict(d) => Some(d),
             _ => None,
@@ -169,8 +169,8 @@ impl From<Array> for Object {
     }
 }
 
-impl From<Dictionary> for Object {
-    fn from(value: Dictionary) -> Self {
+impl From<Dict> for Object {
+    fn from(value: Dict) -> Self {
         Self::Dict(value)
     }
 }
@@ -249,7 +249,7 @@ impl TryFrom<Object> for Array {
     }
 }
 
-impl TryFrom<Object> for Dictionary {
+impl TryFrom<Object> for Dict {
     type Error = ObjectConversionError;
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
@@ -393,7 +393,7 @@ mod tests {
 
     use core::mem::{ManuallyDrop, transmute};
 
-    use crate::nvim_types::{array::Array, kvec::KVec, string::ThinString};
+    use crate::nvim_types::{Array, KVec, ThinString};
 
     use super::{Object, ObjectRef};
 

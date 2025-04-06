@@ -1,4 +1,4 @@
-use crate::nvim_types::{hl_group::HlGroupId, lua::LuaInteger};
+use crate::nvim_types::{HlGroupId, lua::LuaInteger};
 
 use super::IntoLua;
 

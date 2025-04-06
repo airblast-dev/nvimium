@@ -1,11 +1,11 @@
 use libc::c_char;
 use mlua_sys::{lua_checkstack, lua_createtable, lua_setfield};
 
-use crate::nvim_types::{Dictionary, KeyValuePair};
+use crate::nvim_types::{Dict, KeyValuePair};
 
 use super::IntoLua;
 
-impl IntoLua for Dictionary {
+impl IntoLua for Dict {
     unsafe fn push(&self, l: *mut mlua_sys::lua_State) {
         unsafe {
             lua_checkstack(l, 2);

@@ -121,6 +121,7 @@ impl String {
         self.len
     }
 
+    /// Returns `true` if the string is empty
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
@@ -560,7 +561,7 @@ impl<'a> ThinString<'a> {
         unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len) }
     }
 
-    // Returns a slice of the buffers bytes with a null byte
+    // Returns a slice of the buffers bytes with the terminating null byte
     #[inline(always)]
     pub fn as_slice_with_null(&self) -> &'a [u8] {
         let ptr = self.as_ptr();

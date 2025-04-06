@@ -27,14 +27,10 @@ pub struct ThLock(PhantomData<*mut u8>);
 /// If no OS threads are spawned via [`std::thread::spawn`] or other means this function does not
 /// need to be called as nvimium will handle the locking for callbacks and entrypoints.
 ///
-/// Calling this function for the first time will update the panic hook to revoke access for the
-/// current thread.
-///
 /// There is only two reasons to use this:
 /// - A callback or entrypoint spawns another thread where only one thread calls Neovim functions
 /// - Neovim functions are called from multiple threads but other synchronization is achieved by
-///   other means such as a [`std::sync::Mutex`].
-/// - A spawned OS thread must not call Neovim functions after execution is yielded back to Neovim.
+///   other means such as a [`std::sync::Mutex`] or atomics.
 ///
 /// # Safety
 ///
@@ -83,7 +79,7 @@ pub fn can_call() -> bool {
 impl Drop for ThLock {
     fn drop(&mut self) {
         // the drop call is actually just a best effort to disable the lock, in user code
-        // [`scoped`] should be used at will catch any panic and lock access
+        // [`scoped`] should be used as it will catch any panic and lock access
         let _ = HAS_ACCESS.try_with(|c| c.set(false));
     }
 }

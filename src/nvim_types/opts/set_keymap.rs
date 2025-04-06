@@ -11,7 +11,7 @@ masked_builder! {
         script: Boolean,
         expr: Boolean,
         unique: Boolean,
-        // skip for now until lua is supported
+        // TODO: skip for now until lua is supported
         #[builder(skip)]
         callback: LuaRef,
         desc: ThinString<'a>,

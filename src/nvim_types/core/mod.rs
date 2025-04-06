@@ -23,7 +23,7 @@ pub type LuaRefT = libc::c_int;
 pub use array::Array;
 pub use buffer::Buffer;
 pub use call_site::Channel;
-pub use dictionary::{Dictionary, KeyValuePair};
+pub use dictionary::{Dict, KeyValuePair};
 pub use error::Error;
 pub use hl_group::HlGroupId;
 pub use kvec::KVec;

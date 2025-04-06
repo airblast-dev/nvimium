@@ -1,4 +1,4 @@
-use crate::nvim_types::{array::Array, dictionary::Dictionary};
+use crate::nvim_types::{Array, Dict};
 
 #[derive(Debug)]
 pub struct Context {
@@ -10,7 +10,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn from_c_func_ret(ctx: &mut Dictionary) -> Self {
+    pub fn from_c_func_ret(ctx: &mut Dict) -> Self {
         let regs = ctx
             .remove_skip_key_drop(c"regs")
             .unwrap()

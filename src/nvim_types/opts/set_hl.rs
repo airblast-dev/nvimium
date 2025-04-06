@@ -1,8 +1,6 @@
 use macros::masked_builder;
 
-use crate::nvim_types::{
-    Boolean, Integer, hl_group::HlGroupId, object_subs::StringOrInt, string::OwnedThinString,
-};
+use crate::nvim_types::{Boolean, HlGroupId, Integer, OwnedThinString, object_subs::StringOrInt};
 
 masked_builder! {
     #[repr(C)]
