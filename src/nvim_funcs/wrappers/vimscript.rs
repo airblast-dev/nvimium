@@ -1,10 +1,9 @@
-use nvim_types::{
-    Boolean, array::Array, call_site::Channel, dictionary::Dictionary, error::Error,
-    object::Object, opts::exec::ExecOpts, string::AsThinString,
+use crate::nvim_types::{
+    Array, AsThinString, Boolean, Channel, Dict, Error, Object, opts::exec::ExecOpts,
 };
 use thread_lock::call_check;
 
-use crate::c_funcs::vimscript;
+use crate::nvim_funcs::c_funcs::vimscript;
 
 use macros::tri;
 
@@ -57,7 +56,7 @@ pub fn eval<S: AsThinString>(eval: S) -> Result<Object, Error> {
 }
 
 // TODO: replace dictionary with dedicated struct?
-pub fn exec2<S: AsThinString>(exec: S, opts: &ExecOpts) -> Result<Dictionary, Error> {
+pub fn exec2<S: AsThinString>(exec: S, opts: &ExecOpts) -> Result<Dict, Error> {
     tri! {
         let mut err;
         unsafe{ vimscript::nvim_exec2(Channel::LUA_INTERNAL_CALL, exec.as_thinstr(), opts, &mut err) },
@@ -70,7 +69,7 @@ pub fn parse_expression<S: AsThinString, S1: AsThinString>(
     eval: S,
     flags: S1,
     highlight: Boolean,
-) -> Result<Dictionary, Error> {
+) -> Result<Dict, Error> {
     // TODO: likely a memory leak, replace with dedicated struct
     // it seems that the returned Dict contains a mix of owned and static strings which makes this
     // pretty hard to expose to users
@@ -83,19 +82,16 @@ pub fn parse_expression<S: AsThinString, S1: AsThinString>(
     }
 }
 
-#[cfg(feature = "testing")]
+#[cfg(all(not(miri), feature = "testing"))]
 mod tests {
-    use crate as nvim_funcs;
-    use crate::wrappers::global::{feedkeys, list_bufs, set_current_buf};
+    use crate::nvim_test;
+    use crate::nvim_funcs;
+    use crate::nvim_funcs::wrappers::global::{feedkeys, list_bufs, set_current_buf};
 
-    use nvim_types::{
-        array::Array,
-        buffer::Buffer,
-        dictionary::Dictionary,
+    use crate::nvim_types::{
+        Array, Buffer, Dict, Object, OwnedThinString, String,
         func_types::feedkeys::{FeedKeysMode, FeedKeysModeKind},
         kvec::KVec,
-        object::Object,
-        string::{OwnedThinString, String},
     };
 
     #[nvim_test::nvim_test]
@@ -135,7 +131,7 @@ mod tests {
     pub fn nvim_eval() {
         let expr = cr###"#{blue: "#0000ff", red: "#ff0000"}"###;
         let res = super::eval(expr).unwrap().into_dict().unwrap();
-        let expected = Dictionary::from_iter([
+        let expected = Dict::from_iter([
             (
                 String::from("blue"),
                 Object::String(OwnedThinString::from("#0000ff")),

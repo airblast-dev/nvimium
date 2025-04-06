@@ -1,11 +1,8 @@
 use std::mem::MaybeUninit;
 
-use nvim_types::{
-    Arena, Boolean,
-    array::Array,
+use crate::nvim_types::{
+    Arena, Array, Boolean, Channel, Dict,
     borrowed::Borrowed,
-    call_site::Channel,
-    dictionary::Dictionary,
     error::Error,
     object::{Object, ObjectRef},
     opts::exec::ExecOpts,
@@ -37,12 +34,12 @@ unsafe extern "C" {
         exec: ThinString<'a>,
         opts: *const ExecOpts,
         err: *mut Error,
-    ) -> MaybeUninit<Dictionary>;
+    ) -> MaybeUninit<Dict>;
     pub fn nvim_parse_expression<'a>(
         expr: ThinString<'a>,
         flags: ThinString<'a>,
         highlight: Boolean,
         arena: *mut Arena,
         error: *mut Error,
-    ) -> MaybeUninit<Dictionary>;
+    ) -> MaybeUninit<Dict>;
 }

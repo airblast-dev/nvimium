@@ -1,18 +1,11 @@
-use crate::c_funcs::global;
+use crate::nvim_funcs::c_funcs::global;
 use std::{mem::ManuallyDrop, ops::DerefMut};
 
-use macros::tri;
-use nvim_types::{
-    Boolean, Integer,
-    array::Array,
+use crate::nvim_types::{
+    Array, AsThinString, Boolean, Buffer, Channel, Dict, Error, Integer, NameSpace, Object,
+    OwnedThinString,
     borrowed::Borrowed,
-    buffer::Buffer,
-    call_site::Channel,
-    dictionary::Dictionary,
-    error::Error,
     func_types::{echo::Echo, feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
-    namespace::NameSpace,
-    object::Object,
     opts::{
         context::ContextOpts, echo::EchoOpts, eval_statusline::EvalStatusLineOpts,
         get_hl::GetHlOpts, get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts,
@@ -23,10 +16,10 @@ use nvim_types::{
         channel_info::ChannelInfo, color_map::ColorMap, context::Context,
         eval_statusline::EvalStatusLineDict, get_mode::Mode,
     },
-    string::{AsThinString, OwnedThinString},
     tab_page::TabPage,
     window::Window,
 };
+use macros::tri;
 use thread_lock::call_check;
 
 /// Create a new buffer
@@ -215,7 +208,7 @@ pub fn get_current_win() -> Window {
     unsafe { global::nvim_get_current_win() }
 }
 
-pub fn get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<Dictionary, Error> {
+pub fn get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<Dict, Error> {
     call_check();
     tri! {
         let mut err;
@@ -296,7 +289,7 @@ pub fn get_mode() -> Mode {
     Mode { mode, blocking }
 }
 
-pub fn get_proc(pid: Integer) -> Result<Option<Dictionary>, Error> {
+pub fn get_proc(pid: Integer) -> Result<Option<Dict>, Error> {
     call_check();
     // TODO: might be multiple memory leaks here
     tri! {
@@ -438,7 +431,7 @@ pub fn list_wins() -> Array {
     unsafe { global::nvim_list_wins(core::ptr::null_mut()) }
 }
 
-pub fn load_context(ctx: &Dictionary) -> Result<Object, Error> {
+pub fn load_context(ctx: &Dict) -> Result<Object, Error> {
     call_check();
     tri! {
         let mut err;
@@ -519,10 +512,10 @@ pub fn select_popupmenu_item(
 /// is provided in case you are able to provide guarantees that it is safe to call by other means
 pub unsafe fn set_client_info<S: AsThinString>(
     name: S,
-    version: Borrowed<'_, Dictionary>,
+    version: Borrowed<'_, Dict>,
     kind: ClientKind,
-    methods: &Dictionary,
-    attributes: &Dictionary,
+    methods: &Dict,
+    attributes: &Dict,
 ) -> Result<(), Error> {
     call_check();
     tri! {
@@ -651,27 +644,23 @@ pub fn strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
     }
 }
 
-#[cfg(feature = "testing")]
+#[cfg(all(not(miri), feature = "testing"))]
 mod tests {
-    use crate::{self as nvim_funcs, vimscript::exec2};
-    use libc::{c_char, strstr};
-    use nvim_types::{
-        array::Array,
-        dictionary::Dictionary,
+    use crate::nvim_funcs::{self, vimscript::exec2};
+    use crate::nvim_types::{
+        Array, AsThinString, Dict, Object, OwnedThinString, String, Window,
         func_types::{
             echo::Echo,
             feedkeys::{FeedKeysMode, FeedKeysModeKind},
             keymap_mode::KeyMapMode,
         },
         kvec::KVec,
-        object::Object,
         opts::{
             context::ContextOpts, echo::EchoOpts, eval_statusline::EvalStatusLineOpts,
             exec::ExecOpts, set_keymap::SetKeymapOpts,
         },
-        string::{AsThinString, OwnedThinString, String},
-        window::Window,
     };
+    use libc::{c_char, strstr};
 
     // calling `thread_lock::unlock` is safe as every test is spawned as a process with independent
     // threads
@@ -836,14 +825,14 @@ mod tests {
 
     #[nvim_test::nvim_test]
     pub fn nvim_set_get_del_var() {
-        let var = Object::Dict(Dictionary::from_iter([
+        let var = Object::Dict(Dict::from_iter([
             ("apples", Object::Integer(22)),
             ("oranges", Object::Bool(true)),
         ]));
         super::set_var(c"apple_count", &var).unwrap();
         let ret_var = super::get_var(c"apple_count").unwrap();
 
-        let expected = Dictionary::from_iter([
+        let expected = Dict::from_iter([
             ("oranges", Object::Bool(true)),
             ("apples", Object::Integer(22)),
         ]);

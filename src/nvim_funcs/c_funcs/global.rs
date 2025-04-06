@@ -1,15 +1,7 @@
-use core::mem::MaybeUninit;
-use nvim_types::{
-    Arena, Boolean, Integer,
-    array::Array,
+use crate::nvim_types::{
+    Arena, Array, Boolean, Buffer, Channel, Dict, Error, Integer, NameSpace, Object,
     borrowed::Borrowed,
-    buffer::Buffer,
-    call_site::Channel,
-    dictionary::Dictionary,
-    error::Error,
     func_types::{echo::Echo, keymap_mode::KeyMapMode},
-    namespace::NameSpace,
-    object::Object,
     opts::{
         context::ContextOpts, echo::EchoOpts, eval_statusline::EvalStatusLineOpts,
         get_hl::GetHlOpts, get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts,
@@ -20,6 +12,7 @@ use nvim_types::{
     tab_page::TabPage,
     window::Window,
 };
+use core::mem::MaybeUninit;
 use std::mem::ManuallyDrop;
 
 // Some of the neovim functions do not accept a null pointer with strings and call functions
@@ -60,7 +53,7 @@ unsafe extern "C" {
         opts: *const EvalStatusLineOpts<'a>,
         arena: *mut Arena,
         err: *mut Error,
-    ) -> MaybeUninit<Dictionary>;
+    ) -> MaybeUninit<Dict>;
     pub fn nvim_exec_lua<'a>(
         code: ThinString<'a>,
         args: Borrowed<'a, Array>,
@@ -74,16 +67,16 @@ unsafe extern "C" {
         chan: Integer,
         arena: *mut Arena,
         err: *mut Error,
-    ) -> MaybeUninit<ManuallyDrop<Dictionary>>;
+    ) -> MaybeUninit<ManuallyDrop<Dict>>;
     pub fn nvim_get_color_by_name<'a>(name: ThinString<'a>) -> Integer;
     // the color names returned are not owned, to avoid freeing a const value deal with the
-    // deallocation of the Dictionary manually
-    pub fn nvim_get_color_map(arena: *mut Arena) -> ManuallyDrop<Dictionary>;
+    // deallocation of the Dict manually
+    pub fn nvim_get_color_map(arena: *mut Arena) -> ManuallyDrop<Dict>;
     pub fn nvim_get_context<'a>(
         opts: *const ContextOpts,
         arena: *mut Arena,
         err: *mut Error,
-    ) -> MaybeUninit<Dictionary>;
+    ) -> MaybeUninit<Dict>;
     pub fn nvim_get_current_buf() -> Buffer;
     pub fn nvim_get_current_line(
         arena: *mut Arena,
@@ -98,7 +91,7 @@ unsafe extern "C" {
         opts: *const GetHlOpts<'a>,
         arena: *mut Arena,
         err: *mut Error,
-    ) -> MaybeUninit<Dictionary>;
+    ) -> MaybeUninit<Dict>;
     pub fn nvim_get_hl_id_by_name<'a>(name: ThinString<'a>) -> Integer;
     pub fn nvim_get_hl_ns(opts: *const GetHlNsOpts, err: *mut Error) -> MaybeUninit<NameSpace>;
     pub fn nvim_get_keymap(mode: KeyMapMode, arena: *mut Arena) -> ManuallyDrop<Array>;
@@ -108,7 +101,7 @@ unsafe extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Array>;
-    pub fn nvim_get_mode(arena: *mut Arena) -> Dictionary;
+    pub fn nvim_get_mode(arena: *mut Arena) -> Dict;
     pub fn nvim_get_proc(pid: Integer, arena: *mut Arena, err: *mut Error) -> MaybeUninit<Object>;
     pub fn nvim_get_proc_children(
         pid: Integer,
@@ -148,7 +141,7 @@ unsafe extern "C" {
     pub fn nvim_list_uis(arena: *mut Arena) -> ManuallyDrop<Array>;
     pub fn nvim_list_wins(arena: *mut Arena) -> Array;
     pub fn nvim_load_context<'a>(
-        dict: Borrowed<'a, Dictionary>,
+        dict: Borrowed<'a, Dict>,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
     // TODO
@@ -188,10 +181,10 @@ unsafe extern "C" {
     );
     pub fn nvim_set_client_info<'a>(
         name: ThinString<'a>,
-        version: Borrowed<'a, Dictionary>,
+        version: Borrowed<'a, Dict>,
         kind: ClientKind,
-        methods: Borrowed<'a, Dictionary>,
-        attributes: Borrowed<'a, Dictionary>,
+        methods: Borrowed<'a, Dict>,
+        attributes: Borrowed<'a, Dict>,
         arena: *mut Arena,
         err: *mut Error,
     );

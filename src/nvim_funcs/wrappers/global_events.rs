@@ -1,7 +1,7 @@
-use nvim_types::{call_site::Channel, error::Error};
+use crate::nvim_types::{call_site::Channel, error::Error};
 use thread_lock::call_check;
 
-use crate::c_funcs;
+use crate::nvim_funcs::c_funcs;
 
 pub fn nvim_error_event(err: Error) {
     call_check();

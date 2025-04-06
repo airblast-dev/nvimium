@@ -39,4 +39,7 @@ lto = true
 codegen-units = 1
 
 [features]
-testing = ["dep:nvim-test-macro"]
+testing = ["dep:nvim-test-macro", "nvim-test/testing"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
