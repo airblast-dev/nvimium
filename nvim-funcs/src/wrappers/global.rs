@@ -234,6 +234,11 @@ pub fn nvim_get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<Dictionary, Error>
     }
 }
 
+pub fn nvim_get_hl_id_by_name<S: AsThinString>(name: S) -> Integer {
+    call_check();
+    unsafe { global::nvim_get_hl_id_by_name(name.as_thinstr()) }
+}
+
 pub fn nvim_get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpace, Error> {
     call_check();
     tri! {

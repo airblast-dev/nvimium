@@ -99,6 +99,7 @@ unsafe extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Dictionary>;
+    pub fn nvim_get_hl_id_by_name<'a>(name: ThinString<'a>) -> Integer;
     pub fn nvim_get_hl_ns(opts: *const GetHlNsOpts, err: *mut Error) -> MaybeUninit<NameSpace>;
     pub fn nvim_get_keymap(mode: KeyMapMode, arena: *mut Arena) -> ManuallyDrop<Array>;
     pub fn nvim_get_mark<'a>(
