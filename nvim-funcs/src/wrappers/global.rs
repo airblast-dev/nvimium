@@ -664,6 +664,7 @@ mod tests {
             exec::ExecOpts, set_keymap::SetKeymapOpts,
         },
         string::{AsThinString, OwnedThinString, String},
+        tab_page::TabPage,
         window::Window,
     };
 
@@ -678,6 +679,22 @@ mod tests {
         assert_eq!(buf.as_int(), 1);
         let buf = super::nvim_create_buf(true, true).unwrap();
         assert_eq!(buf.as_int(), 2);
+    }
+
+    #[nvim_test::nvim_test]
+    pub fn nvim_get_set_current_tabpage() {
+        let tp = super::nvim_get_current_tabpage();
+        assert_eq!(tp.as_int(), 1);
+        super::nvim_set_current_tabpage(tp).unwrap();
+        // TODO: cant test as feedkeys is lazy
+    }
+
+    #[nvim_test::nvim_test]
+    pub fn nvim_get_set_current_window() {
+        let w = super::nvim_get_current_win();
+        assert_eq!(w.as_int(), 1000);
+        super::nvim_set_current_win(w).unwrap();
+        // TODO: cant test as feedkeys is lazy
     }
 
     #[nvim_test::nvim_test]
