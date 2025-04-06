@@ -215,7 +215,7 @@ pub fn nvim_get_current_win() -> Window {
     unsafe { global::nvim_get_current_win() }
 }
 
-pub fn nvim_get_hl<S: AsThinString>(ns: NameSpace, opts: &GetHlOpts) -> Result<Dictionary, Error> {
+pub fn nvim_get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<Dictionary, Error> {
     call_check();
     tri! {
         let mut err;
