@@ -664,7 +664,6 @@ mod tests {
             exec::ExecOpts, set_keymap::SetKeymapOpts,
         },
         string::{AsThinString, OwnedThinString, String},
-        tab_page::TabPage,
         window::Window,
     };
 
