@@ -72,6 +72,10 @@ pub fn nvim_parse_expression<S: AsThinString, S1: AsThinString>(
     highlight: Boolean,
 ) -> Result<Dictionary, Error> {
     // TODO: likely a memory leak, replace with dedicated struct
+    // it seems that the returned Dict contains a mix of owned and static strings which makes this
+    // pretty hard to expose to users
+    //
+    // this is fine for now but should eventually use a dedicated struct in the return type
     tri! {
         let mut err;
         unsafe { vimscript::nvim_parse_expression(eval.as_thinstr(), flags.as_thinstr(), highlight, core::ptr::null_mut(), &mut err) },
@@ -142,5 +146,12 @@ mod tests {
             ),
         ]);
         assert_eq!(res, expected);
+    }
+
+    #[nvim_test::nvim_test]
+    pub fn nvim_parse_expression() {
+        // TODO: add proper testing to ensure that we get the expected result
+        let expr = c"echo  123";
+        super::nvim_parse_expression(expr, c"", false).unwrap();
     }
 }
