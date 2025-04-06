@@ -19,6 +19,7 @@ pub struct Error {
 }
 
 impl Debug for Error {
+    #[inline(never)]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let cs = if !self.msg.is_null() {
             unsafe { CStr::from_ptr(self.msg.cast()) }
@@ -29,12 +30,24 @@ impl Debug for Error {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 enum ErrorType {
     None = -1,
     Exception,
     Validation,
+}
+
+impl Debug for ErrorType {
+    #[inline(never)]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let var = match self {
+            Self::None => "None",
+            Self::Exception => "Exception",
+            Self::Validation => "Validation",
+        };
+        f.write_str(var)
+    }
 }
 
 impl Error {
@@ -69,7 +82,7 @@ impl Error {
 
 impl Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "Error: {:?}", self)
+        <Self as Debug>::fmt(self, f)
     }
 }
 
