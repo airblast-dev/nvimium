@@ -57,7 +57,6 @@ impl EvalStatusLineDict {
             })
             .collect();
 
-
         Self {
             chars: s,
             width,

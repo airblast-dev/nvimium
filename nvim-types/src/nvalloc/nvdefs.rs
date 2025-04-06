@@ -1,6 +1,5 @@
 use libc::c_char;
 
-
 unsafe extern "C" {
     #[link_name = "e_outofmem"]
     pub static E_OUTOFMEM: *const c_char;

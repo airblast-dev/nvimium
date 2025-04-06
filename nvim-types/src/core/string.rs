@@ -45,8 +45,8 @@ use std::ops::Deref;
 
 use alloc::ffi::CString;
 
-use libc::size_t;
 use crate::nvalloc::{xfree, xmalloc, xmemcpyz, xmemdupz, xrealloc};
+use libc::size_t;
 use panics::not_null_terminated;
 
 static EMPTY: ThinString<'static> = ThinString::from_null_terminated(c"".to_bytes_with_nul());

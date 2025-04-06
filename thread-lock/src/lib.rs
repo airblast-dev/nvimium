@@ -82,7 +82,7 @@ pub fn can_call() -> bool {
 
 impl Drop for ThLock {
     fn drop(&mut self) {
-        // the drop call is actually just a best effort to disable the lock, in user code 
+        // the drop call is actually just a best effort to disable the lock, in user code
         // [`scoped`] should be used at will catch any panic and lock access
         let _ = HAS_ACCESS.try_with(|c| c.set(false));
     }
