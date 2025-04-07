@@ -54,6 +54,10 @@ impl Function {
         Self(unsafe { LuaRef::new(box_fn::register(L, f)) })
     }
 
+    pub fn into_luaref(self) -> LuaRef {
+        self.0
+    }
+
     /// Wraps the provided function and returns a [`Function`] that stores the key to the lua registry
     ///
     /// The provided function will be attempted to be downcasted to a function pointer for cheaper
