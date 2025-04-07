@@ -26,7 +26,6 @@ plugin!(luaopen_hello_world, hello_world);
 
 #[cfg(feature = "testing")]
 mod tests {
-    use nvimium::nvim_funcs;
     use nvimium::nvim_funcs::vimscript::exec2;
     use nvimium::{
         nvim_test,
