@@ -32,9 +32,12 @@ mod tests {
         nvim_types::{dictionary::KeyValuePair, opts::exec::ExecOpts},
     };
 
-    /// The nvim_test macro requires that `nvim_funcs` and `nvim_tests` are in scope!
+    // The nvim_test macro spawns a neovim instance and loads this function in similar way to Lua's
+    // `require`.
     #[nvim_test::nvim_test]
     fn hello_world() {
+        // After calling this function the message log should contain the messages sent from our
+        // function.
         super::hello_world();
         let mut result = exec2(c":messages", ExecOpts::default().output(true)).unwrap();
         let KeyValuePair { object, .. } = result.remove("output").unwrap();
