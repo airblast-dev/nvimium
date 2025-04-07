@@ -7,7 +7,6 @@ unsafe extern "C" {
 #[cfg(all(not(miri), feature = "testing"))]
 mod testing {
     use crate as nvimium;
-    use crate::nvim_funcs;
     use crate::nvim_types::{call_site::Channel, error::Error, string::ThinString};
 
     // we actually cant test if this succedes but if the test fails or hangs we can tell something
