@@ -40,7 +40,7 @@ pub use nvim_test::test_pkg;
 macro_rules! plugin {
     ($open:ident, $ident:ident) => {
         #[cfg(test)]
-        $crate::test_pkg!();
+        ::nvimium::nvim_test::test_pkg!();
         const _: () = const {
             const fn panic() -> ! {
                 ::core::panic!();
@@ -62,8 +62,11 @@ macro_rules! plugin {
         #[unsafe(no_mangle)]
         extern "C" fn $open(lstate: *mut $crate::plugin::lua_State) -> usize {
             let func: fn() -> _ = $ident;
-            let ret = unsafe { $crate::thread_lock::scoped(|_| $ident(), ()) };
-            unsafe { $crate::nvim_types::lua::IntoLua::push(&ret, lstate) };
+            unsafe {
+                ::nvimium::thread_lock::init_main_lua_ptr(lstate);
+                let ret = ::nvimium::thread_lock::scoped(|_| $ident(), ());
+                ::nvimium::nvim_types::lua::IntoLua::push(&ret, lstate);
+            }
             1
         }
     };

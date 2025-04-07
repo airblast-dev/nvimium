@@ -14,8 +14,12 @@
 use std::{
     cell::Cell,
     marker::PhantomData,
-    panic::{AssertUnwindSafe, catch_unwind, resume_unwind},
+    panic::{catch_unwind, resume_unwind, AssertUnwindSafe},
+    ptr::NonNull,
+    sync::atomic::{AtomicPtr, Ordering},
 };
+
+use mlua_sys::lua_State;
 
 thread_local! {static HAS_ACCESS: Cell<bool> = const { Cell::new(false) } }
 
@@ -100,6 +104,34 @@ pub unsafe fn scoped<F: Fn(A) -> R, A, R>(f: F, arg: A) -> R {
             resume_unwind(err);
         }
     }
+}
+
+static MAIN_LUA: AtomicPtr<lua_State> = AtomicPtr::new(core::ptr::null_mut());
+thread_local! {static LUA_PTR: Cell<Option<NonNull<lua_State>>> = const { Cell::new(None) }}
+
+/// Initialize the lua pointer for the main thread
+///
+/// # Safety
+///
+/// The pointer must point to the main Lua instance.
+/// This is almost always the Lua pointer provided when loading a plugin.
+#[inline(always)]
+pub unsafe fn init_main_lua_ptr(ptr: *mut lua_State) {
+    MAIN_LUA.store(ptr, Ordering::Relaxed);
+}
+
+/// Initialize the lua pointer for the current thread
+///
+/// If the main lua pointer has not been initialized yet, this will initialize the main pointer as
+/// well.
+///
+/// # Safety
+///
+/// The exact safety requirements depend on the call site, but the pointer must always point to a Lua
+/// instance.
+pub unsafe fn init_lua_ptr(ptr: *mut lua_State) {
+    let _ = MAIN_LUA.compare_exchange(core::ptr::null_mut(), ptr, Ordering::Acquire, Ordering::Relaxed);
+    LUA_PTR.set(NonNull::new(ptr));
 }
 
 #[cfg(test)]
