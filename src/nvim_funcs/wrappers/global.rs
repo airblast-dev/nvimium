@@ -646,7 +646,8 @@ pub fn strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
 
 #[cfg(all(not(miri), feature = "testing"))]
 mod tests {
-    use crate::nvim_funcs::{self, vimscript::exec2};
+    use crate as nvimium;
+    use crate::nvim_funcs::vimscript::exec2;
     use crate::nvim_types::{
         Array, AsThinString, Dict, Object, OwnedThinString, String, Window,
         func_types::{
@@ -884,7 +885,7 @@ mod tests {
             EvalStatusLineOpts::default().winid(Window::new(999)),
         )
         .unwrap_err();
-        assert_eq!("Error: Exception: \"unknown winid 999\"", err.to_string());
+        assert_eq!("Exception: \"unknown winid 999\"", err.to_string());
     }
 
     #[nvim_test::nvim_test]

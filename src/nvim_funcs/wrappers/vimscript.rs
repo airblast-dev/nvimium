@@ -84,8 +84,7 @@ pub fn parse_expression<S: AsThinString, S1: AsThinString>(
 
 #[cfg(all(not(miri), feature = "testing"))]
 mod tests {
-    use crate::nvim_test;
-    use crate::nvim_funcs;
+    use crate as nvimium;
     use crate::nvim_funcs::wrappers::global::{feedkeys, list_bufs, set_current_buf};
 
     use crate::nvim_types::{
