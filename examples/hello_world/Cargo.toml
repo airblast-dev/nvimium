@@ -22,4 +22,4 @@ codegen-units = 1
 panic = "abort"
 strip = "debuginfo"
 # opt-level = 3 gets very bloated, don't use it unless you have measured a significant performance difference
-opt-level = "z"
+opt-level = "s"
