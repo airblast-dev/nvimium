@@ -2,16 +2,20 @@ use mlua_sys::{
     LUA_REGISTRYINDEX, lua_State, lua_checkstack, lua_pushcclosure, lua_pushlightuserdata,
     lua_tolightuserdata, lua_upvalueindex, luaL_ref,
 };
+use thread_lock::{get_lua_ptr, init_lua_ptr};
 
 use super::{FromLua, IntoLua};
 
 #[inline]
 fn fn_callback<A: FromLua, R: IntoLua>() -> extern "C-unwind" fn(*mut lua_State) -> i32 {
     extern "C-unwind" fn callback<A: FromLua, R: IntoLua>(l: *mut lua_State) -> i32 {
+        // before calling init in case a jump happens
         let fn_ptr = unsafe { lua_tolightuserdata(l, lua_upvalueindex(1)) } as *mut fn(A) -> R;
+        unsafe { init_lua_ptr(l) };
+        let mut l = get_lua_ptr();
         assert!(!fn_ptr.is_null());
         unsafe {
-            (*fn_ptr)(A::pop(l).unwrap());
+            (*fn_ptr)(A::pop(l.as_ptr()).unwrap());
         };
         0
     }

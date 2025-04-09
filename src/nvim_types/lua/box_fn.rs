@@ -6,6 +6,7 @@ use mlua_sys::{
     lua_pushcfunction, lua_rawgeti, lua_setfield, lua_setmetatable, lua_touserdata,
     lua_upvalueindex, luaL_newmetatable, luaL_ref,
 };
+use thread_lock::{get_lua_ptr, init_lua_ptr};
 
 use super::FromLua;
 
@@ -44,13 +45,16 @@ pub fn register<F: 'static + Send + Sync + Fn(A) -> R, A: FromLua, R>(
     f: F,
 ) -> i32 {
     extern "C-unwind" fn call(l: *mut lua_State) -> i32 {
+        // before calling init in case a jump happens
         let ud = unsafe { lua_touserdata(l, lua_upvalueindex(1)) };
+        unsafe { init_lua_ptr(l) };
+        let mut l = get_lua_ptr();
         let cb: &dyn Fn(*mut lua_State) = unsafe {
             (ud as *mut Box<dyn Fn(*mut lua_State)>)
                 .as_ref()
                 .expect("registered closure's userdata pointer is null")
         };
-        (cb)(l);
+        (cb)(l.as_ptr());
         0
     }
     unsafe {
@@ -60,6 +64,7 @@ pub fn register<F: 'static + Send + Sync + Fn(A) -> R, A: FromLua, R>(
 
         // f must be moved or else it gets freed at the end of the scope
         let f: Box<dyn Fn(*mut lua_State)> = Box::new(move |l| {
+            // instead of double boxing, get the args here
             let arg = A::pop(l).unwrap();
             f(arg);
         });

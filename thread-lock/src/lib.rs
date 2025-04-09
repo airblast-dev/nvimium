@@ -26,7 +26,7 @@ use mlua_sys::lua_State;
 
 thread_local! {
     /// When true, the current thread was yielded execution and is allowed to perform calls to neovim.
-    static HAS_ACCESS: Cell<bool> = const { Cell::new(false) } 
+    static HAS_ACCESS: Cell<bool> = const { Cell::new(false) }
 }
 
 #[derive(Default)]
@@ -172,11 +172,38 @@ pub unsafe fn init_lua_ptr(ptr: *mut lua_State) {
     LUA_PTR.set(NonNull::new(ptr));
 }
 
+pub struct LuaPtr {
+    ptr: *mut lua_State,
+    should_unset: bool,
+}
+
+impl LuaPtr {
+    pub fn as_ptr(&mut self) -> *mut lua_State {
+        self.ptr
+    }
+}
+
+impl Drop for LuaPtr {
+    fn drop(&mut self) {
+        if self.should_unset {
+            LUA_PTR.take();
+        }
+    }
+}
+pub fn get_lua_ptr() -> LuaPtr {
+    let (ptr, should_unset) = if let Some(ptr) = LUA_PTR.get() {
+        (ptr.as_ptr(), true)
+    } else {
+        (MAIN_LUA.load(Ordering::Relaxed), false)
+    };
+    LuaPtr { ptr, should_unset }
+}
+
 #[cfg(test)]
 mod tests {
     use std::{panic::catch_unwind, ptr::NonNull};
 
-    use crate::{call_check, init_main_lua_ptr, scoped, HAS_ACCESS};
+    use crate::{HAS_ACCESS, call_check, init_main_lua_ptr, scoped};
 
     #[test]
     fn scoped_gives_access() {

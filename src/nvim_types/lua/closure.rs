@@ -3,6 +3,7 @@ use mlua_sys::{
     lua_pushcclosure, lua_pushcfunction, lua_setfield, lua_setmetatable, lua_touserdata,
     lua_upvalueindex, luaL_ref,
 };
+use thread_lock::{get_lua_ptr, init_lua_ptr};
 
 use super::{FromLua, IntoLua};
 
@@ -12,8 +13,11 @@ fn closure_drop<F: Fn(A) -> R + Send + Sync + Unpin, A: FromLua, R>() -> (
     extern "C-unwind" fn(*mut lua_State) -> i32,
 ) {
     extern "C-unwind" fn callback<F: Fn(A) -> R, A: FromLua, R>(l: *mut lua_State) -> i32 {
+        // before calling init in case a jump happens
         let ud = unsafe { lua_touserdata(l, lua_upvalueindex(1)) } as *mut F;
-        unsafe { (ud.as_ref().unwrap())(core::mem::zeroed()) };
+        unsafe { init_lua_ptr(l) };
+        let mut l = get_lua_ptr();
+        unsafe { (ud.as_ref().unwrap())(A::pop(l.as_ptr()).unwrap()) };
         0
     }
     extern "C-unwind" fn drop_fn<T: Fn(A) -> R, A: FromLua, R>(l: *mut lua_State) -> i32 {

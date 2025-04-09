@@ -24,10 +24,9 @@ pub use core::{FromLua, IntoLua};
 
 #[doc(hidden)]
 pub use mlua_sys::lua_State;
+use thread_lock::get_lua_ptr;
 
 use crate::nvim_types::LuaRef;
-
-static mut L: *mut lua_State = ::core::ptr::null_mut();
 
 #[cfg(target_pointer_width = "32")]
 type LuaInteger = i32;
@@ -41,17 +40,20 @@ impl Function {
     pub(crate) fn from_fn<F: 'static + Send + Sync + Fn(A) -> R + Unpin, A: FromLua, R: IntoLua>(
         f: F,
     ) -> Self {
-        Self(unsafe { LuaRef::new(closure::register(L, f)) })
+        let mut l = get_lua_ptr();
+        Self(unsafe { LuaRef::new(closure::register(l.as_ptr(), f)) })
     }
 
     pub(crate) fn from_fn_ptr<A: FromLua, R: IntoLua>(f: fn(A) -> R) -> Self {
-        Self(unsafe { LuaRef::new(fn_ptr::register(L, f)) })
+        let mut l = get_lua_ptr();
+        Self(unsafe { LuaRef::new(fn_ptr::register(l.as_ptr(), f)) })
     }
 
     pub(crate) fn from_box_fn<F: 'static + Send + Sync + Fn(A) -> R, A: FromLua, R: IntoLua>(
         f: F,
     ) -> Self {
-        Self(unsafe { LuaRef::new(box_fn::register(L, f)) })
+        let mut l = get_lua_ptr();
+        Self(unsafe { LuaRef::new(box_fn::register(l.as_ptr(), f)) })
     }
 
     pub fn into_luaref(self) -> LuaRef {
