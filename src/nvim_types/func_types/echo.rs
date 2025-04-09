@@ -4,7 +4,7 @@ use crate::nvim_types::{
     hl_group::HlGroupId,
     kvec::KVec,
     object::Object,
-    string::{AsThinString, OwnedThinString, ThinString},
+    string::{OwnedThinString, ThinString},
 };
 
 #[repr(transparent)]
@@ -27,8 +27,19 @@ impl<'a> FromIterator<(ThinString<'a>, Option<HlGroupId>)> for Echo {
 }
 
 impl Echo {
-    pub fn message<S: AsThinString>(th: S) -> Self {
-        Self::from_iter([(th.as_thinstr(), None)])
+    pub fn message<S>(th: S) -> Self
+    where
+        OwnedThinString: From<S>,
+    {
+        Self::msg(OwnedThinString::from(th))
+    }
+
+    pub(crate) fn msg(s: OwnedThinString) -> Self {
+        let mut kv = KVec::with_capacity(1);
+        let mut inner_kv = KVec::with_capacity(1);
+        inner_kv.push(Object::String(s));
+        kv.push(Object::Array(Array(inner_kv)));
+        Self(Array(kv))
     }
 }
 
