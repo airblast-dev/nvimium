@@ -8,6 +8,9 @@
 
 use crate::nvim_types::{borrowed::Borrowed, Arena, Array, Dict, Object, OwnedThinString, ThinString};
 
+// these may seem usable in normal clone implementations but they use mutable statics and non
+// thread safe recovery mechanisms. Instead we do the recovery calls after ensuring they are safe.
+// we call our own x*alloc definitions in nvalloc instead of these.
 unsafe extern "C" {
     // NOTE: these functions return a null pointer for strings if the string points to null
     pub(crate) fn copy_dict<'a>(dict: Borrowed<'a, Dict>, arena: *mut Arena) -> Dict;
