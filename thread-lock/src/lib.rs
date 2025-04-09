@@ -7,21 +7,27 @@
 //! Calling Neovim functions from other threads require an explicit call to functions located in
 //! the module.
 //!
-//! Thread safety is provided via two steps:
+//! Thread safety is provided via three steps:
 //! - Every function called by neovim checks if it is allowed access.
-//! - All functions called must be wrapped with a scope that catches panics and sets the thread
-//!   access.
+//! - All functions called must be wrapped with a scope (often with [`scoped`]) that catches panics and sets/revokes the
+//!   threads access.
+//! - The main Lua pointer is checked if it is null. This is done to avoid version mismatches with
+//!   dependencies that use a different version of nvimium as the static variable are shared with the
+//!   same versions of a crate.
 use std::{
     cell::Cell,
     marker::PhantomData,
-    panic::{catch_unwind, resume_unwind, AssertUnwindSafe},
+    panic::{AssertUnwindSafe, catch_unwind, resume_unwind},
     ptr::NonNull,
     sync::atomic::{AtomicPtr, Ordering},
 };
 
 use mlua_sys::lua_State;
 
-thread_local! {static HAS_ACCESS: Cell<bool> = const { Cell::new(false) } }
+thread_local! {
+    /// When true, the current thread was yielded execution and is allowed to perform calls to neovim.
+    static HAS_ACCESS: Cell<bool> = const { Cell::new(false) } 
+}
 
 #[derive(Default)]
 pub struct ThLock(PhantomData<*mut u8>);
@@ -35,6 +41,9 @@ pub struct ThLock(PhantomData<*mut u8>);
 /// - A callback or entrypoint spawns another thread where only one thread calls Neovim functions
 /// - Neovim functions are called from multiple threads but other synchronization is achieved by
 ///   other means such as a [`std::sync::Mutex`] or atomics.
+///
+/// Regardless of the reason, you are highly discouraged from calling this as in all cases nvimium
+/// should call it where it is safe.
 ///
 /// # Safety
 ///
@@ -59,6 +68,8 @@ pub fn lock(_th: ThLock) {}
 ///
 /// If the current thread is not allowed to call Neovim functions panics with a message that
 /// provides the current threads ID and name.
+///
+/// Can also panic if a dependency with mismatching nvimium versions is used.
 pub fn call_check() {
     let allowed = HAS_ACCESS.get();
     if !allowed {
@@ -74,10 +85,27 @@ pub fn call_check() {
         }
         yeet();
     }
+
+    //
+    if MAIN_LUA.load(Ordering::Relaxed).is_null() {
+        #[cold]
+        #[inline(never)]
+        fn version_mismatch() -> ! {
+            panic!(
+                "Lua pointer is not initialized, this is likely triggered due to \
+                version mismatches with dependencies that use nvimium.\n
+                supported nvimium version: {}",
+                env!("CARGO_PKG_VERSION")
+            )
+        }
+        version_mismatch();
+    }
 }
 
+/// Same as [`call_check`] except it returns a bool value indicating if it is safe to call a neovim
+/// function
 pub fn can_call() -> bool {
-    HAS_ACCESS.get()
+    HAS_ACCESS.get() && !MAIN_LUA.load(Ordering::Relaxed).is_null()
 }
 
 impl Drop for ThLock {
@@ -106,6 +134,11 @@ pub unsafe fn scoped<F: Fn(A) -> R, A, R>(f: F, arg: A) -> R {
     }
 }
 
+// this also serves as a check to ensure that this version of nvimium was initialized
+//
+// a library that is a dependent of nvimium will likely want to call neovims C function
+// since we dont have a way to ensure that a library dependent on nvimium is using a matching
+// version, this static should be checked if it contains a null pointer
 static MAIN_LUA: AtomicPtr<lua_State> = AtomicPtr::new(core::ptr::null_mut());
 thread_local! {static LUA_PTR: Cell<Option<NonNull<lua_State>>> = const { Cell::new(None) }}
 
@@ -130,18 +163,26 @@ pub unsafe fn init_main_lua_ptr(ptr: *mut lua_State) {
 /// The exact safety requirements depend on the call site, but the pointer must always point to a Lua
 /// instance.
 pub unsafe fn init_lua_ptr(ptr: *mut lua_State) {
-    let _ = MAIN_LUA.compare_exchange(core::ptr::null_mut(), ptr, Ordering::Acquire, Ordering::Relaxed);
+    let _ = MAIN_LUA.compare_exchange(
+        core::ptr::null_mut(),
+        ptr,
+        Ordering::Acquire,
+        Ordering::Relaxed,
+    );
     LUA_PTR.set(NonNull::new(ptr));
 }
 
 #[cfg(test)]
 mod tests {
-    use std::panic::catch_unwind;
+    use std::{panic::catch_unwind, ptr::NonNull};
 
-    use crate::{HAS_ACCESS, call_check, scoped};
+    use crate::{call_check, init_main_lua_ptr, scoped, HAS_ACCESS};
 
     #[test]
     fn scoped_gives_access() {
+        // in this context the pointer is not used
+        // we need a non null pointer to pass call_check
+        unsafe { init_main_lua_ptr(NonNull::dangling().as_ptr()) };
         unsafe {
             scoped(
                 |_: ()| {

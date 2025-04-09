@@ -45,6 +45,7 @@ pub fn nvim_test(
         #[allow(non_snake_case)]
         #[doc(hidden)]
         pub extern "C" fn #cdylib_ident(state: *mut ()) -> ::std::ffi::c_int {
+            unsafe { nvimium::thread_lock::init_main_lua_ptr(state as _) };
             unsafe { nvimium::thread_lock::scoped(|_: ()| {
                 let panic_out_th = nvimium::nvim_funcs::global::get_var(c"NVIMIUM_PANIC_LOG_FILE").unwrap().into_string().unwrap();
                 let panic_out_path = ::std::path::PathBuf::from(::std::string::String::from_utf8(panic_out_th.as_thinstr().as_slice().to_vec()).unwrap());
