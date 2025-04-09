@@ -50,9 +50,8 @@ where
     }
 }
 
-// TODO: impl Dict PartialEq to be unordered
 #[repr(transparent)]
-#[derive(Default, Debug, PartialEq)]
+#[derive(Default, Debug)]
 pub struct Dict(pub(crate) KVec<KeyValuePair>);
 
 impl Clone for Dict {
@@ -75,6 +74,18 @@ impl Deref for Dict {
 impl DerefMut for Dict {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl PartialEq for Dict {
+    fn eq(&self, other: &Self) -> bool {
+        if self.len() != other.len() {
+            return false;
+        }
+
+        self.0.iter().all(|kv| {
+            other.0.contains(kv)
+        })
     }
 }
 
