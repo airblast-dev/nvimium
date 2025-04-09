@@ -1,6 +1,6 @@
 [package]
 name = "nvimium"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 license = "MIT OR Apache-2.0"
 
@@ -26,6 +26,9 @@ nvim-test-macro = { path = "./nvim-test-macro", default-features = false }
 [workspace]
 members = [ "panics", "macros" , "nvim-test", "thread-lock"]
 exclude = ["examples"]
+
+[workspace.package]
+version = "0.1.0"
 
 [dev-dependencies]
 trybuild = "1.0.104"
