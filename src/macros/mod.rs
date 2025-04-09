@@ -1,3 +1,4 @@
+pub mod dict;
 pub mod masked_builder;
 pub mod one_of_objects;
 pub mod tri;
