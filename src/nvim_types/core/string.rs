@@ -828,12 +828,23 @@ impl From<String> for OwnedThinString {
     }
 }
 
-impl<T: AsRef<[u8]>> From<T> for OwnedThinString {
-    fn from(value: T) -> Self {
-        let bytes = value.as_ref();
-        let mut s = String::with_capacity(bytes.len());
-        s.push(bytes);
-        Self::from(s)
+impl From<&CStr> for OwnedThinString {
+    fn from(value: &CStr) -> Self {
+        OwnedThinString::from(value.as_thinstr())
+    }
+}
+
+impl From<&str> for OwnedThinString {
+    fn from(value: &str) -> Self {
+        Self::from(value.as_bytes())
+    }
+}
+
+impl From<&[u8]> for OwnedThinString {
+    fn from(value: &[u8]) -> Self {
+        let ptr = unsafe { xmemdupz(value.as_ptr() as *mut c_void, value.len(), size_of::<u8>()) };
+        let th = unsafe { ThinString::new(value.len(), ptr.as_ptr() as *mut c_char) };
+        Self(th)
     }
 }
 
