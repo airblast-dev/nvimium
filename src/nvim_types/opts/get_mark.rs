@@ -1,4 +1,4 @@
-use macros::masked_builder;
+use crate::masked_builder;
 
 masked_builder!(
     #[repr(C)]

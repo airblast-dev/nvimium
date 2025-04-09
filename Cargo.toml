@@ -8,7 +8,6 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 nvim-test = { workspace = true }
 nvim-test-macro = { workspace = true, optional = true }
-macros = { workspace = true }
 libc = { workspace = true }
 mlua-sys = { workspace = true }
 thread-lock = { workspace = true }
@@ -20,11 +19,10 @@ libc = { version = "0.2.169", default-features = false }
 thread-lock = { path = "./thread-lock/" }
 panics = { path = "./panics" }
 nvim-test = { path = "./nvim-test/" }
-macros = { path = "./macros/" }
 nvim-test-macro = { path = "./nvim-test-macro", default-features = false }
 
 [workspace]
-members = [ "panics", "macros" , "nvim-test", "thread-lock"]
+members = ["panics", "nvim-test", "thread-lock"]
 exclude = ["examples"]
 
 [workspace.package]

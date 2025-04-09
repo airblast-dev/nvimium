@@ -1,4 +1,4 @@
-use macros::masked_builder;
+use crate::masked_builder;
 
 use crate::nvim_types::{Boolean, HlGroupId, Integer, OwnedThinString, object_subs::StringOrInt};
 

@@ -1,5 +1,5 @@
 pub mod array;
-pub(crate) mod borrowed;
+pub mod borrowed;
 pub mod buffer;
 pub mod call_site;
 pub mod dictionary;

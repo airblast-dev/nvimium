@@ -3,7 +3,7 @@ extern crate alloc;
 mod nvalloc;
 
 pub mod arena;
-mod core;
+pub mod core;
 pub mod func_types;
 pub mod lua;
 pub mod object_subs;

@@ -19,7 +19,7 @@ use crate::nvim_types::{
     tab_page::TabPage,
     window::Window,
 };
-use macros::tri;
+use crate::tri;
 use thread_lock::call_check;
 
 /// Create a new buffer

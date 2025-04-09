@@ -1,4 +1,4 @@
-use macros::masked_builder;
+use crate::masked_builder;
 
 use crate::nvim_types::{Boolean, lua_ref::LuaRef};
 

@@ -5,7 +5,7 @@ use thread_lock::call_check;
 
 use crate::nvim_funcs::c_funcs::vimscript;
 
-use macros::tri;
+use crate::tri;
 
 // TODO: add test
 pub fn call_dict_function<S1: AsThinString, S2: AsThinString>(

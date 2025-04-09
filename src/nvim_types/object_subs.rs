@@ -1,4 +1,4 @@
-use macros::one_of_objects;
+use crate::one_of_objects;
 
 use super::{Integer, object::Object, string::OwnedThinString};
 

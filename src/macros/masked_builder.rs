@@ -68,7 +68,7 @@ macro_rules! masked_builder {
             #[allow(unreachable_code)]
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 let mut base_mask = 1;
-                use $crate::masked_builder::Uninit;
+                use $crate::macros::masked_builder::Uninit;
                 use ::core::marker::PhantomData;
 
 
@@ -80,13 +80,13 @@ macro_rules! masked_builder {
                                 ( unsafe { self.$field.assume_init_ref() } as &dyn ::core::fmt::Debug )
                             } else {
                                 $field = if true {
-                                    $crate::masked_builder::Uninit(PhantomData)
+                                    $crate::macros::masked_builder::Uninit(PhantomData)
                                 }
                                 // we cant use the lifetimes stored in field_ty so we infer the type instead :P
                                 else {
                                     unreachable!("pretty if true always takes the same branch");
 
-                                    $crate::masked_builder::Uninit::new(self.$field)
+                                    $crate::macros::masked_builder::Uninit::new(self.$field)
                                 };
                                 &$field as &dyn ::core::fmt::Debug
                             };
@@ -130,7 +130,7 @@ macro_rules! func_gen_masked {
         $(#[$func_meta])*
         pub fn $field<T: Into<$field_ty>>(&mut self, $field: T) -> &mut Self {
             if self.mask & 1 == 1 {
-                $crate::masked_builder::cold();
+                $crate::macros::masked_builder::cold();
                 unsafe { self.$field.assume_init_drop() }
             }
             self.mask |= 1;
@@ -203,7 +203,7 @@ macro_rules! func_gen_masked_inner {
         $(#[$func_meta])*
         pub fn $field<T: Into<$field_ty>>(&mut self, $field: T) -> &mut Self {
             if self.mask & $mask == $mask {
-                $crate::masked_builder::cold();
+                $crate::macros::masked_builder::cold();
                 unsafe { self.$field.assume_init_drop() }
             }
             self.mask |= $mask;

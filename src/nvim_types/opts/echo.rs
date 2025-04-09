@@ -1,4 +1,4 @@
-use macros::builder;
+use crate::builder;
 
 use crate::nvim_types::Boolean;
 
