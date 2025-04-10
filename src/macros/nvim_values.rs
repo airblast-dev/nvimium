@@ -1,6 +1,6 @@
 #[macro_export]
-macro_rules! dict {
-    ($( $key:literal = $val:tt $(: $kind:tt)?),*) => {
+macro_rules! const_dict {
+    ($( $key:tt = $val:tt $(: $kind:tt)?),*) => {
         {
             use $crate::nvim_types::{ThinString, core::borrowed::Borrowed, Dict, object::{ObjectRef}};
             #[repr(C)]
@@ -18,6 +18,7 @@ macro_rules! dict {
             const COUNT: usize = $crate::count_tts!($($key),*);
             const ARR: [::core::mem::MaybeUninit<Kv>; COUNT] = {
                 use core::mem::MaybeUninit;
+                #[allow(unused_mut)]
                 let mut arr: [MaybeUninit<Kv>; COUNT] = [const { MaybeUninit::uninit() }; COUNT];
                 #[allow(unused)]
                 let mut _i = 0;
@@ -50,8 +51,42 @@ macro_rules! dict {
     };
 }
 
+#[allow(unused)]
+use crate::nvim_types::{Array, Object};
+/// A macro for initializing a const [`Array`]
+///
+/// In some cases creating a large array with multiple [`Object`] can be cumbersome and costly.
+/// This macro initializes a const [`Array`] and returns a `'static` reference to it.
+///
+/// # Example
+///
+/// ```no_run
+/// use nvimium::const_array;
+/// use nvimium::nvim_types::Array;
+/// use nvimium::nvim_funcs::exec_lua;
+///
+/// fn my_callback() {
+///     const LUA_EXEC_ARGUMENTS: &Array = const_array![
+///         "MyFirstArgument",
+///         // the actual variant of the objects that use integers must be specified as buffers, 
+///         // windows and tabpages also use integers
+///         12: int,
+///         0: buffer,
+///         1: window,
+///         2: tabpage,
+///         {
+///             "Dict key value" = [
+///                 "We can also create nested array's"
+///             ]
+///         }
+///     ];
+///     
+///     // we can now pass these without allocating
+///     exec_lua("vim.print", LUA_EXEC_ARGUMENTS);
+/// }
+/// ```
 #[macro_export]
-macro_rules! array {
+macro_rules! const_array {
     ($($val:tt $(: $kind:tt)?),*) => {
         {
             use core::mem::MaybeUninit;
@@ -142,13 +177,13 @@ macro_rules! value_to_object {
     }};
     ([$($val:tt $(: $kind:tt)?),*]) => {{
         use $crate::nvim_types::{ Array, object::{ObjectRef, ObjectTag} };
-        const ARRAY: &Array = $crate::array![$($val $(: $kind)?),*];
+        const ARRAY: &Array = $crate::const_array![$($val $(: $kind)?),*];
 
         unsafe { ObjectRef::new(ObjectTag::Array, ARRAY) }
     }};
-    ({$($key:literal = $val:tt),*}) => {{
+    ({$($key:literal = $val:tt $(: $kind:tt)?),*}) => {{
         use $crate::nvim_types::{ object::{ObjectRef, ObjectTag} };
-        unsafe { ObjectRef::new(ObjectTag::Dict, $crate::dict!($($key = $val),*) ) }
+        unsafe { ObjectRef::new(ObjectTag::Dict, $crate::const_dict!($($key = $val $(: $kind)?),*) ) }
     }};
     ($string:tt) => {{
         use $crate::nvim_types::{
@@ -173,15 +208,17 @@ macro_rules! count_tts {
 
 #[cfg(test)]
 mod array {
-    use crate::nvim_types::{Array, Buffer, Dict, KVec, KeyValuePair, Object, OwnedThinString};
+    use crate::nvim_types::{
+        Array, Buffer, Dict, KVec, KeyValuePair, Object, OwnedThinString, Window,
+    };
 
     #[test]
     fn array() {
-        const ARR1: &Array = array![1: int, 2: int, 3: int];
+        const ARR1: &Array = const_array![1: int, 2: int, 3: int];
         let exp = Array(KVec::from_iter([1, 2, 3].map(Object::from)));
         assert_eq!(&exp, ARR1);
 
-        const ARR2: &Array = array![
+        const ARR2: &Array = const_array![
             1: int, 2: int, 3: int, 2: int, "Hello", 31: buffer, 31.5: float,
             ["Bye", 1: int, 2: int],
             {"MyKey" = "MyValue", "apples" = ["InnerArray"]}
@@ -210,5 +247,44 @@ mod array {
             ])),
         ]));
         assert_eq!(&exp, ARR2);
+    }
+
+    #[test]
+    fn dict() {
+        const DICT1: &Dict = const_dict! {
+            "Hello" = "Bye",
+            "MyArray" = [1: int, 2: int, "InsideMyArray"],
+            "NestedDict" = {
+                "NestedDictKey" = "NestedDictValue",
+                "NestedDictStuff" = 12: int
+            },
+            "buffer" = 0: buffer,
+            "window" = 1: window
+        };
+        let exp = Dict::from_iter([
+            KeyValuePair::from(("Hello", Object::String(OwnedThinString::from("Bye")))),
+            KeyValuePair::from((
+                "MyArray",
+                Object::Array(Array(KVec::from_iter([
+                    Object::Integer(1),
+                    Object::Integer(2),
+                    Object::String(OwnedThinString::from("InsideMyArray")),
+                ]))),
+            )),
+            KeyValuePair::from((
+                "NestedDict",
+                Object::Dict(Dict::from_iter([
+                    KeyValuePair::from((
+                        "NestedDictKey",
+                        Object::String(OwnedThinString::from("NestedDictValue")),
+                    )),
+                    KeyValuePair::from(("NestedDictStuff", Object::Integer(12))),
+                ])),
+            )),
+            KeyValuePair::from(("buffer", Object::Buffer(Buffer::new(0)))),
+            KeyValuePair::from(("window", Object::Window(Window::new(1)))),
+        ]);
+
+        assert_eq!(DICT1, &exp);
     }
 }
