@@ -87,7 +87,7 @@ macro_rules! masked_builder {
                                 }
                                 // we cant use the lifetimes stored in field_ty so we infer the type instead :P
                                 else {
-                                    unreachable!("pretty if true always takes the same branch");
+                                    unreachable!("pretty sure if true always takes the same branch");
 
                                     $crate::macros::masked_builder::Uninit::new(self.$field)
                                 };
