@@ -1,12 +1,8 @@
 use std::mem::MaybeUninit;
 
 use crate::nvim_types::{
-    Arena, Array, Boolean, Channel, Dict,
-    borrowed::Borrowed,
-    error::Error,
-    object::{Object, ObjectRef},
-    opts::exec::ExecOpts,
-    string::ThinString,
+    Arena, Array, Boolean, Channel, Dict, borrowed::Borrowed, error::Error, object::Object,
+    opts::exec::ExecOpts, string::ThinString,
 };
 
 unsafe extern "C" {

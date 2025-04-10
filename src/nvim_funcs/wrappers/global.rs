@@ -4,13 +4,12 @@ use std::{mem::ManuallyDrop, ops::DerefMut};
 use crate::nvim_types::{
     Array, AsThinString, Boolean, Buffer, Channel, Dict, Error, Integer, NameSpace, Object,
     OwnedThinString,
-    borrowed::Borrowed,
     func_types::{echo::Echo, feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
     opts::{
         context::ContextOpts, echo::EchoOpts, eval_statusline::EvalStatusLineOpts,
         get_hl::GetHlOpts, get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts,
-        paste::PastePhase, select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind,
-        set_hl::SetHlOpts, set_keymap::SetKeymapOpts,
+        paste::PastePhase, select_popupmenu_item::SelectPopupMenuOpts, set_hl::SetHlOpts,
+        set_keymap::SetKeymapOpts,
     },
     returns::{
         channel_info::ChannelInfo, color_map::ColorMap, context::Context,
@@ -515,35 +514,6 @@ pub fn select_popupmenu_item(
     tri! {
         let mut err;
         unsafe { global::nvim_select_popupmenu_item(item, insert, finish, opts, &mut err) }
-    }
-}
-
-/// See neovim API documentation
-///
-/// # Safety
-/// This function is only safe to call through RPC under specific circumstances, still a wrapper
-/// is provided in case you are able to provide guarantees that it is safe to call by other means
-pub unsafe fn set_client_info<S: AsThinString>(
-    name: S,
-    version: Borrowed<'_, Dict>,
-    kind: ClientKind,
-    methods: &Dict,
-    attributes: &Dict,
-) -> Result<(), Error> {
-    call_check();
-    tri! {
-        let mut err;
-        unsafe {
-            global::nvim_set_client_info(
-                name.as_thinstr(),
-                version,
-                kind,
-                methods.into(),
-                attributes.into(),
-                core::ptr::null_mut(),
-                &mut err
-            );
-        }
     }
 }
 

@@ -5,8 +5,8 @@ use crate::nvim_types::{
     opts::{
         context::ContextOpts, echo::EchoOpts, eval_statusline::EvalStatusLineOpts,
         get_hl::GetHlOpts, get_hl_ns::GetHlNsOpts, get_mark::GetMarkOpts, open_term::OpenTermOpts,
-        paste::PastePhase, select_popupmenu_item::SelectPopupMenuOpts, set_client_info::ClientKind,
-        set_hl::SetHlOpts, set_keymap::SetKeymapOpts,
+        paste::PastePhase, select_popupmenu_item::SelectPopupMenuOpts, set_hl::SetHlOpts,
+        set_keymap::SetKeymapOpts,
     },
     string::{OwnedThinString, ThinString},
     tab_page::TabPage,
@@ -140,10 +140,7 @@ unsafe extern "C" {
     pub fn nvim_list_tabpages(arena: *mut Arena) -> Array;
     pub fn nvim_list_uis(arena: *mut Arena) -> ManuallyDrop<Array>;
     pub fn nvim_list_wins(arena: *mut Arena) -> Array;
-    pub fn nvim_load_context<'a>(
-        dict: Borrowed<'a, Dict>,
-        err: *mut Error,
-    ) -> MaybeUninit<Object>;
+    pub fn nvim_load_context<'a>(dict: Borrowed<'a, Dict>, err: *mut Error) -> MaybeUninit<Object>;
     // TODO
     pub fn nvim_open_term(
         buffer: Buffer,
@@ -177,15 +174,6 @@ unsafe extern "C" {
         insert: Boolean,
         finish: Boolean,
         opts: *const SelectPopupMenuOpts,
-        err: *mut Error,
-    );
-    pub fn nvim_set_client_info<'a>(
-        name: ThinString<'a>,
-        version: Borrowed<'a, Dict>,
-        kind: ClientKind,
-        methods: Borrowed<'a, Dict>,
-        attributes: Borrowed<'a, Dict>,
-        arena: *mut Arena,
         err: *mut Error,
     );
     pub fn nvim_set_current_buf(buf: Buffer, err: *mut Error);

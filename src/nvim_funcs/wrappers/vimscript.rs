@@ -1,4 +1,3 @@
-use crate::nvim_types::object::ObjectRef;
 use crate::nvim_types::OwnedThinString;
 use crate::nvim_types::{
     Array, AsThinString, Boolean, Channel, Dict, Error, Object, opts::exec::ExecOpts,
