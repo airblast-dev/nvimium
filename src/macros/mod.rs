@@ -1,4 +1,4 @@
-pub mod dict;
+pub mod nvim_values;
 pub mod masked_builder;
 pub mod one_of_objects;
 pub mod tri;
