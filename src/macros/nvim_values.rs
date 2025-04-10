@@ -138,7 +138,7 @@ macro_rules! value_to_object {
             object::{ObjectRef, ObjectTag},
         };
         const FLOAT: Float = $float;
-        unsafe { ObjectRef::new(ObjectTag::Bool, &BOOL) }
+        unsafe { ObjectRef::new(ObjectTag::Float, &FLOAT) }
     }};
     ([$($val:tt $(: $kind:tt)?),*]) => {{
         use $crate::nvim_types::{ Array, object::{ObjectRef, ObjectTag} };
@@ -146,15 +146,16 @@ macro_rules! value_to_object {
 
         unsafe { ObjectRef::new(ObjectTag::Array, ARRAY) }
     }};
-    ({$($key:literal = $val:tt),*}) => {
-        $crate::dict!($($key = $val),*)
-    };
+    ({$($key:literal = $val:tt),*}) => {{
+        use $crate::nvim_types::{ object::{ObjectRef, ObjectTag} };
+        unsafe { ObjectRef::new(ObjectTag::Dict, $crate::dict!($($key = $val),*) ) }
+    }};
     ($string:tt) => {{
         use $crate::nvim_types::{
             ThinString,
             object::{ObjectRef, ObjectTag},
         };
-        const IS_STR: &str = $string;
+        const _IS_STR: &str = $string;
         const S: &[u8] = ::std::concat!($string, "\0").as_bytes();
         const TH: ThinString<'static> = ThinString::from_null_terminated(S);
         unsafe { ObjectRef::new(ObjectTag::String, &TH) }
@@ -166,6 +167,48 @@ macro_rules! value_to_object {
 #[macro_export]
 macro_rules! count_tts {
     () => { 0 };
-    ($odd:tt $(, $a:tt, $b:tt),*) => { ($crate::count_tts!($($a)*) << 1) | 1 };
-    ($($a:tt, $even:tt),*) => { $crate::count_tts!($($a)*) << 1 };
+    ($odd:tt $(, $a:tt, $b:tt)*) => { ($crate::count_tts!($($a),*) << 1) | 1 };
+    ($($a:tt, $even:tt),*) => { $crate::count_tts!($($a),*) << 1 };
+}
+
+#[cfg(test)]
+mod array {
+    use crate::nvim_types::{Array, Buffer, Dict, KVec, KeyValuePair, Object, OwnedThinString};
+
+    #[test]
+    fn array() {
+        const ARR1: &Array = array![1: int, 2: int, 3: int];
+        let exp = Array(KVec::from_iter([1, 2, 3].map(Object::from)));
+        assert_eq!(&exp, ARR1);
+
+        const ARR2: &Array = array![
+            1: int, 2: int, 3: int, 2: int, "Hello", 31: buffer, 31.5: float,
+            ["Bye", 1: int, 2: int],
+            {"MyKey" = "MyValue", "apples" = ["InnerArray"]}
+        ];
+        let exp = Array(KVec::from_iter([
+            Object::from(1),
+            Object::from(2),
+            Object::from(3),
+            Object::from(2),
+            Object::from(OwnedThinString::from("Hello")),
+            Object::Buffer(Buffer::new(31)),
+            Object::Float(31.5),
+            Object::Array(Array(KVec::from_iter([
+                Object::from(OwnedThinString::from("Bye")),
+                Object::from(1),
+                Object::from(2),
+            ]))),
+            Object::Dict(Dict::from_iter([
+                KeyValuePair::from(("MyKey", Object::String(OwnedThinString::from("MyValue")))),
+                KeyValuePair::from((
+                    "apples",
+                    Object::Array(Array(KVec::from_iter([Object::String(
+                        OwnedThinString::from("InnerArray"),
+                    )]))),
+                )),
+            ])),
+        ]));
+        assert_eq!(&exp, ARR2);
+    }
 }
