@@ -332,6 +332,9 @@ pub enum ObjectTag {
 #[repr(C)]
 pub struct ObjectRef {
     tag: ObjectTag,
+    // the value could be stored as anything with a size and layout of usize
+    // this allows miri to keep track of the pointers provenance so we can remove some workarounds
+    // for miri tests
     val: [*mut (); 3],
 }
 
