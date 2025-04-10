@@ -53,12 +53,13 @@ macro_rules! masked_builder {
                 }
 
                 // TODO: might be possible to optimize this with tagged scope and comparisons
-                let mut base_mask = 1;
+                #[allow(unused_mut)]
+                let mut _base_mask = 1;
                 $(
-                    if self.mask & base_mask == base_mask {
+                    if self.mask & _base_mask == _base_mask {
                         unsafe { self.$field.assume_init_drop() }
                     }
-                    base_mask <<= 1;
+                    _base_mask <<= 1;
                 )*
 
             }
@@ -67,8 +68,10 @@ macro_rules! masked_builder {
         impl $(<$($lf),*>)? ::core::fmt::Debug for $ident $(<$($lf),*>)? {
             #[allow(unreachable_code)]
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                let mut base_mask = 1;
+                let mut _base_mask = 1;
+                #[allow(unused)]
                 use $crate::macros::masked_builder::Uninit;
+                #[allow(unused)]
                 use ::core::marker::PhantomData;
 
 
@@ -76,7 +79,7 @@ macro_rules! masked_builder {
                 f.debug_struct(stringify!($ident))
                     $(
                         .field(stringify!($field), {
-                            let ret = if self.mask & base_mask == base_mask {
+                            let ret = if self.mask & _base_mask == _base_mask {
                                 ( unsafe { self.$field.assume_init_ref() } as &dyn ::core::fmt::Debug )
                             } else {
                                 $field = if true {
@@ -90,7 +93,7 @@ macro_rules! masked_builder {
                                 };
                                 &$field as &dyn ::core::fmt::Debug
                             };
-                            base_mask <<= 1;
+                            _base_mask <<= 1;
                             ret
                         })
                     )*
