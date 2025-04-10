@@ -1,8 +1,6 @@
 // TODO: replace meta fragments with ident to allow better comparison in macros?
 // TODO: derive Debug for better debug print output
 
-use std::{any::type_name, marker::PhantomData, mem::MaybeUninit};
-
 #[macro_export]
 macro_rules! masked_builder {
     (
@@ -75,23 +73,18 @@ macro_rules! masked_builder {
                 use ::core::marker::PhantomData;
 
 
-                $(let $field;)*
+                #[allow(unused)]
+                let mut field: &dyn ::core::fmt::Debug;
+                #[allow(unused)]
+                let mut un: Uninit;
                 f.debug_struct(stringify!($ident))
                     $(
                         .field(stringify!($field), {
                             let ret = if self.mask & _base_mask == _base_mask {
                                 ( unsafe { self.$field.assume_init_ref() } as &dyn ::core::fmt::Debug )
                             } else {
-                                $field = if true {
-                                    $crate::macros::masked_builder::Uninit(PhantomData)
-                                }
-                                // we cant use the lifetimes stored in field_ty so we infer the type instead :P
-                                else {
-                                    unreachable!("pretty sure if true always takes the same branch");
-
-                                    $crate::macros::masked_builder::Uninit::new(self.$field)
-                                };
-                                &$field as &dyn ::core::fmt::Debug
+                                un = $crate::macros::masked_builder::Uninit(::core::any::type_name::<$field_ty>());
+                                &un
                             };
                             _base_mask <<= 1;
                             ret
@@ -104,17 +97,12 @@ macro_rules! masked_builder {
 }
 
 #[doc(hidden)]
-pub struct Uninit<T>(#[doc(hidden)] pub PhantomData<T>);
-impl<T> Uninit<T> {
-    #[doc(hidden)]
-    pub fn new(_: MaybeUninit<T>) -> Self {
-        Self(PhantomData)
-    }
-}
+pub struct Uninit(#[doc(hidden)] pub &'static str);
 
-impl<T> ::core::fmt::Debug for Uninit<T> {
+impl ::core::fmt::Debug for Uninit {
+    #[inline(never)]
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        write!(f, "Uninit<{}>", type_name::<T>())
+        write!(f, "Uninit<{}>", self.0)
     }
 }
 
