@@ -63,7 +63,7 @@ use crate::nvim_types::{Array, Object};
 /// ```no_run
 /// use nvimium::const_array;
 /// use nvimium::nvim_types::Array;
-/// use nvimium::nvim_funcs::exec_lua;
+/// use nvimium::nvim_funcs::global::exec_lua;
 ///
 /// fn my_callback() {
 ///     const LUA_EXEC_ARGUMENTS: &Array = const_array![
