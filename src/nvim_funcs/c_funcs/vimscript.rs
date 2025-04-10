@@ -11,7 +11,7 @@ use crate::nvim_types::{
 
 unsafe extern "C" {
     pub fn nvim_call_dict_function<'a>(
-        dict: ObjectRef<'a, ThinString<'a>>,
+        dict: Object,
         func: ThinString<'a>,
         args: Borrowed<'a, Array>,
         arena: *mut Arena,

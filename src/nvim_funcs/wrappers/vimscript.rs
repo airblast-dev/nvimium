@@ -1,3 +1,5 @@
+use crate::nvim_types::object::ObjectRef;
+use crate::nvim_types::OwnedThinString;
 use crate::nvim_types::{
     Array, AsThinString, Boolean, Channel, Dict, Error, Object, opts::exec::ExecOpts,
 };
@@ -18,7 +20,7 @@ pub fn call_dict_function<S1: AsThinString, S2: AsThinString>(
         let mut err;
         unsafe {
             vimscript::nvim_call_dict_function(
-                (&dict.as_thinstr()).into(),
+                Object::String(OwnedThinString::from(dict.as_thinstr())),
                 func.as_thinstr(),
                 args.into(),
                 core::ptr::null_mut(),

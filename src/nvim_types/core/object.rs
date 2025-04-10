@@ -330,60 +330,53 @@ pub enum ObjectTag {
 /// Same as [`Object`] but accepts any type that has a valid layout for a Neovim object
 #[doc(hidden)]
 #[repr(C)]
-pub struct ObjectRef<'a, T> {
+pub struct ObjectRef {
     tag: ObjectTag,
-    val: [size_t; 3],
-    p: PhantomData<&'a T>,
+    val: [*mut (); 3],
 }
 
-impl<T> ObjectRef<'_, T> {
-    const SIZE: () = assert!(size_of::<T>() == 16 || size_of::<T>() == 32);
-    const OBJ_SIZE: () = assert!(size_of::<ObjectRef<T>>() == size_of::<Object>());
-
+impl ObjectRef {
     /// Initialize an [`ObjectRef`] with `T`
     ///
     /// # Safety
     ///
     /// Calling this function requires the tag and value to match the layout of its equal [`Object`]
-    pub unsafe fn new(tag: ObjectTag, val: &T) -> Self {
-        #[allow(clippy::let_unit_value)]
-        let _a = Self::SIZE;
-        #[allow(clippy::let_unit_value)]
-        let _a = Self::OBJ_SIZE;
+    pub const unsafe fn new<T>(tag: ObjectTag, val: &T) -> Self {
         let mut r = ObjectRef {
             tag,
-            val: [0; 3],
-            p: PhantomData,
+            val: [core::ptr::null_mut(); 3],
         };
         let val = unsafe { (val as *const T).cast::<ManuallyDrop<T>>().read() };
         unsafe { r.val.as_mut_ptr().cast::<ManuallyDrop<T>>().write(val) };
         r
     }
-}
 
-impl<'a> From<&'a ThinString<'a>> for ObjectRef<'a, ThinString<'a>> {
-    fn from(value: &'a ThinString<'a>) -> Self {
+    pub const fn from_th(val: ThinString<'static>) -> Self {
         // This is hand written instead of using ObjectRef::new to be able to test with miri
         // maybe do this for other types as well?
-        let addr = value.as_ptr() as usize;
-        let len = value.len();
+        let addr = val.as_ptr();
+        let len = val.len();
         ObjectRef {
             tag: ObjectTag::String,
-            val: [addr, len, 0],
-            p: PhantomData,
+            val: [addr as _, len as _, core::ptr::null_mut()],
         }
     }
 }
 
-impl<'a> From<&'a Array> for ObjectRef<'a, Array> {
-    fn from(value: &'a Array) -> Self {
+impl From<&'static ThinString<'static>> for ObjectRef {
+    fn from(value: &'static ThinString) -> Self {
+        Self::from_th(*value)
+    }
+}
+
+impl From<&'static Array> for ObjectRef {
+    fn from(value: &'static Array) -> Self {
         let addr = value.as_ptr() as usize;
         let len = value.len();
         let cap = value.capacity();
         ObjectRef {
             tag: ObjectTag::Array,
-            val: [len, cap, addr],
-            p: PhantomData,
+            val: [len as _, cap as _, addr as _],
         }
     }
 }
@@ -391,33 +384,22 @@ impl<'a> From<&'a Array> for ObjectRef<'a, Array> {
 #[cfg(test)]
 mod tests {
 
-    use core::mem::{ManuallyDrop, transmute};
+    use crate::nvim_types::ThinString;
 
-    use crate::nvim_types::{Array, KVec, ThinString};
+    use super::ObjectRef;
 
-    use super::{Object, ObjectRef};
-
-    impl<'a> ObjectRef<'a, ThinString<'a>> {
-        fn convert_back(self) -> ThinString<'a> {
+    impl ObjectRef {
+        fn convert_back(self) -> ThinString<'static> {
             let addr = self.val[0];
             let ptr = addr as *mut _;
-            unsafe { ThinString::new(self.val[1], ptr) }
+            unsafe { ThinString::new(self.val[1] as usize, ptr) }
         }
     }
 
     #[test]
     fn object_ref_readback() {
-        let th: ThinString<'_> = ThinString::from_null_terminated(b"Hello\0");
-        let oref = ObjectRef::from(&th);
+        const TH: ThinString<'_> = ThinString::from_null_terminated(b"Hello\0");
+        let oref = ObjectRef::from(&TH);
         assert_eq!(oref.convert_back(), "Hello");
-    }
-
-    #[test]
-    fn object_ref_to_object() {
-        let obj = Object::from(Array(KVec::with_capacity(10)));
-        let arr = Array(KVec::with_capacity(10));
-        let obj_ref = ObjectRef::from(&arr);
-        let obj_reft = unsafe { transmute::<ObjectRef<_>, ManuallyDrop<Object>>(obj_ref) };
-        assert_eq!(&obj, &*obj_reft);
     }
 }

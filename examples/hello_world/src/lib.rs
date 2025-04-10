@@ -1,6 +1,6 @@
 use nvimium::{
     nvim_funcs::global::echo,
-    nvim_types::{func_types::echo::Echo, opts::echo::EchoOpts},
+    nvim_types::{Integer, func_types::echo::Echo, opts::echo::EchoOpts},
     plugin,
 };
 
