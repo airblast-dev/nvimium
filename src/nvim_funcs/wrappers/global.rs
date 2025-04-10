@@ -114,6 +114,19 @@ pub fn eval_statusline<S: AsThinString>(
     }
 }
 
+/// Execute a lua script
+///
+/// The returned [`Object`] has some limitations:
+/// - If the [`Object`] contains a buffer, window or tabpage handle it will be returned as an
+///   integer.
+/// - The returned Object will not contain a LuaRef.
+/// - Since we are passing a string as code, each call to this function will require the string to
+///   be parsed and executed resulting in bad performance.
+///
+/// Due to these limitations you are encouraged to use the provided bindings or call functions from Lua
+/// directly instead of using this function.
+///
+/// This function is mainly useful when writing tests.
 pub fn exec_lua<S: AsThinString>(code: S, args: &Array) -> Result<Object, Error> {
     call_check();
     tri! {
