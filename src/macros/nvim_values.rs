@@ -1,3 +1,36 @@
+#[allow(unused)]
+use crate::nvim_types::Dict;
+/// A macro for initializing a const [`Dict`]
+///
+/// In some cases creating a large dict with multiple [`Object`]'s can be cumbersome and costly.
+/// This macro initializes a const [`Dict`] and returns a `'static` reference to it.
+///
+/// # Example
+///
+/// ```no_run
+/// use nvimium::const_dict;
+/// use nvimium::nvim_types::Dict;
+/// use nvimium::nvim_funcs::global::exec_lua;
+///
+/// fn my_callback() {
+///     const LUA_EXEC_ARGUMENTS: &Dict = const_dict!{
+///         "Key" = "Value",
+///         // the actual variant of the objects that use integers must be specified as buffers
+///         // windows and tabpages also use integers
+///         "some number" = 12: int,
+///         "a very interesting buffer" = 0: buffer,
+///         "woosh" = 1: window,
+///         "cool" = 2: tabpage,
+///         "nice, we can nest dictionaries and arrays" = {
+///             "Dict key value" = [
+///                 "We can also create nested array's"
+///             ]
+///         }
+///     };
+///     
+///     // use the const Dict or return it from a callback
+/// }
+/// ```
 #[macro_export]
 macro_rules! const_dict {
     ($( $key:tt = $val:tt $(: $kind:tt)?),*) => {
@@ -74,6 +107,7 @@ use crate::nvim_types::{Array, Object};
 ///         0: buffer,
 ///         1: window,
 ///         2: tabpage,
+///         NULL,
 ///         {
 ///             "Dict key value" = [
 ///                 "We can also create nested array's"
@@ -185,6 +219,10 @@ macro_rules! value_to_object {
         use $crate::nvim_types::{ object::{ObjectRef, ObjectTag} };
         unsafe { ObjectRef::new(ObjectTag::Dict, $crate::const_dict!($($key = $val $(: $kind)?),*) ) }
     }};
+    (NULL) => {{
+        use $crate::nvim_types::{ object::{ObjectRef, ObjectTag} };
+        unsafe { ObjectRef::new(ObjectTag::Null, &0) }
+    }};
     ($string:tt) => {{
         use $crate::nvim_types::{
             ThinString,
@@ -259,7 +297,8 @@ mod array {
                 "NestedDictStuff" = 12: int
             },
             "buffer" = 0: buffer,
-            "window" = 1: window
+            "window" = 1: window,
+            "nothing" = NULL
         };
         let exp = Dict::from_iter([
             KeyValuePair::from(("Hello", Object::String(OwnedThinString::from("Bye")))),
@@ -283,6 +322,7 @@ mod array {
             )),
             KeyValuePair::from(("buffer", Object::Buffer(Buffer::new(0)))),
             KeyValuePair::from(("window", Object::Window(Window::new(1)))),
+            KeyValuePair::from(("nothing", Object::Null)),
         ]);
 
         assert_eq!(DICT1, &exp);
