@@ -68,7 +68,7 @@ use crate::nvim_types::{Array, Object};
 /// fn my_callback() {
 ///     const LUA_EXEC_ARGUMENTS: &Array = const_array![
 ///         "MyFirstArgument",
-///         // the actual variant of the objects that use integers must be specified as buffers, 
+///         // the actual variant of the objects that use integers must be specified as buffers
 ///         // windows and tabpages also use integers
 ///         12: int,
 ///         0: buffer,
@@ -82,7 +82,7 @@ use crate::nvim_types::{Array, Object};
 ///     ];
 ///     
 ///     // we can now pass these without allocating
-///     exec_lua("vim.print", LUA_EXEC_ARGUMENTS);
+///     exec_lua(c"vim.print(...)", LUA_EXEC_ARGUMENTS).unwrap();
 /// }
 /// ```
 #[macro_export]
