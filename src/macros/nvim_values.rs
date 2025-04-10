@@ -55,7 +55,7 @@ macro_rules! const_dict {
 use crate::nvim_types::{Array, Object};
 /// A macro for initializing a const [`Array`]
 ///
-/// In some cases creating a large array with multiple [`Object`] can be cumbersome and costly.
+/// In some cases creating a large array with multiple [`Object`]'s can be cumbersome and costly.
 /// This macro initializes a const [`Array`] and returns a `'static` reference to it.
 ///
 /// # Example
