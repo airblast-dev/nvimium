@@ -157,9 +157,12 @@ impl From<Float> for Object {
     }
 }
 
-impl From<OwnedThinString> for Object {
-    fn from(value: OwnedThinString) -> Self {
-        Self::String(value)
+impl<T> From<T> for Object
+where
+    OwnedThinString: From<T>,
+{
+    fn from(value: T) -> Self {
+        Self::String(OwnedThinString::from(value))
     }
 }
 
