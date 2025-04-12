@@ -257,7 +257,8 @@ impl<T> KVec<T> {
     /// # Safety
     ///     
     /// Callers must guarantee that enough space is allocated. It is undefined behavior otherwise.
-    unsafe fn push_unchecked(&mut self, element: T) {
+    #[doc(hidden)]
+    pub unsafe fn push_unchecked(&mut self, element: T) {
         debug_assert!(
             self.len() < self.capacity(),
             "called KVec::push_unchecked without enough capacity"
