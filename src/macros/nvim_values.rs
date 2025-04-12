@@ -58,7 +58,7 @@ macro_rules! const_dict {
                 $(
                     {
                         const KEY: ThinString<'static> = ThinString::from_null_terminated(::std::concat!($key, "\0").as_bytes());
-                        const OBJ: ObjectRef = $crate::value_to_object!($val $(: $kind)?);
+                        const OBJ: ObjectRef = $crate::const_value_to_object!($val $(: $kind)?);
                         const KV: Kv = Kv {
                             key: KEY,
                             obj: OBJ,
@@ -133,7 +133,7 @@ macro_rules! const_array {
                 $(
                     stringify!($val);
                     stringify!($($kind)?);
-                    arr[_i] = MaybeUninit::new($crate::value_to_object!($val $(: $kind)?));
+                    arr[_i] = MaybeUninit::new($crate::const_value_to_object!($val $(: $kind)?));
                     _i += 1;
                 )*
                 unsafe { ::core::mem::transmute::<[MaybeUninit<ObjectRef>; COUNT], [ObjectRef; COUNT]>(arr) }
@@ -159,8 +159,9 @@ macro_rules! const_array {
     };
 }
 
+#[doc(hidden)]
 #[macro_export]
-macro_rules! value_to_object {
+macro_rules! const_value_to_object {
     ($int:tt: int) => {{
         use $crate::nvim_types::{
             Integer,
@@ -245,7 +246,7 @@ macro_rules! count_tts {
 }
 
 #[cfg(test)]
-mod array {
+mod const_macros {
     use crate::nvim_types::{
         Array, Buffer, Dict, KVec, KeyValuePair, Object, OwnedThinString, Window,
     };
@@ -288,7 +289,7 @@ mod array {
     }
 
     #[test]
-    fn dict() {
+    fn const_dict() {
         const DICT1: &Dict = const_dict! {
             "Hello" = "Bye",
             "MyArray" = [1: int, 2: int, "InsideMyArray"],
