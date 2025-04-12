@@ -23,6 +23,8 @@
 ///     // and nested arrays/dicts are supported
 ///     example_key = [
 ///         // we can use any literal or variable that can be turned into an object
+///         // these values are not stored as Integer objects but rather each is stored 
+///         // as a buffer handle window handle and tabpage handle respectively
 ///         1: buffer,
 ///         2: window,
 ///         3: tabpage,
