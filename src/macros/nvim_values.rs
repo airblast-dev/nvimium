@@ -130,6 +130,10 @@ use crate::nvim_types::Dict;
 /// In some cases creating a large dict with multiple [`Object`]'s can be cumbersome and costly.
 /// This macro initializes a const [`Dict`] and returns a `'static` reference to it.
 ///
+/// Generally [`dict`] should be preferred as it provides more flexibility when initializing the
+/// dictionary. This macro is only recommended in tests or when returning fully const values from
+/// a callback.
+///
 /// # Example
 ///
 /// ```no_run
