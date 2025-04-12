@@ -191,3 +191,9 @@ impl<'a> From<&'a Dict> for Borrowed<'a, Dict> {
         Borrowed::new(value)
     }
 }
+
+impl From<KVec<KeyValuePair>> for Dict {
+    fn from(value: KVec<KeyValuePair>) -> Self {
+        Self(value)
+    }
+}
