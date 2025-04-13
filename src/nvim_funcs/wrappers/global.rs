@@ -1,4 +1,7 @@
-use crate::nvim_funcs::c_funcs::global;
+use crate::{
+    nvim_funcs::c_funcs::global,
+    nvim_types::{Arena, arena_finish, arena_mem_free},
+};
 use std::{mem::ManuallyDrop, ops::DerefMut};
 
 use crate::nvim_types::{
@@ -170,10 +173,11 @@ pub fn get_color_map() -> ColorMap {
         #[inline(never)]
         fn once() {}
         once();
-        let mut color_dict = unsafe { global::nvim_get_color_map(core::ptr::null_mut()) };
+        let mut arena = Arena::EMPTY;
+        let mut color_dict = unsafe { global::nvim_get_color_map(&mut arena) };
         let cm = ColorMap::from_c_func_ret(color_dict.deref_mut());
         assert_eq!(color_dict.len(), 0);
-        unsafe { ManuallyDrop::drop(&mut color_dict) };
+        unsafe { arena_mem_free(arena_finish(&mut arena)) };
         cm
     } else {
         ColorMap::initialized()
