@@ -35,6 +35,41 @@
 ///         "end of the array"
 ///     ]
 /// };
+///
+/// // now lets create the same dictionary by using functions
+/// use nvimium::nvim_types::{Object, Dict, Array, OwnedThinString, KeyValuePair, Window,
+/// TabPage, KVec};
+/// let my_dict = Dict::from_iter([
+///     KeyValuePair {
+///         key: "an interesting buffer".into(),
+///         object: Object::Buffer(buffer)
+///     },
+///     KeyValuePair {
+///         key: "buffer to be deleted".into(),
+///         object: Object::Buffer(Buffer::new(0))
+///     },
+///     KeyValuePair {
+///         key: "Hello!".into(),
+///         object: Object::Array(Array::from(KVec::from_iter([
+///             Object::Buffer(Buffer::new(1)),
+///             Object::Window(Window::new(1)),
+///             Object::TabPage(TabPage::new(1)),
+///             Object::Dict(Dict::from_iter([
+///                 KeyValuePair {
+///                     key: "dict key for a dict inside an array inside a dict".into(),
+///                     object: Object::String("some interesting value".into()),
+///                 },
+///                 KeyValuePair {
+///                     key: "description".into(),
+///                     object: Object::Buffer(Buffer::new(0)),
+///                 }
+///             ])),
+///             Object::String("end of the array".into())
+///         ])))
+///     }
+/// ]);
+///
+/// assert_eq!(my_dict, some_return_val);
 /// # }
 /// ```
 #[macro_export]
@@ -59,7 +94,7 @@ macro_rules! dict {
 
 /// A macro to easily initialize an [`Array`]
 ///
-/// This macro follows the same rules and syntax as [`dict`].
+/// This macro follows the same rules and syntax as [`dict`], see its documentation instead.
 #[macro_export]
 macro_rules! array {
     ($($val:tt $(: $kind:tt)?),*) => {{
