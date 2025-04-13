@@ -2,6 +2,7 @@ use std::{ffi::CStr, mem::ManuallyDrop};
 
 use crate::nvim_types::{Dict, Object};
 
+#[inline(never)]
 pub(crate) fn remove_keys(
     keys: &'static [&'static CStr],
     d: &mut Dict,
@@ -14,7 +15,7 @@ pub(crate) fn remove_keys(
     // based on the std libraries comments this is unlikely to unroll which is good for binary size
     while i < len {
         let key = keys[i];
-        let Some(val) = d.remove_skip_key_drop(keys[i]) else {
+        let Some(val) = d.remove_skip_key_drop(key) else {
             if let Some(f) = cleanup {
                 f(objects);
             }
