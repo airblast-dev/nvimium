@@ -101,7 +101,7 @@ unsafe extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Array>;
-    pub fn nvim_get_mode(arena: *mut Arena) -> Dict;
+    pub fn nvim_get_mode(arena: *mut Arena) -> ManuallyDrop<Dict>;
     pub fn nvim_get_proc(pid: Integer, arena: *mut Arena, err: *mut Error) -> MaybeUninit<Object>;
     pub fn nvim_get_proc_children(
         pid: Integer,

@@ -281,28 +281,7 @@ pub fn get_mark<S: AsThinString>(name: S) -> Result<Array, Error> {
 pub fn get_mode() -> Mode {
     call_check();
     let mut dict = unsafe { global::nvim_get_mode(core::ptr::null_mut()) };
-    let mode = dict
-        .remove_skip_key_drop("mode")
-        .map(|m| {
-            if let Object::String(s) = m {
-                s
-            } else {
-                panic!("unexpected object type returned from nvim_get_mode for \"mode\" key");
-            }
-        })
-        .expect("\"mode\" key missing in nvim_get_mode Dictionary");
-    let blocking = dict
-        .remove_skip_key_drop("blocking")
-        .map(|b| {
-            if let Object::Bool(b) = b {
-                b
-            } else {
-                panic!("unexpected object type returned from nvim_get_mode for \"blocking\" key");
-            }
-        })
-        .expect("\"blocking\" key missing in nvim_get_mode Dictionary");
-
-    Mode { mode, blocking }
+    Mode::from_c_func_ret(&mut dict)
 }
 
 pub fn get_proc(pid: Integer) -> Result<Option<Dict>, Error> {
