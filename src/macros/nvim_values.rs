@@ -23,7 +23,7 @@
 ///     // and nested arrays/dicts are supported
 ///     example_key = [
 ///         // we can use any literal or variable that can be turned into an object
-///         // these values are not stored as Integer objects but rather each is stored 
+///         // these values are not stored as Integer objects but rather each is stored
 ///         // as a buffer handle window handle and tabpage handle respectively
 ///         1: buffer,
 ///         2: window,
@@ -54,6 +54,24 @@ macro_rules! dict {
             }
         )*
         Dict::from(kv)
+    }};
+}
+
+/// A macro to easily initialize an [`Array`]
+///
+/// This macro follows the same rules and syntax as [`dict`].
+#[macro_export]
+macro_rules! array {
+    ($($val:tt $(: $kind:tt)?),*) => {{
+        use $crate::nvim_types::{Array, KVec};
+        let count = $crate::count_tts!($($key),*);
+        let mut kv = KVec::with_capacity(count);
+        $(
+            let object = $crate::to_value!($val $(: $kind)?);
+            unsafe { kv.push_unchecked(object) };
+        )*
+
+        Array::from(kv)
     }};
 }
 
@@ -94,14 +112,12 @@ macro_rules! to_value {
         )*
         Object::Dict(Dict::from(kv))
     }};
-    (#$val:ident $(: $kind:tt)?) => {{
-        $crate::decide_literal_kind!($val $(: $kind)?)
-    }};
     ($val:tt $(: $kind:tt)?) => {{
         $crate::decide_literal_kind!($val $(: $kind)?)
     }};
 }
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! decide_literal_kind {
     ($val:tt: buffer) => {{
