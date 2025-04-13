@@ -1,10 +1,11 @@
 use core::marker::PhantomData;
+use std::ffi::c_void;
 
 // arena_alloc_block for allocating
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct Arena {
-    cur_blk: *const libc::c_char,
+    cur_blk: *mut libc::c_char,
     pos: libc::size_t,
     size: libc::size_t,
 }
@@ -18,22 +19,20 @@ impl Arena {
 }
 
 #[repr(C)]
-pub struct ArenaMem<'a>(*mut Self, PhantomData<&'a u8>);
+#[derive(Clone)]
+pub struct ArenaMem(*mut Self);
 
-impl ArenaMem<'_> {
-    unsafe fn clone(&self) -> Self {
-        ArenaMem(self.0, PhantomData::<&'static u8>)
-    }
-}
-
-impl Drop for ArenaMem<'_> {
-    fn drop(&mut self) {
+impl ArenaMem {
+    unsafe fn drop(&mut self) {
         unsafe { arena_mem_free(self.clone()) };
     }
 }
 
 // TODO: use arena to optimize performance
 // This is somewhat low priority but will be useful for large allocations
+// NOTE: actually seems some api's kind of require this in order to provide a sane deallocation
 unsafe extern "C" {
-    fn arena_mem_free(arena_mem: ArenaMem);
+    pub(crate) fn arena_mem_free(arena_mem: ArenaMem);
+    pub(crate) fn arena_finish(arena: *mut Arena) -> ArenaMem;
+    pub(crate) fn arena_alloc(arena: *mut Arena, size: usize, align: bool) -> *mut c_void;
 }
