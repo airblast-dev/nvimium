@@ -1,4 +1,8 @@
-use crate::nvim_types::{Array, Dict};
+use std::mem::ManuallyDrop;
+
+use crate::nvim_types::{Array, Dict, Object};
+
+use super::utils::remove_keys;
 
 #[derive(Debug)]
 pub struct Context {
@@ -11,31 +15,16 @@ pub struct Context {
 
 impl Context {
     pub fn from_c_func_ret(ctx: &mut Dict) -> Self {
-        let regs = ctx
-            .remove_skip_key_drop(c"regs")
-            .unwrap()
-            .into_array()
-            .unwrap();
-        let jumps = ctx
-            .remove_skip_key_drop(c"jumps")
-            .unwrap()
-            .into_array()
-            .unwrap();
-        let bufs = ctx
-            .remove_skip_key_drop(c"bufs")
-            .unwrap()
-            .into_array()
-            .unwrap();
-        let gvars = ctx
-            .remove_skip_key_drop(c"gvars")
-            .unwrap()
-            .into_array()
-            .unwrap();
-        let funcs = ctx
-            .remove_skip_key_drop(c"funcs")
-            .unwrap()
-            .into_array()
-            .unwrap();
+        let [regs, jumps, bufs, gvars, funcs, ..] =
+            remove_keys(&[c"regs", c"jumps", c"bufs", c"gvars", c"funcs"], ctx, None)
+                .unwrap()
+                .map(|arr| {
+                    if matches!(*arr, Object::Array(_)) {
+                        Object::into_array(ManuallyDrop::into_inner(arr)).unwrap()
+                    } else {
+                        panic!()
+                    }
+                });
 
         unsafe { ctx.0.set_len(0) };
 
