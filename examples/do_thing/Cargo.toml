@@ -1,0 +1,26 @@
+[package]
+name = "do_thing"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+nvimium = { path = "../../" }
+
+[features]
+# You will definitely want to add a testing feature gate to avoid terrible compile times
+# You should only enable this when testing, but it is set as the default here for better readability in editors.
+default = ["testing"]
+testing = ["nvimium/testing"]
+
+# Recommended release profile for size and performance
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "debuginfo"
+# opt-level = 3 gets very bloated, don't use it unless you have measured a significant performance difference
+opt-level = "s"
+
