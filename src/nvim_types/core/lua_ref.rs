@@ -1,5 +1,8 @@
 use core::marker::PhantomData;
 
+use mlua_sys::{LUA_REGISTRYINDEX, luaL_unref};
+use thread_lock::get_lua_ptr;
+
 use super::LuaRefT;
 
 #[repr(transparent)]
@@ -20,5 +23,11 @@ impl LuaRef {
     /// Get the raw integer value of the [`LuaRef`]
     pub const fn as_int(&self) -> LuaRefT {
         self.0
+    }
+}
+
+impl Drop for LuaRef {
+    fn drop(&mut self) {
+        unsafe { luaL_unref(get_lua_ptr().as_ptr(), LUA_REGISTRYINDEX, self.0) }
     }
 }
