@@ -12,6 +12,7 @@ jobs:
         rust: [stable, beta, nightly]
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
+    - uses: ilammy/msvc-dev-cmd@v1
     - name: Checkout
       uses: actions/checkout@v4
     - name: Install Neovim
