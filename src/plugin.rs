@@ -15,8 +15,9 @@ pub use nvim_test::test_pkg;
 /// # Example
 /// ```
 /// use nvimium::plugin;
-/// fn my_entry_point() {
+/// fn my_entry_point() -> Result<(), &'static str> {
 ///     // call neovim functions
+///     Ok(())
 /// }
 ///
 /// plugin!(luaopen_my_entry_point, my_entry_point);
