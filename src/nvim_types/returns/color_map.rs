@@ -4,6 +4,7 @@ use core::{
 };
 use std::ffi::c_void;
 
+#[cfg(not(miri))]
 use libc::{bsearch, c_char, c_int, qsort, strcmp};
 
 use crate::nvim_types::{nvalloc::xmalloc, string::AsThinString};
