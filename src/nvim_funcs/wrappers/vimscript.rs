@@ -66,7 +66,9 @@ pub fn exec2<S: AsThinString>(exec: S, opts: &ExecOpts) -> Result<Dict, Error> {
     }
 }
 
-pub fn parse_expression<S: AsThinString, S1: AsThinString>(
+// TODO: create proper structs and what not.
+// good amount of work to be done
+fn parse_expression<S: AsThinString, S1: AsThinString>(
     eval: S,
     flags: S1,
     highlight: Boolean,
