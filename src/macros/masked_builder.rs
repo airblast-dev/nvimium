@@ -195,7 +195,7 @@ macro_rules! func_gen_masked_inner {
         pub fn $field<T: Into<$field_ty>>(&mut self, $field: T) -> &mut Self {
             if self.mask & $mask == $mask {
                 $crate::macros::masked_builder::cold();
-                unsafe { self.$field.assume_init_drop() }
+                unsafe { self.$field.assume_init_drop() };
             }
             self.mask |= $mask;
             self.$field.write($field.into());
