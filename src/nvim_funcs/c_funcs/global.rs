@@ -196,7 +196,7 @@ unsafe extern "C" {
         mode: KeyMapMode,
         lhs: ThinString<'a>,
         rhs: ThinString<'a>,
-        opts: *const SetKeymapOpts,
+        opts: *mut SetKeymapOpts,
         err: *mut Error,
     );
     pub fn nvim_set_var<'a>(name: ThinString<'a>, obj: Borrowed<'a, Object>, err: *mut Error);

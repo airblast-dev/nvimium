@@ -576,7 +576,7 @@ pub fn set_keymap<S: AsThinString, S1: AsThinString>(
     mode: KeyMapMode,
     lhs: S,
     rhs: S1,
-    opts: &SetKeymapOpts,
+    opts: &mut SetKeymapOpts,
 ) -> Result<(), Error> {
     call_check();
     tri! {
@@ -884,7 +884,7 @@ mod tests {
             KeyMapMode::INSERT,
             c"3",
             c"<Esc>:qall!<CR>",
-            &SetKeymapOpts::default(),
+            &mut SetKeymapOpts::default(),
         )
         .unwrap();
         //super::nvim_exec_lua(
