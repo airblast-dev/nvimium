@@ -3,7 +3,7 @@
 install_crate = { rustup_component_name = "rust-src" }
 
 [tasks.install-miri]
-toolchain = "nightly"    
+toolchain = "nightly-2025-05-14"    
 install_crate = { rustup_component_name = "miri" }
 
 [tasks.test]
@@ -19,6 +19,6 @@ args = ["test", "--workspace", "--exclude", "macros", "--features", "testing"]
 
 [tasks.miri-tests]
 dependencies = ["install-miri"]
-toolchain = "nightly"
+toolchain = "nightly-2025-05-14"    
 command = "cargo"
 args = ["miri", "test"]
