@@ -15,7 +15,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Install Neovim
-      run: snap install neovim
+      run: sudo snap install neovim
     - name: Install rust
       uses: dtolnay/rust-toolchain@master
       with:
