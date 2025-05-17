@@ -21,7 +21,7 @@ jobs:
     - name: Install Lua 5.1
       uses: leafo/gh-actions-lua@v11
       with:
-        luaVersion: "5.1.0"
+        luaVersion: "5.1.5"
     - name: Install rust
       uses: dtolnay/rust-toolchain@master
       with:
