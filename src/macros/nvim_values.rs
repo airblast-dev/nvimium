@@ -5,7 +5,7 @@
 /// similar to a initializating a lua table.
 ///
 /// # Example
-/// ```
+/// ```no_run
 /// # fn my_func() {
 /// use nvimium::nvim_funcs::global::get_current_buf;
 /// use nvimium::nvim_types::Buffer;
