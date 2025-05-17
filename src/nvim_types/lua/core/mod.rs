@@ -47,7 +47,11 @@ pub trait IntoLua {
 }
 
 impl IntoLua for () {
-    unsafe fn push(&self, l: *mut lua_State) {
-        unsafe { lua_pushnil(l) };
+    unsafe fn push(&self, _: *mut lua_State) {}
+}
+
+impl FromLua for () {
+    unsafe fn pop(_: *mut lua_State) -> Result<Self> {
+        Ok(())
     }
 }
