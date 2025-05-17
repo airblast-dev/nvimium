@@ -18,6 +18,10 @@ jobs:
       uses: rhysd/action-setup-vim@v1
       with:
         neovim: true
+    - name: Install Lua 5.1
+      uses: leafo/gh-actions-lua@v11
+      with:
+        luaVersion: "5.1.0"
     - name: Install rust
       uses: dtolnay/rust-toolchain@master
       with:
