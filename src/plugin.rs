@@ -62,10 +62,34 @@ macro_rules! plugin {
         #[unsafe(no_mangle)]
         extern "C" fn $open(lstate: *mut $crate::plugin::lua_State) -> usize {
             let func: fn() -> _ = $ident;
+            use ::core::result::Result;
             unsafe {
-                ::nvimium::thread_lock::init_main_lua_ptr(lstate);
-                let ret = ::nvimium::thread_lock::scoped(|_| $ident(), ());
-                ::nvimium::nvim_types::lua::IntoLua::push(&ret, lstate);
+                $crate::thread_lock::init_main_lua_ptr(lstate);
+                $crate::thread_lock::scoped(
+                    |_| {
+                        let ret = $ident();
+                        match ret {
+                            Ok(k) => $crate::nvim_types::lua::IntoLua::push(&k, lstate),
+                            Err(err) => {
+                                use std::fmt::Write;
+                                use $crate::nvim_types::{String, ThinString};
+                                use $crate::{
+                                    nvim_funcs::global::echo,
+                                    nvim_types::{func_types::echo::Echo, opts::echo::EchoOpts},
+                                };
+                                let mut msg = <String as ::std::default::Default>::default();
+                                // TODO: add fallback messages
+                                let _ = ::std::write!(&mut msg, "Nvimium Error: {}", err);
+                                let _ = echo(
+                                    &Echo::message(msg),
+                                    true,
+                                    <EchoOpts as ::std::default::Default>::default().err(true),
+                                );
+                            }
+                        };
+                    },
+                    (),
+                );
             }
             1
         }
