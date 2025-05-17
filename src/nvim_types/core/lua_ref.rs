@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use mlua_sys::{LUA_REGISTRYINDEX, luaL_unref};
+use mlua_sys::{luaL_unref, LUA_NOREF, LUA_REFNIL, LUA_REGISTRYINDEX};
 use thread_lock::get_lua_ptr;
 
 use super::LuaRefT;
@@ -28,6 +28,8 @@ impl LuaRef {
 
 impl Drop for LuaRef {
     fn drop(&mut self) {
-        unsafe { luaL_unref(get_lua_ptr().as_ptr(), LUA_REGISTRYINDEX, self.0) }
+        if self.0 != LUA_NOREF && self.0 != LUA_REFNIL {
+            unsafe { luaL_unref(get_lua_ptr().as_ptr(), LUA_REGISTRYINDEX, self.0) }
+        }
     }
 }
