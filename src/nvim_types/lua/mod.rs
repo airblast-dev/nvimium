@@ -19,8 +19,8 @@ mod closure;
 pub mod core;
 mod fn_ptr;
 
-use std::any::Any;
 pub use core::{FromLua, IntoLua};
+use std::any::Any;
 
 #[doc(hidden)]
 pub use mlua_sys::lua_State;
@@ -34,7 +34,7 @@ type LuaInteger = i32;
 type LuaInteger = i64;
 
 #[repr(transparent)]
-struct Function(LuaRef);
+pub struct Function(LuaRef);
 
 impl Function {
     pub(crate) fn from_fn<F: 'static + Send + Sync + Fn(A) -> R + Unpin, A: FromLua, R: IntoLua>(
