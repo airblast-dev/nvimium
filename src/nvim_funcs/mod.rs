@@ -5,5 +5,3 @@ test_pkg!();
 mod c_funcs;
 mod wrappers;
 pub use wrappers::*;
-
-pub(crate) mod internals;
