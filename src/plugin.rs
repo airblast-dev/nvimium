@@ -13,7 +13,7 @@ pub use nvim_test::test_pkg;
 /// the `<yourfunc>` identifier provided to the second argument.
 ///
 /// # Example
-/// ```
+/// ```no_run
 /// use nvimium::plugin;
 /// fn my_entry_point() -> Result<(), &'static str> {
 ///     // call neovim functions
