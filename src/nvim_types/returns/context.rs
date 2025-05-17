@@ -22,7 +22,7 @@ impl Context {
                     if matches!(*arr, Object::Array(_)) {
                         Object::into_array(ManuallyDrop::into_inner(arr)).unwrap()
                     } else {
-                        panic!()
+                        Array::default()
                     }
                 });
 
