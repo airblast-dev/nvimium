@@ -12,17 +12,17 @@ jobs:
         rust: [stable, beta, nightly]
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
-    - uses: ilammy/msvc-dev-cmd@v1
     - name: Checkout
       uses: actions/checkout@v4
     - name: Install Neovim
       uses: rhysd/action-setup-vim@v1
       with:
         neovim: true
+    - uses: ilammy/msvc-dev-cmd@v1
     - name: Install Lua 5.1
       uses: leafo/gh-actions-lua@v11
       with:
-        luaVersion: "5.1.5"
+        luaVersion: "5.1.5-dev"
     - name: Install rust
       uses: dtolnay/rust-toolchain@master
       with:
