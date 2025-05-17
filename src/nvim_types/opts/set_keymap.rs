@@ -23,7 +23,7 @@ masked_builder! {
 }
 
 impl<'a> SetKeymapOpts<'a> {
-    pub fn callback<F: 'static + Fn(()) + Unpin + Send + Sync>(&mut self, f: F) -> &mut Self {
+    pub fn callback<F: 'static + Fn(()) + Unpin>(&mut self, f: F) -> &mut Self {
         let lref = Function::wrap(f).into_luaref();
         const CB_MASK: u64 = 1 << 8;
         if self.mask & CB_MASK == CB_MASK {
