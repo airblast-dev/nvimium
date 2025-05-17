@@ -44,20 +44,14 @@ macro_rules! masked_builder {
 
         impl $(<$($lf),*>)? Drop for $ident $(<$($lf),*>)? {
             fn drop(&mut self) {
-
-                // the first bit is unused so the masks value being 1 or 0 means no fields were set
-                if self.mask <= 1 {
-                    return;
-                }
-
                 // TODO: might be possible to optimize this with tagged scope and comparisons
                 #[allow(unused_mut)]
                 let mut _base_mask = 1;
                 $(
+                    _base_mask <<= 1;
                     if self.mask & _base_mask == _base_mask {
                         unsafe { self.$field.assume_init_drop() }
                     }
-                    _base_mask <<= 1;
                 )*
 
             }
@@ -80,13 +74,13 @@ macro_rules! masked_builder {
                 f.debug_struct(stringify!($ident))
                     $(
                         .field(stringify!($field), {
+                            _base_mask <<= 1;
                             let ret = if self.mask & _base_mask == _base_mask {
                                 ( unsafe { self.$field.assume_init_ref() } as &dyn ::core::fmt::Debug )
                             } else {
                                 un = $crate::macros::masked_builder::Uninit(::core::any::type_name::<$field_ty>());
                                 &un
                             };
-                            _base_mask <<= 1;
                             ret
                         })
                     )*
@@ -120,16 +114,16 @@ macro_rules! func_gen_masked {
     ) => {
         $(#[$func_meta])*
         pub fn $field<T: Into<$field_ty>>(&mut self, $field: T) -> &mut Self {
-            if self.mask & 1 == 1 {
+            if self.mask & 2 == 2 {
                 $crate::macros::masked_builder::cold();
                 unsafe { self.$field.assume_init_drop() }
             }
-            self.mask |= 1;
+            self.mask |= 2;
             self.$field.write($field.into());
             self
         }
         $crate::func_gen_masked_inner!(
-            2,
+            4,
             $(
                 $(#[builder($inner_skip)])?
                 $( #[func_meta = $inner_func_meta] )*
@@ -239,11 +233,11 @@ mod tests {
             c: MaybeUninit::new(true),
         };
         c.a(20_u32);
-        assert_eq!(c.mask, 1);
+        assert_eq!(c.mask, 2);
         c.b("hello");
-        assert_eq!(c.mask, 1 | 2);
+        assert_eq!(c.mask, 2 | 4);
         c.c(false);
-        assert_eq!(c.mask, 1 | 2 | 4);
+        assert_eq!(c.mask, 2 | 4 | 8);
 
         unsafe {
             assert!(!c.c.assume_init());
@@ -267,13 +261,13 @@ mod tests {
         };
 
         c.a(5_u32);
-        assert_eq!(c.mask, 1);
+        assert_eq!(c.mask, 2);
         c.b(6_u64);
-        assert_eq!(c.mask, 1 | 2);
+        assert_eq!(c.mask, 2 | 4);
         c.c("HAHAHA".to_owned());
         unsafe {
             assert_eq!(c.c.assume_init_ref(), "HAHAHA");
-            assert_eq!(c.mask, 1 | 2 | 4);
+            assert_eq!(c.mask, 2 | 4 | 8);
 
             assert_eq!(c.a.assume_init(), 5_u32);
             assert_eq!(c.b.assume_init(), 6_u64);
