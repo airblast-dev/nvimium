@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-test-cdylib = { path = "../../test-cdylib/", optional = true }
+test-cdylib = { path = "../test-cdylib/", optional = true }
 thread-lock = { workspace = true }
 nvim-test-macro = { workspace = true }
 tempfile = { version = "3.19.1", optional = true }

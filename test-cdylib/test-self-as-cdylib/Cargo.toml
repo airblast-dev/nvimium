@@ -1,0 +1,15 @@
+[package]
+name = "test-self-as-cdylib"
+version = "0.0.0"
+authors = ["Jason Newcomb <jsnewcomb@pm.me>"]
+workspace = ".."
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dev-dependencies]
+dlopen = "0.1.8"
+
+[dev-dependencies.test-cdylib]
+path = ".."
