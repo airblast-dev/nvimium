@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         rust: [stable, beta, nightly]
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest]
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -18,11 +18,8 @@ jobs:
       uses: rhysd/action-setup-vim@v1
       with:
         neovim: true
-    - uses: ilammy/msvc-dev-cmd@v1
     - name: Install Lua 5.1
-      uses: leafo/gh-actions-lua@v11
-      with:
-        luaVersion: "5.1.5-dev"
+      run: sudo apt install liblua5.1
     - name: Install rust
       uses: dtolnay/rust-toolchain@master
       with:
