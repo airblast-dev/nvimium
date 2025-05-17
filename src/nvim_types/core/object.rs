@@ -1,6 +1,4 @@
-use core::{fmt::Debug, marker::PhantomData, mem::ManuallyDrop};
-
-use libc::size_t;
+use core::{fmt::Debug, mem::ManuallyDrop};
 
 use super::{array::Array, dictionary::Dict};
 
