@@ -1,4 +1,3 @@
-use core::marker::PhantomData;
 use std::ffi::c_void;
 
 // arena_alloc_block for allocating
