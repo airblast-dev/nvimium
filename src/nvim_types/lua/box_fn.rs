@@ -40,10 +40,7 @@ fn metatable_key(l: *mut lua_State) -> i32 {
 
 static KEY: OnceLock<i32> = OnceLock::new();
 
-pub fn register<F: 'static + Send + Sync + Fn(A) -> R, A: FromLua, R>(
-    l: *mut lua_State,
-    f: F,
-) -> i32 {
+pub fn register<F: 'static + Fn(A) -> R, A: FromLua, R>(l: *mut lua_State, f: F) -> i32 {
     extern "C-unwind" fn call(l: *mut lua_State) -> i32 {
         // before calling init in case a jump happens
         let ud = unsafe { lua_touserdata(l, lua_upvalueindex(1)) };
@@ -89,6 +86,6 @@ pub fn register<F: 'static + Send + Sync + Fn(A) -> R, A: FromLua, R>(
 
 extern "C-unwind" fn drop_fn<D: Unpin>(l: *mut lua_State) -> i32 {
     let ud = unsafe { lua_touserdata(l, -1) } as *mut D;
-    unsafe { ud.read() };
+    unsafe { ud.drop_in_place() };
     0
 }

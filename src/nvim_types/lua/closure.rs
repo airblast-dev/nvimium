@@ -8,7 +8,7 @@ use thread_lock::init_lua_ptr;
 use super::{FromLua, IntoLua};
 
 #[inline]
-fn closure_drop<F: Fn(A) -> R + Send + Sync + Unpin, A: FromLua, R>() -> (
+fn closure_drop<F: Fn(A) -> R + Unpin, A: FromLua, R>() -> (
     extern "C-unwind" fn(*mut lua_State) -> i32,
     extern "C-unwind" fn(*mut lua_State) -> i32,
 ) {
@@ -31,7 +31,7 @@ fn closure_drop<F: Fn(A) -> R + Send + Sync + Unpin, A: FromLua, R>() -> (
 }
 
 #[inline]
-pub fn register<F: 'static + Fn(A) -> R + Send + Sync + Unpin, A: FromLua, R: IntoLua>(
+pub fn register<F: 'static + Fn(A) -> R + Unpin, A: FromLua, R: IntoLua>(
     l: *mut lua_State,
     f: F,
 ) -> i32 {
