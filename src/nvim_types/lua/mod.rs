@@ -18,13 +18,15 @@ mod box_fn;
 mod closure;
 pub mod core;
 mod fn_ptr;
+#[doc(hidden)]
+pub use box_fn::set_callback_name;
 
 pub use core::{FromLua, IntoLua};
 use std::any::Any;
 
 #[doc(hidden)]
 pub use mlua_sys::lua_State;
-use thread_lock::get_lua_ptr;
+use thread_lock::{call_check, get_lua_ptr};
 
 use crate::nvim_types::LuaRef;
 
