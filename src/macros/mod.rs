@@ -1,5 +1,6 @@
-pub mod nvim_values;
+pub mod comp_unique_id;
 pub mod masked_builder;
+pub mod nvim_values;
 pub mod one_of_objects;
 pub mod tri;
 
