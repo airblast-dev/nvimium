@@ -14,7 +14,7 @@ impl ThinString<'static> {
     ///
     /// Only use internally as users are free to push and pop from the stack when using mlua inside
     /// callbacks
-    unsafe fn pop(l: *mut mlua_sys::lua_State) -> Result<Self> {
+    pub(crate) unsafe fn pop(l: *mut mlua_sys::lua_State) -> Result<Self> {
         unsafe {
             let ty = lua_type(l, -1);
             if LUA_TNONE == ty {

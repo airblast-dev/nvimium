@@ -1,13 +1,14 @@
-error[E0433]: failed to resolve: use of undeclared crate or module `nvim_types`
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `nvim_types`
  --> tests/fails/types/thinstring_lifetime.rs:1:5
   |
 1 | use nvim_types::string::{AsThinString, OwnedThinString, String};
-  |     ^^^^^^^^^^ use of undeclared crate or module `nvim_types`
+  |     ^^^^^^^^^^ use of unresolved module or unlinked crate `nvim_types`
   |
 help: there is a crate or module with a similar name
   |
-1 | use nvim_test::string::{AsThinString, OwnedThinString, String};
-  |     ~~~~~~~~~
+1 - use nvim_types::string::{AsThinString, OwnedThinString, String};
+1 + use nvim_test::string::{AsThinString, OwnedThinString, String};
+  |
 
 error[E0599]: no method named `as_thinstr` found for struct `CString` in the current scope
   --> tests/fails/types/thinstring_lifetime.rs:17:21
@@ -17,8 +18,9 @@ error[E0599]: no method named `as_thinstr` found for struct `CString` in the cur
    |
 help: there is a method `as_c_str` with a similar name
    |
-17 |         let th = cs.as_c_str();
-   |                     ~~~~~~~~
+17 -         let th = cs.as_thinstr();
+17 +         let th = cs.as_c_str();
+   |
 
 error[E0599]: no method named `as_thinstr` found for reference `&CStr` in the current scope
   --> tests/fails/types/thinstring_lifetime.rs:24:23
@@ -28,5 +30,6 @@ error[E0599]: no method named `as_thinstr` found for reference `&CStr` in the cu
    |
 help: there is a method `as_ptr` with a similar name
    |
-24 |         let th = cstr.as_ptr();
-   |                       ~~~~~~
+24 -         let th = cstr.as_thinstr();
+24 +         let th = cstr.as_ptr();
+   |

@@ -1,10 +1,11 @@
-error[E0433]: failed to resolve: use of undeclared crate or module `nvim_types`
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `nvim_types`
  --> tests/fails/types/borrowed_lifetimes.rs:3:5
   |
 3 | use nvim_types::{array::Array, borrowed::Borrowed};
-  |     ^^^^^^^^^^ use of undeclared crate or module `nvim_types`
+  |     ^^^^^^^^^^ use of unresolved module or unlinked crate `nvim_types`
   |
 help: there is a crate or module with a similar name
   |
-3 | use nvim_test::{array::Array, borrowed::Borrowed};
-  |     ~~~~~~~~~
+3 - use nvim_types::{array::Array, borrowed::Borrowed};
+3 + use nvim_test::{array::Array, borrowed::Borrowed};
+  |
