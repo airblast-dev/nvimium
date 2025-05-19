@@ -27,7 +27,7 @@ use std::any::Any;
 
 #[doc(hidden)]
 pub use mlua_sys::lua_State;
-use thread_lock::{call_check, get_lua_ptr};
+use thread_lock::get_lua_ptr;
 
 use crate::nvim_types::LuaRef;
 

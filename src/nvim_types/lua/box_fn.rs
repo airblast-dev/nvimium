@@ -13,11 +13,11 @@ use mlua_sys::{
     lua_upvalueindex, luaL_newmetatable, luaL_ref,
 };
 use rand::{SeedableRng, distr::Distribution, rngs::SmallRng};
-use thread_lock::{init_lua_ptr, unlock};
+use thread_lock::init_lua_ptr;
 
 use crate::nvim_types::String;
 
-use super::{core::FromLuaMany, FromLua};
+use super::core::FromLuaMany;
 
 static FALLBACK_TYPE_NAME: &CStr = c"NVIMIUM FALLBACK CALLBACK ID";
 static TYPE_NAME: AtomicPtr<c_char> = AtomicPtr::new(FALLBACK_TYPE_NAME.as_ptr() as *mut c_char);
