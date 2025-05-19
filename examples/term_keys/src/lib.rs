@@ -1,10 +1,10 @@
 use std::error::Error;
 
 use nvimium::{
-    nvim_funcs::global::{create_buf, del_keymap, echo, open_term, set_current_buf, set_keymap},
+    nvim_funcs::global::{create_buf, echo, open_term, set_current_buf},
     nvim_types::{
-        func_types::{echo::Echo, keymap_mode::KeyMapMode},
-        opts::{echo::EchoOpts, open_term::OpenTermOpts, set_keymap::SetKeymapOpts},
+        func_types::echo::Echo,
+        opts::{echo::EchoOpts, open_term::OpenTermOpts},
     },
     plugin,
 };

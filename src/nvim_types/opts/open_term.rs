@@ -1,7 +1,5 @@
 use std::mem::MaybeUninit;
 
-use thread_lock::get_lua_ptr;
-
 use crate::masked_builder;
 
 use crate::nvim_types::args::open_term_cb::OpenTermOnInputArgs;
@@ -23,11 +21,7 @@ impl OpenTermOpts {
         &mut self,
         f: F,
     ) -> &mut Self {
-        // OpenTermOnInputArgs contains references so we cannot use FromLua
-        // instead we provide 'a to limit the scope that the fields are valid.
-        let cb = Function::wrap(move |_: ()| {
-            f(unsafe { OpenTermOnInputArgs::pop(get_lua_ptr().as_ptr()).unwrap() })
-        });
+        let cb = Function::wrap(f);
         if self.mask & 2 == 2 {
             unsafe { self.on_input.assume_init_drop() };
         }

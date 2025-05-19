@@ -21,6 +21,7 @@ mod fn_ptr;
 #[doc(hidden)]
 pub use box_fn::set_callback_name;
 
+use core::FromLuaMany;
 pub use core::{FromLua, IntoLua};
 use std::any::Any;
 
@@ -44,12 +45,12 @@ impl Function {
         Self(unsafe { LuaRef::new(closure::register(l.as_ptr(), f)) })
     }
 
-    pub(crate) fn from_fn_ptr<A: FromLua, R: IntoLua>(f: fn(A) -> R) -> Self {
+    pub(crate) fn from_fn_ptr<A: FromLuaMany, R: IntoLua>(f: fn(A) -> R) -> Self {
         let mut l = get_lua_ptr();
         Self(unsafe { LuaRef::new(fn_ptr::register(l.as_ptr(), f)) })
     }
 
-    pub(crate) fn from_box_fn<F: 'static + Fn(A) -> R, A: FromLua, R: IntoLua>(f: F) -> Self {
+    pub(crate) fn from_box_fn<F: 'static + Fn(A) -> R, A: FromLuaMany, R: IntoLua>(f: F) -> Self {
         let mut l = get_lua_ptr();
         Self(unsafe { LuaRef::new(box_fn::register(l.as_ptr(), f)) })
     }
@@ -62,7 +63,9 @@ impl Function {
     ///
     /// The provided function will be attempted to be downcasted to a function pointer for cheaper
     /// initialization and drops.
-    pub fn wrap<F: 'static + Fn(A) -> R + Unpin, A: FromLua, R: 'static + IntoLua>(f: F) -> Self {
+    pub fn wrap<F: 'static + Fn(A) -> R + Unpin, A: 'static + FromLuaMany, R: 'static + IntoLua>(
+        f: F,
+    ) -> Self {
         // if F is a function pointer we can avoid dynamic dispatch, an extra indirection and the drop
         // call passed to lua (we can use lightuserdata)
         if let Some(f) = (&f as &dyn Any).downcast_ref::<fn(A) -> R>() {
