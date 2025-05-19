@@ -141,10 +141,9 @@ unsafe extern "C" {
     pub fn nvim_list_uis(arena: *mut Arena) -> ManuallyDrop<Array>;
     pub fn nvim_list_wins(arena: *mut Arena) -> Array;
     pub fn nvim_load_context<'a>(dict: Borrowed<'a, Dict>, err: *mut Error) -> MaybeUninit<Object>;
-    // TODO
     pub fn nvim_open_term(
         buffer: Buffer,
-        opts: *const OpenTermOpts,
+        opts: *mut OpenTermOpts,
         err: *mut Error,
     ) -> MaybeUninit<Integer>;
     pub fn nvim_paste<'a>(

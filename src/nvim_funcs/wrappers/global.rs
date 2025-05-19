@@ -441,7 +441,7 @@ pub fn load_context(ctx: &Dict) -> Result<Object, Error> {
     }
 }
 
-pub fn open_term(buf: Buffer, opts: &OpenTermOpts) -> Result<Integer, Error> {
+pub fn open_term(buf: Buffer, opts: &mut OpenTermOpts) -> Result<Integer, Error> {
     call_check();
     tri! {
         let mut err;
