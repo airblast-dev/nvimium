@@ -1,9 +1,11 @@
 use mlua_sys::{
-    LUA_REGISTRYINDEX, lua_State, lua_checkstack, lua_createtable, lua_newuserdata,
+    LUA_REGISTRYINDEX, lua_State, lua_checkstack, lua_createtable, lua_newuserdata, lua_pop,
     lua_pushcclosure, lua_pushcfunction, lua_setfield, lua_setmetatable, lua_touserdata,
     lua_upvalueindex, luaL_ref,
 };
 use thread_lock::init_lua_ptr;
+
+use crate::nvim_types::lua::core::FromLuaMany;
 
 use super::{FromLua, IntoLua};
 
@@ -12,11 +14,21 @@ fn closure_drop<F: Fn(A) -> R + Unpin, A: FromLua, R>() -> (
     extern "C-unwind" fn(*mut lua_State) -> i32,
     extern "C-unwind" fn(*mut lua_State) -> i32,
 ) {
-    extern "C-unwind" fn callback<F: Fn(A) -> R, A: FromLua, R>(l: *mut lua_State) -> i32 {
+    extern "C-unwind" fn callback<F: Fn(A) -> R, A: FromLuaMany, R>(l: *mut lua_State) -> i32 {
         // before calling init in case a jump happens
         let ud = unsafe { lua_touserdata(l, lua_upvalueindex(1)) } as *mut F;
         unsafe { init_lua_ptr(l) };
-        unsafe { thread_lock::scoped(|_| (ud.as_ref().unwrap())(A::pop(l).unwrap()), ()) };
+        unsafe {
+            thread_lock::scoped(
+                |_| {
+                    let mut to_pop = 0;
+                    let ret = (ud.as_ref().unwrap())(A::get(l, &mut to_pop).unwrap());
+                    lua_pop(l, to_pop);
+                    ret
+                },
+                (),
+            )
+        };
         0
     }
     extern "C-unwind" fn drop_fn<T: Fn(A) -> R, A: FromLua, R>(l: *mut lua_State) -> i32 {

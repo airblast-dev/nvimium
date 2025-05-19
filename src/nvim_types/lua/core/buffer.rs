@@ -1,3 +1,4 @@
+use libc::c_int;
 use mlua_sys::lua_pushinteger;
 
 use crate::nvim_types::{HandleT, Integer, buffer::Buffer, lua::LuaInteger};
@@ -5,8 +6,8 @@ use crate::nvim_types::{HandleT, Integer, buffer::Buffer, lua::LuaInteger};
 use super::{FromLua, FromLuaErr, IntoLua};
 
 impl FromLua for Buffer {
-    unsafe fn pop(l: *mut mlua_sys::lua_State) -> super::Result<Self> {
-        let int = unsafe { Integer::pop(l) }?;
+    unsafe fn get(l: *mut mlua_sys::lua_State, index: c_int, to_pop: &mut i32) -> super::Result<Self> {
+        let int = unsafe { Integer::get(l, index, to_pop) }?;
 
         Ok(Self(
             // buffer arg should be at most [`i32::MAX`] so exceeding that value would mean

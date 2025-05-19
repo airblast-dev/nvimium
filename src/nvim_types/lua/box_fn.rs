@@ -17,7 +17,7 @@ use thread_lock::{init_lua_ptr, unlock};
 
 use crate::nvim_types::String;
 
-use super::FromLua;
+use super::{core::FromLuaMany, FromLua};
 
 static FALLBACK_TYPE_NAME: &CStr = c"NVIMIUM FALLBACK CALLBACK ID";
 static TYPE_NAME: AtomicPtr<c_char> = AtomicPtr::new(FALLBACK_TYPE_NAME.as_ptr() as *mut c_char);
@@ -86,7 +86,7 @@ fn metatable_key(l: *mut lua_State) -> i32 {
 
 static KEY: OnceLock<i32> = OnceLock::new();
 
-pub fn register<F: 'static + Fn(A) -> R, A: FromLua, R>(l: *mut lua_State, f: F) -> i32 {
+pub fn register<F: 'static + Fn(A) -> R, A: FromLuaMany, R>(l: *mut lua_State, f: F) -> i32 {
     extern "C-unwind" fn call(l: *mut lua_State) -> i32 {
         // before calling init in case a jump happens
         let ud = unsafe { lua_touserdata(l, lua_upvalueindex(1)) };
@@ -114,8 +114,10 @@ pub fn register<F: 'static + Fn(A) -> R, A: FromLua, R>(l: *mut lua_State, f: F)
         // f must be moved or else it gets freed at the end of the scope
         let f: Box<dyn Fn(*mut lua_State)> = Box::new(move |l| {
             // instead of double boxing, get the args here
-            let arg = A::pop(l).unwrap();
+            let mut to_pop = 0;
+            let arg = A::get(l, &mut to_pop).unwrap();
             f(arg);
+            lua_pop(l, to_pop);
         });
 
         let ud = lua_newuserdata(l, size_of::<Box<dyn Fn(*mut lua_State)>>())

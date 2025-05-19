@@ -1,4 +1,4 @@
-use libc::c_char;
+use libc::{c_char, c_int};
 use mlua_sys::{LUA_TNONE, LUA_TSTRING, lua_pushlstring, lua_tolstring, lua_type};
 
 use crate::nvim_types::{AsThinString, OwnedThinString, ThinString};
@@ -14,17 +14,23 @@ impl ThinString<'static> {
     ///
     /// Only use internally as users are free to push and pop from the stack when using mlua inside
     /// callbacks
-    pub(crate) unsafe fn pop(l: *mut mlua_sys::lua_State) -> Result<Self> {
+    pub(crate) unsafe fn get(
+        l: *mut mlua_sys::lua_State,
+        index: c_int,
+        to_pop: &mut i32,
+    ) -> Result<Self> {
         unsafe {
-            let ty = lua_type(l, -1);
+            let ty = lua_type(l, index);
             if LUA_TNONE == ty {
                 return Err(FromLuaErr::NotFound);
             }
+
+            *to_pop += 1;
             if LUA_TSTRING != ty {
                 return Err(FromLuaErr::IncorrectType);
             }
             let mut len = 0;
-            let ptr = lua_tolstring(l, -1, &mut len);
+            let ptr = lua_tolstring(l, index, &mut len);
             let th: ThinString<'static> = ThinString::new(len, ptr);
             Ok(th)
         }
@@ -32,8 +38,8 @@ impl ThinString<'static> {
 }
 
 impl FromLua for OwnedThinString {
-    unsafe fn pop(l: *mut mlua_sys::lua_State) -> Result<Self> {
-        let th = unsafe { ThinString::pop(l) }?;
+    unsafe fn get(l: *mut mlua_sys::lua_State, index: c_int, to_pop: &mut i32) -> Result<Self> {
+        let th = unsafe { ThinString::get(l, index, to_pop) }?;
         Ok(Self::from(th))
     }
 }
