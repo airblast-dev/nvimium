@@ -1,5 +1,4 @@
 // TODO: replace meta fragments with ident to allow better comparison in macros?
-// TODO: derive Debug for better debug print output
 
 #[macro_export]
 macro_rules! masked_builder {

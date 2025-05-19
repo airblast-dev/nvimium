@@ -107,7 +107,6 @@ impl Object {
         }
     }
 
-    // TODO: complete this after adding lua integration
     pub fn into_luaref(self) -> Option<LuaRef> {
         match self {
             Self::LuaRef(lr) => Some(lr),
