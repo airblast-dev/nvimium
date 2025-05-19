@@ -1,6 +1,4 @@
-use mlua_sys::{lua_pop, lua_tolstring, lua_type, lua_typename};
-
-use crate::nvim_types::{Buffer, FromLua, Integer, String, ThinString, lua::core::FromLuaMany};
+use crate::nvim_types::{Buffer, FromLua, Integer, ThinString, lua::core::FromLuaMany};
 
 pub struct OpenTermOnInputArgs<'a> {
     pub src: ThinString<'a>,

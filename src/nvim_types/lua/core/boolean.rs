@@ -1,7 +1,5 @@
 use libc::c_int;
-use mlua_sys::{
-    LUA_TNONE, lua_checkstack, lua_getstack, lua_gettop, lua_pushboolean, lua_toboolean, lua_type,
-};
+use mlua_sys::{LUA_TNONE, lua_checkstack, lua_pushboolean, lua_toboolean, lua_type};
 
 use crate::nvim_types::Boolean;
 
