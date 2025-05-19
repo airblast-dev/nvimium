@@ -24,7 +24,8 @@ impl ThinString<'static> {
                 return Err(FromLuaErr::IncorrectType);
             }
             let mut len = 0;
-            let th: ThinString<'static> = ThinString::new(len, lua_tolstring(l, -1, &mut len));
+            let ptr = lua_tolstring(l, -1, &mut len);
+            let th: ThinString<'static> = ThinString::new(len, ptr);
             Ok(th)
         }
     }
