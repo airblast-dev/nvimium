@@ -8,6 +8,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 nvimium = { path = "../../" }
+anyhow = "1.0.98"
 
 [features]
 # You will definitely want to add a testing feature gate to avoid terrible compile times

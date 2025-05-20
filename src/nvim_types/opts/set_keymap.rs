@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::mem::MaybeUninit;
 
 use crate::masked_builder;
@@ -23,7 +24,10 @@ masked_builder! {
 }
 
 impl<'a> SetKeymapOpts<'a> {
-    pub fn callback<F: 'static + Fn(()) + Unpin>(&mut self, f: F) -> &mut Self {
+    pub fn callback<E: 'static + Error>(
+        &mut self,
+        f: impl 'static + Unpin + Fn(()) -> Result<(), E>,
+    ) -> &mut Self {
         let lref = Function::wrap(f).into_luaref();
         const CB_MASK: u64 = 1 << 8;
         if self.mask & CB_MASK == CB_MASK {

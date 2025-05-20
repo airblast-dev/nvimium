@@ -12,6 +12,8 @@ mod string;
 mod tabpage;
 mod window;
 
+use std::{error::Error, fmt::Display};
+
 use libc::c_int;
 use mlua_sys::{lua_State, lua_pop, lua_pushnil};
 
@@ -45,6 +47,18 @@ pub enum FromLuaErr {
     NotFound,
     IncorrectType,
 }
+
+impl Display for FromLuaErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Self::NotFound => "field not found",
+            Self::IncorrectType => "incorrect lua type found",
+        };
+        write!(f, "{}", s)
+    }
+}
+
+impl Error for FromLuaErr {}
 
 impl<T: FromLua> FromLua for Option<T> {
     unsafe fn get(l: *mut lua_State, index: c_int, to_pop: &mut i32) -> Result<Self> {
