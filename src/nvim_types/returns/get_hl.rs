@@ -1,6 +1,4 @@
-use crate::nvim_types::{
-    Boolean, Dict, KVec, KeyValuePair, Object, OwnedThinString, String, ThinString,
-};
+use crate::nvim_types::{Boolean, Dict, KVec, KeyValuePair, Object, OwnedThinString, ThinString};
 // my lord this is ugly
 // at least it provides a flexible API and allows for a sane deallocation strategy
 // though maybe a closure and a &Dict arg is better? (in practice its a unwrap and condition check
@@ -158,6 +156,8 @@ impl HighlightAttributes {
         }
     }
 
+    // we arent fully stable on the internal details of this should be an owned or ref value.
+    // in case we want to provide a reference in the future return a ThinString
     pub fn link(&self) -> Option<ThinString<'_>> {
         if self.attr_map & (Self::LAST_SET << 4) == Self::LAST_SET << 4 {
             Some(self.link.as_thinstr())
@@ -181,7 +181,7 @@ impl HighlightAttributes {
             None
         }
     }
-    
+
     pub fn cterm_bg(&self) -> Option<[u8; 3]> {
         if self.attr_map & (Self::LAST_SET << 7) == Self::LAST_SET << 7 {
             Some(self.cterm_background)
@@ -250,7 +250,7 @@ impl HighlightAttributes {
             attr_map |= last_bit;
             link = s.clone();
         } else {
-            link = String::default().into();
+            link = OwnedThinString::default();
         }
 
         last_bit <<= 1;
