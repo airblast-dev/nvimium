@@ -1,8 +1,10 @@
 use std::ffi::c_void;
 
+use thread_lock::call_check;
+
 // arena_alloc_block for allocating
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Arena {
     cur_blk: *mut libc::c_char,
     pos: libc::size_t,
@@ -17,12 +19,24 @@ impl Arena {
     };
 }
 
+impl Drop for Arena {
+    fn drop(&mut self) {
+        // SAFETY: we are mutating a neovim static in arena_finish, we must have execution yielded
+        // in order to drop this
+        //
+        // it might make more sense to just leak instead of a panic but the allocated space of 
+        // arena's are somewhat large
+        call_check();
+        unsafe { arena_finish(self) };
+    }
+}
+
 #[repr(C)]
 #[derive(Clone)]
 pub struct ArenaMem(*mut Self);
 
-impl ArenaMem {
-    unsafe fn drop(&mut self) {
+impl Drop for ArenaMem {
+    fn drop(&mut self) {
         unsafe { arena_mem_free(self.clone()) };
     }
 }
