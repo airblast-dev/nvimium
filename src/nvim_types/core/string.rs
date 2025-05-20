@@ -791,6 +791,12 @@ impl Clone for OwnedThinString {
     }
 }
 
+impl Default for OwnedThinString {
+    fn default() -> Self {
+        String::default().into()
+    }
+}
+
 impl OwnedThinString {
     pub fn as_thinstr<'a>(&'a self) -> ThinString<'a> {
         if self.0.data.is_null() {
