@@ -17,7 +17,7 @@ fn term_keys() -> Result<(), Box<dyn Error>> {
             echo(
                 &Echo::message(args.data),
                 true,
-                EchoOpts::default().err(true),
+                &EchoOpts::default(),
             )
             .unwrap();
         }),
