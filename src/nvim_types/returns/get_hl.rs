@@ -1,4 +1,6 @@
-use crate::nvim_types::{Boolean, Dict, KVec, KeyValuePair, Object, OwnedThinString, String, ThinString};
+use crate::nvim_types::{
+    Boolean, Dict, KVec, KeyValuePair, Object, OwnedThinString, String, ThinString,
+};
 // my lord this is ugly
 // at least it provides a flexible API and allows for a sane deallocation strategy
 // though maybe a closure and a &Dict arg is better? (in practice its a unwrap and condition check
@@ -118,6 +120,8 @@ pub struct HighlightAttributes {
     foreground: [u8; 3],
     background: [u8; 3],
     special: [u8; 3],
+    cterm_foreground: [u8; 3],
+    cterm_background: [u8; 3],
     blend: u8,
 }
 
@@ -131,7 +135,7 @@ impl HighlightAttributes {
     }
 
     pub fn background(&self) -> Option<[u8; 3]> {
-        if self.attr_map & ( Self::LAST_SET << 1 ) == Self::LAST_SET << 1 {
+        if self.attr_map & (Self::LAST_SET << 1) == Self::LAST_SET << 1 {
             Some(self.background)
         } else {
             None
@@ -139,7 +143,7 @@ impl HighlightAttributes {
     }
 
     pub fn special(&self) -> Option<[u8; 3]> {
-        if self.attr_map & ( Self::LAST_SET << 2 ) == Self::LAST_SET << 2 {
+        if self.attr_map & (Self::LAST_SET << 2) == Self::LAST_SET << 2 {
             Some(self.special)
         } else {
             None
@@ -163,8 +167,24 @@ impl HighlightAttributes {
     }
 
     pub fn cterm_attributes(&self) -> Option<&HighlightCtermAttributes> {
-        if self.attr_map & ( Self::LAST_SET << 5) == Self::LAST_SET << 5 {
+        if self.attr_map & (Self::LAST_SET << 5) == Self::LAST_SET << 5 {
             Some(&self.cterm_attributes)
+        } else {
+            None
+        }
+    }
+
+    pub fn cterm_fg(&self) -> Option<[u8; 3]> {
+        if self.attr_map & (Self::LAST_SET << 6) == Self::LAST_SET << 6 {
+            Some(self.cterm_foreground)
+        } else {
+            None
+        }
+    }
+    
+    pub fn cterm_bg(&self) -> Option<[u8; 3]> {
+        if self.attr_map & (Self::LAST_SET << 7) == Self::LAST_SET << 7 {
+            Some(self.cterm_background)
         } else {
             None
         }
@@ -177,8 +197,13 @@ impl HighlightAttributes {
         // exists. each bit means a field was set/found. For boolean values a macro above generates
         // the methods and creates `collect_attributes`. for non bool values we handle them
         // manually.
+        //
+        // the C api only returns shorthands, in the rare case it doesn't, check for the long name
         let foreground;
-        if let Some(Object::Integer(fg)) = d.get(c"foreground") {
+        if let Some(Object::Integer(fg)) = d.get(c"fg").or_else(
+            #[cold]
+            || d.get(c"foreground"),
+        ) {
             let fg = *fg;
             foreground = [(fg >> 16) as u8, (fg >> 8) as u8, fg as u8];
             attr_map |= last_bit;
@@ -187,7 +212,10 @@ impl HighlightAttributes {
         }
         last_bit <<= 1;
         let background;
-        if let Some(Object::Integer(bg)) = d.get(c"background") {
+        if let Some(Object::Integer(bg)) = d.get(c"bg").or_else(
+            #[cold]
+            || d.get(c"background"),
+        ) {
             let bg = *bg;
             background = [(bg >> 16) as u8, (bg >> 8) as u8, bg as u8];
             attr_map |= last_bit;
@@ -196,7 +224,10 @@ impl HighlightAttributes {
         }
         let special;
         last_bit <<= 1;
-        if let Some(Object::Integer(sp)) = d.get(c"special") {
+        if let Some(Object::Integer(sp)) = d.get(c"sp").or_else(
+            #[cold]
+            || d.get(c"special"),
+        ) {
             attr_map |= last_bit;
             let rgb = *sp;
             special = [(rgb >> 16) as u8, (rgb >> 8) as u8, rgb as u8]
@@ -206,7 +237,7 @@ impl HighlightAttributes {
 
         last_bit <<= 1;
         let blend;
-        if let Some(Object::Integer(bl)) = d.get(c"blend") {
+        if let Some(Object::Integer(bl @ 0..=100)) = d.get(c"blend") {
             attr_map |= last_bit;
             blend = *bl as u8;
         } else {
@@ -231,6 +262,26 @@ impl HighlightAttributes {
             cterm_attributes = HighlightCtermAttributes::default();
         }
 
+        last_bit <<= 1;
+        let cterm_foreground;
+        if let Some(Object::Integer(ctermfg)) = d.get(c"ctermfg") {
+            attr_map |= last_bit;
+
+            cterm_foreground = [(ctermfg >> 16) as u8, (ctermfg >> 8) as u8, *ctermfg as u8];
+        } else {
+            cterm_foreground = [0; 3];
+        }
+
+        last_bit <<= 1;
+        let cterm_background;
+        if let Some(Object::Integer(ctermbg)) = d.get(c"ctermbg") {
+            attr_map |= last_bit;
+
+            cterm_background = [(ctermbg >> 16) as u8, (ctermbg >> 8) as u8, *ctermbg as u8];
+        } else {
+            cterm_background = [0; 3];
+        }
+
         Self {
             attr_map,
             foreground,
@@ -239,6 +290,8 @@ impl HighlightAttributes {
             blend,
             link,
             cterm_attributes,
+            cterm_foreground,
+            cterm_background,
         }
     }
 }
