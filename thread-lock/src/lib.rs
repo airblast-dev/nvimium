@@ -86,7 +86,6 @@ pub fn call_check() {
         yeet();
     }
 
-    //
     if MAIN_LUA.load(Ordering::Relaxed).is_null() {
         #[cold]
         #[inline(never)]
