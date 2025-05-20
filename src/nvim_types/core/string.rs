@@ -744,7 +744,7 @@ pub enum ThinStringError {
 /// Compared to [`std`] this is similar to a [`Box<str>`] where the capacity is unknown.
 ///
 /// This type is guaranteed to have the same layout as [`ThinString`]. It is also the type stored
-/// in [`super::array::Array`] and [`super::dictionary::Dictionary`].
+/// in [`super::array::Array`] and [`super::dictionary::Dict`].
 // TODO: add more info
 #[repr(transparent)]
 #[derive(Debug, Eq)]
