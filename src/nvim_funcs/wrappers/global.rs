@@ -45,12 +45,6 @@ pub fn del_current_line() -> Result<(), Error> {
 }
 
 pub fn del_keymap<S: AsThinString>(map_mode: KeyMapMode, lhs: S) -> Result<(), Error> {
-    // TODO: passing a keymap with a callback and then deleting and ends up with a memory leak
-    //
-    // For some reasons nvim_del_keymap passes a null pointer of options resulting in the lua
-    // callback not being read. Because of that the lua ref is never found or freed.
-    // Instead of locating the keymap and callback it just leaves it? Not really sure how this is
-    // supposed to free any lua ref under any situation to be honest.
     call_check();
     tri! {
         let mut err;
@@ -237,7 +231,6 @@ pub fn get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<HighlightGroups, Error>
         let mut err;
         unsafe { global::nvim_get_hl(ns, opts, &mut arena, &mut err) },
         Ok(dict) => {
-            // TODO: might be leaking some memory here
             let dict = ManuallyDrop::new(unsafe { dict.assume_init_ref() });
             let res = HighlightGroups::from_c_func_ret(&dict);
 
