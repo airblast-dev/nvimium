@@ -1,6 +1,6 @@
 use crate::{
     nvim_funcs::c_funcs::global,
-    nvim_types::{Arena, arena_finish, arena_mem_free},
+    nvim_types::{Arena, arena_finish, arena_mem_free, returns::get_hl::HighlightGroups},
 };
 use std::{mem::ManuallyDrop, ops::DerefMut};
 
@@ -230,21 +230,19 @@ pub fn get_current_win() -> Window {
     unsafe { global::nvim_get_current_win() }
 }
 
-pub fn get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<Dict, Error> {
+pub fn get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<HighlightGroups, Error> {
     call_check();
+    let mut arena = Arena::EMPTY;
     tri! {
         let mut err;
-        unsafe { global::nvim_get_hl(ns, opts, core::ptr::null_mut(), &mut err) },
+        unsafe { global::nvim_get_hl(ns, opts, &mut arena, &mut err) },
         Ok(dict) => {
             // TODO: might be leaking some memory here
-            let mut dict = ManuallyDrop::new(unsafe { dict.assume_init() });
-            let res = Ok(ManuallyDrop::into_inner(dict.clone()));
-            unsafe {
-                dict.0.set_len(0);
-                ManuallyDrop::drop(&mut dict);
-            };
+            let dict = ManuallyDrop::new(unsafe { dict.assume_init_ref() });
+            let res = HighlightGroups::from_c_func_ret(&dict);
 
-            res
+
+            Ok(res)
         }
     }
 }
