@@ -1,3 +1,4 @@
+use nvimium::nvim_types::Error as NvError;
 use std::error::Error;
 
 use nvimium::{
@@ -13,13 +14,9 @@ fn term_keys() -> Result<(), Box<dyn Error>> {
     let buf = create_buf(true, false)?;
     open_term(
         buf,
-        OpenTermOpts::default().on_input(|args| {
-            echo(
-                &Echo::message(args.data),
-                true,
-                &EchoOpts::default(),
-            )
-            .unwrap();
+        // add a callback that prints the key pressed in this terminal
+        OpenTermOpts::default().on_input::<NvError>(|args| {
+            echo(&Echo::message(args.data), true, &EchoOpts::default())
         }),
     )?;
     set_current_buf(buf)?;

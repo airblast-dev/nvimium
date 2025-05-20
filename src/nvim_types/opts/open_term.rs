@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::mem::MaybeUninit;
 
 use crate::masked_builder;
@@ -17,9 +18,9 @@ masked_builder! {
 }
 
 impl OpenTermOpts {
-    pub fn on_input<F: 'static + for<'a> Fn(OpenTermOnInputArgs<'a>) + Unpin>(
+    pub fn on_input<E: 'static + Error>(
         &mut self,
-        f: F,
+        f: impl 'static + for<'a> Fn(OpenTermOnInputArgs<'a>) -> Result<(), E> + Unpin,
     ) -> &mut Self {
         let cb = Function::wrap(f);
         if self.mask & 2 == 2 {

@@ -1,5 +1,6 @@
 use core::ffi::c_char;
 use std::{
+    error::Error,
     ffi::CStr,
     sync::{
         OnceLock,
@@ -7,15 +8,16 @@ use std::{
     },
 };
 
+use libc::c_int;
 use mlua_sys::{
     LUA_REGISTRYINDEX, lua_State, lua_checkstack, lua_newuserdata, lua_pop, lua_pushcclosure,
-    lua_pushcfunction, lua_rawgeti, lua_setfield, lua_setmetatable, lua_touserdata,
-    lua_upvalueindex, luaL_newmetatable, luaL_ref,
+    lua_pushcfunction, lua_pushlightuserdata, lua_rawgeti, lua_setfield, lua_setmetatable,
+    lua_tolightuserdata, lua_touserdata, lua_upvalueindex, luaL_newmetatable, luaL_ref,
 };
 use rand::{SeedableRng, distr::Distribution, rngs::SmallRng};
 use thread_lock::init_lua_ptr;
 
-use crate::nvim_types::String;
+use crate::nvim_types::{String, lua::utils::handle_callback_err_ret};
 
 use super::core::FromLuaMany;
 
@@ -86,25 +88,27 @@ fn metatable_key(l: *mut lua_State) -> i32 {
 
 static KEY: OnceLock<i32> = OnceLock::new();
 
-pub fn register<F: 'static + Fn(A) -> R, A: FromLuaMany, R>(l: *mut lua_State, f: F) -> i32 {
+pub fn register<E: Error, F: 'static + Fn(A) -> Result<R, E>, A: FromLuaMany, R>(
+    l: *mut lua_State,
+    f: F,
+) -> i32 {
     extern "C-unwind" fn call(l: *mut lua_State) -> i32 {
         // before calling init in case a jump happens
-        let ud = unsafe { lua_touserdata(l, lua_upvalueindex(1)) };
-        unsafe { init_lua_ptr(l) };
-        let cb: &dyn Fn(*mut lua_State) = unsafe {
-            (ud as *mut Box<dyn Fn(*mut lua_State)>)
-                .as_ref()
-                .expect("registered closure's userdata pointer is null")
-        };
         unsafe {
-            thread_lock::scoped(
-                move |_| {
-                    (cb)(l);
-                },
-                (),
-            )
-        };
-        0
+            // sanity check: check if our user data is actually the one associated with the closure
+            // by comparing the associated `typename`
+            assert!(core::ptr::addr_eq(
+                lua_tolightuserdata(l, lua_upvalueindex(2)),
+                type_name()
+            ));
+            let ud = lua_touserdata(l, lua_upvalueindex(1));
+            init_lua_ptr(l);
+            let cb: &dyn Fn(*mut lua_State) -> c_int =
+                (ud as *mut Box<dyn Fn(*mut lua_State) -> c_int>)
+                    .as_ref()
+                    .expect("registered closure's userdata pointer is null");
+            thread_lock::scoped(cb, l)
+        }
     }
     unsafe {
         if lua_checkstack(l, 2) == 0 {
@@ -112,28 +116,47 @@ pub fn register<F: 'static + Fn(A) -> R, A: FromLuaMany, R>(l: *mut lua_State, f
         }
 
         // f must be moved or else it gets freed at the end of the scope
-        let f: Box<dyn Fn(*mut lua_State)> = Box::new(move |l| {
-            // instead of double boxing, get the args here
+        let f: Box<dyn Fn(*mut lua_State) -> c_int> = Box::new(move |l| {
             let mut to_pop = 0;
-            let arg = A::get(l, &mut to_pop).unwrap();
-            f(arg);
+            let arg = match A::get(l, &mut to_pop) {
+                Ok(arg) => arg,
+                Err(err) => {
+                    handle_callback_err_ret(l, &err);
+                    return 0;
+                }
+            };
+            let ret = f(arg);
             lua_pop(l, to_pop);
+            match ret {
+                Ok(r) => 0,
+                Err(err) => {
+                    handle_callback_err_ret(l, &err);
+                    0
+                }
+            }
         });
 
-        let ud = lua_newuserdata(l, size_of::<Box<dyn Fn(*mut lua_State)>>())
-            as *mut Box<dyn Fn(*mut lua_State)>;
+        let ud = lua_newuserdata(l, size_of::<Box<dyn Fn(*mut lua_State) -> c_int>>())
+            as *mut Box<dyn Fn(*mut lua_State) -> c_int>;
         ud.write(f);
         let mt_key = metatable_key(l);
         lua_rawgeti(l, LUA_REGISTRYINDEX, mt_key.into());
         lua_setmetatable(l, -2);
 
-        lua_pushcclosure(l, call, 1);
+        // we associate the function identifier with the closure
+        // later we check if the pointer is the same in the function call
+        lua_pushlightuserdata(l, type_name() as *mut _);
+
+        lua_pushcclosure(l, call, 2);
         luaL_ref(l, LUA_REGISTRYINDEX)
     }
 }
 
 extern "C-unwind" fn drop_fn<D: Unpin>(l: *mut lua_State) -> i32 {
     let ud = unsafe { lua_touserdata(l, -1) } as *mut D;
-    unsafe { ud.drop_in_place() };
+    debug_assert!(!ud.is_null());
+    if !ud.is_null() {
+        unsafe { ud.drop_in_place() };
+    }
     0
 }

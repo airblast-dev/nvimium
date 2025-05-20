@@ -1,4 +1,5 @@
 use std::error::Error;
+use nvimium::nvim_types::Error as NvError;
 
 use nvimium::{
     nvim_funcs::global::{del_keymap, echo, set_keymap},
@@ -14,13 +15,15 @@ fn once_off_keymaps() -> Result<(), Box<dyn Error>> {
         KeyMapMode::INSERT,
         c"1",
         c"",
-        SetKeymapOpts::default().callback(move |_| {
-            let _ = echo(
+        // The error type must be specified to use the "?" operator
+        SetKeymapOpts::default().callback::<NvError>(move |_| {
+            echo(
                 &Echo::message("Pressed 1\nShould be called once."),
                 true,
                 EchoOpts::default().err(true),
-            );
-            let _ = del_keymap(KeyMapMode::INSERT, c"1");
+            )?;
+            del_keymap(KeyMapMode::INSERT, c"1")?;
+            Ok(())
         }),
     )?;
     Ok(())
