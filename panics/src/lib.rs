@@ -2,6 +2,7 @@
 #[inline(never)]
 #[track_caller]
 pub fn alloc_failed() -> ! {
+    // TODO: maybe use [`std::alloc::handle_alloc_error`]
     panic!("unable to allocate memory")
 }
 
