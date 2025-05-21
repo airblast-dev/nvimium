@@ -22,6 +22,7 @@ use thread_lock::can_call;
 #[derive(Default)]
 pub struct NvAllocator {
     alloc: System,
+    #[allow(unused)]
     preserve_exit: bool,
 }
 
