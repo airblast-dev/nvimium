@@ -103,6 +103,7 @@ pub fn call_check() {
 
 /// Same as [`call_check`] except it returns a bool value indicating if it is safe to call a neovim
 /// function
+#[inline(always)]
 pub fn can_call() -> bool {
     HAS_ACCESS.get() && !MAIN_LUA.load(Ordering::Relaxed).is_null()
 }
