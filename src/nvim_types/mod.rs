@@ -1,6 +1,6 @@
 extern crate alloc;
 
-mod nvalloc;
+pub(crate) mod nvalloc;
 
 pub mod args;
 pub mod arena;
