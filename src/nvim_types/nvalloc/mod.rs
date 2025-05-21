@@ -17,40 +17,6 @@ use panics::alloc_failed;
 #[cfg(not(any(miri, test)))]
 use thread_lock::can_call;
 
-struct AllocLock;
-impl Drop for AllocLock {
-    fn drop(&mut self) {
-        release();
-    }
-}
-static ALLOC_LOCK: AtomicBool = AtomicBool::new(false);
-
-/// Acquires a lock to allocate
-///
-/// Improves platform support where the allocator is not thread safe, and allows us to call
-/// recovery function inside neovim safely.
-#[inline(always)]
-fn wait_lock() -> AllocLock {
-    while ALLOC_LOCK.swap(true, Ordering::SeqCst) {
-        cold();
-        #[cold]
-        #[inline(never)]
-        fn cold() {}
-        core::hint::spin_loop();
-    }
-
-    AllocLock
-}
-
-/// Manually releases the lock
-///
-/// It isn't a requirement to call this but it allows us to release the lock early allowing for
-/// shorter blocks in other threads.
-#[inline(always)]
-pub fn release() {
-    ALLOC_LOCK.store(false, Ordering::SeqCst);
-}
-
 #[inline]
 pub(crate) fn real_size(size: size_t, count: size_t) -> size_t {
     size.checked_mul(count).unwrap()
@@ -66,15 +32,11 @@ pub unsafe fn xmalloc(size: size_t, count: size_t) -> NonNull<c_void> {
         cold();
         return NonNull::dangling();
     }
-    let _lock = wait_lock();
-
     #[allow(unused_mut)]
     let mut ptr = unsafe { malloc(real_size) };
-    release();
     #[cfg(not(any(miri, test)))]
     if ptr.is_null() && can_call() {
         unsafe {
-            let _lock = wait_lock();
             try_to_free_memory();
             ptr = malloc(real_size);
         }
@@ -95,7 +57,6 @@ pub unsafe fn xrealloc(
 ) -> NonNull<c_void> {
     let real_size = real_size(size, new_cap);
 
-    let _lock = wait_lock();
     if real_size == 0 {
         if old_cap != 0 {
             unsafe {
@@ -108,14 +69,12 @@ pub unsafe fn xrealloc(
     let ptr = unsafe {
         #[allow(unused_mut)]
         let mut new_ptr = libc::realloc(ptr, real_size);
-        release();
 
         // we couldnt allocate memory and execution is yielded to us
         // tell neovim to free up some memory and try allocating again
         #[cfg(not(any(miri, test)))]
         if new_ptr.is_null() && can_call() {
             {
-                let _lock = wait_lock();
                 try_to_free_memory();
                 new_ptr = libc::realloc(ptr, real_size);
             }
