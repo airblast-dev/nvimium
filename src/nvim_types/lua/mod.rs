@@ -69,24 +69,35 @@ impl Function {
         self.0
     }
 
-    /// Wraps the provided function and returns a [`Function`] that stores the key to the lua registry
+    /// Wraps the provided function and passes it to Lua
     ///
-    /// The provided function will be attempted to be downcasted to a function pointer for cheaper
-    /// initialization and drops.
+    /// [`Function::wrap`] will pass the function to Lua and return a [`Function`] containing the
+    /// Lua reference.
     pub fn wrap<
         A: 'static + FromLuaMany,
         R: 'static + IntoLua,
         E: 'static + Error,
-        F: 'static + Fn(A) -> Result<R, E> + Unpin,
+        F: 'static + Fn(A) -> Result<R, E>,
     >(
         f: F,
     ) -> Self {
-        // if F is a function pointer we can avoid dynamic dispatch, an extra indirection and the drop
-        // call passed to lua (we can use lightuserdata)
-        if let Some(f) = (&f as &dyn Any).downcast_ref::<fn(A) -> Result<R, E>>() {
-            Self::from_fn_ptr(*f)
-        } else {
-            Self::from_box_fn(f)
-        }
+        Self::from_box_fn(f)
+    }
+
+    /// Wraps the provided function pointer and passes it to Lua
+    ///
+    /// [`Function::wrap_ptr`] will pass the function pointer to Lua and return a [`Function`]
+    /// containing the Lua reference.
+    ///
+    /// Compared to [`Function::wrap`] this is a better performing solution due to the following
+    /// reasons:
+    /// - No allocation when passing the function
+    /// - A single indirection from Lua to our Rust function
+    /// - More efficient drop handling in Lua (only really matters if its passed and destroyed often)
+    /// - No dynamic dispatch
+    pub fn wrap_ptr<A: 'static + FromLuaMany, R: 'static + IntoLua, E: 'static + Error>(
+        f: fn(A) -> Result<R, E>,
+    ) -> Self {
+        Self::from_fn_ptr(f)
     }
 }
