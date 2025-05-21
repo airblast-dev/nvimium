@@ -11,7 +11,7 @@ use std::{
 use libc::{c_char, malloc, size_t};
 
 #[cfg(not(any(miri, test)))]
-use nvdefs::{E_OUTOFMEM, preserve_exit, try_to_free_memory};
+pub(crate) use nvdefs::{E_OUTOFMEM, preserve_exit, try_to_free_memory};
 use panics::alloc_failed;
 
 #[cfg(not(any(miri, test)))]
