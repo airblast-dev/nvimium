@@ -52,7 +52,7 @@ pub fn release() {
 }
 
 #[inline]
-pub fn real_size(size: size_t, count: size_t) -> size_t {
+pub(crate) fn real_size(size: size_t, count: size_t) -> size_t {
     size.checked_mul(count).unwrap()
 }
 
