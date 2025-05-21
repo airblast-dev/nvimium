@@ -1,9 +1,8 @@
-
-#[cfg(not(any(miri, test)))]
-use thread_lock::can_call;
 #[cfg(not(any(miri, test)))]
 use crate::nvim_types::nvalloc::try_to_free_memory;
 use std::alloc::{GlobalAlloc, System};
+#[cfg(not(any(miri, test)))]
+use thread_lock::can_call;
 
 /// A wrapper around [`std::alloc::System`] that reclaims extra memory used by Neovim
 ///
@@ -24,11 +23,12 @@ use std::alloc::{GlobalAlloc, System};
 #[derive(Default)]
 pub struct NvAllocator {
     alloc: System,
+    preserve_exit: bool,
 }
 
 impl NvAllocator {
-    pub const fn new() -> Self {
-        Self { alloc: System }
+    pub const fn new(preserve_exit: bool) -> Self {
+        Self { alloc: System, preserve_exit }
     }
 }
 
