@@ -7,7 +7,7 @@ pub mod nvim_funcs;
 pub mod allocator;
 
 #[global_allocator]
-static GLOBAL: NvAllocator = NvAllocator::new(true);
+static GLOBAL_ALLOCATOR: NvAllocator = NvAllocator::new(true);
 
 #[cfg(feature = "testing")]
 pub use nvim_test_macro;
