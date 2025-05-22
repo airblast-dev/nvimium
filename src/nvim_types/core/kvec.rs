@@ -5,9 +5,9 @@ use core::{
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
 };
-use std::ffi::c_void;
+use std::alloc::{GlobalAlloc, Layout, handle_alloc_error};
 
-use crate::nvim_types::nvalloc::{xfree, xmalloc, xrealloc};
+use crate::{GLOBAL_ALLOCATOR, allocator::NvAllocator};
 use panics::slice_error;
 
 unsafe impl<T> Sync for KVec<T> where T: Sync {}
@@ -147,7 +147,12 @@ impl<T> KVec<T> {
     /// This function is guaranteed to at least allocate for `capacity` elements.
     pub fn with_capacity(capacity: usize) -> Self {
         // We shouldn't be storing ZST's in any use case, but if we do, just return a dangling pointer.
-        let ptr = unsafe { xmalloc(size_of::<T>(), capacity) }.as_ptr() as *mut T;
+        let layout = Layout::array::<T>(capacity).unwrap();
+        let ptr = unsafe { NvAllocator::new(true).alloc(Layout::array::<T>(capacity).unwrap()) }
+            as *mut T;
+        if ptr.is_null() {
+            handle_alloc_error(layout);
+        }
 
         Self {
             len: 0,
@@ -229,14 +234,13 @@ impl<T> KVec<T> {
     fn realloc(&mut self, new_capacity: usize) {
         if self.capacity() != new_capacity {
             self.ptr = unsafe {
-                xrealloc(
-                    self.ptr as *mut c_void,
-                    size_of::<T>(),
-                    self.capacity(),
-                    new_capacity,
-                )
-            }
-            .as_ptr() as *mut T;
+                GLOBAL_ALLOCATOR.realloc(
+                    self.ptr as _,
+                    // SAFETY: already validated during allocation
+                    Layout::array::<T>(self.capacity()).unwrap_unchecked(),
+                    Layout::array::<T>(new_capacity).unwrap().size(),
+                ) as *mut T
+            };
         }
         self.capacity = new_capacity;
     }
@@ -510,7 +514,10 @@ impl<T> Drop for Iter<T> {
                 )
                 .drop_in_place();
             }
-            xfree(self.start_ptr as *mut c_void, self.capacity);
+            crate::GLOBAL_ALLOCATOR.dealloc(
+                self.start_ptr as _,
+                Layout::array::<T>(self.capacity).unwrap_unchecked(),
+            );
         }
     }
 }
@@ -545,7 +552,10 @@ impl<T> Drop for KVec<T> {
             // null
             if cap > 0 {
                 core::ptr::slice_from_raw_parts_mut(self.as_ptr(), len).drop_in_place();
-                xfree(self.ptr as *mut c_void, cap);
+                GLOBAL_ALLOCATOR.dealloc(
+                    self.ptr as _,
+                    Layout::array::<T>(self.capacity()).unwrap_unchecked(),
+                );
             }
         }
     }
