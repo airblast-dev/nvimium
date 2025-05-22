@@ -118,6 +118,10 @@ pub fn eval_statusline<S: AsThinString>(
 
 /// Execute a lua script
 ///
+/// # Warning
+///
+/// This function is recommended to only be used in tests.
+///
 /// The returned [`Object`] has some limitations:
 /// - If the [`Object`] contains a buffer, window or tabpage handle it will be returned as an
 ///   integer.
@@ -177,7 +181,6 @@ pub fn get_color_map() -> ColorMap {
         let mut color_dict = unsafe { global::nvim_get_color_map(&mut arena) };
         let cm = ColorMap::from_c_func_ret(color_dict.deref_mut());
         assert_eq!(color_dict.len(), 0);
-        unsafe { arena_mem_free(arena_finish(&mut arena)) };
         cm
     } else {
         ColorMap::initialized()
