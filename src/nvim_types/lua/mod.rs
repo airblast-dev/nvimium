@@ -24,7 +24,7 @@ pub use box_fn::set_callback_name;
 
 use core::FromLuaMany;
 pub use core::{FromLua, IntoLua};
-use std::{any::Any, error::Error};
+use std::error::Error;
 
 #[doc(hidden)]
 pub use mlua_sys::lua_State;
@@ -33,9 +33,9 @@ use thread_lock::get_lua_ptr;
 use crate::nvim_types::LuaRef;
 
 #[cfg(target_pointer_width = "32")]
-type LuaInteger = i32;
+pub(crate) type LuaInteger = i32;
 #[cfg(target_pointer_width = "64")]
-type LuaInteger = i64;
+pub(crate) type LuaInteger = i64;
 
 #[repr(transparent)]
 pub struct Function(LuaRef);
