@@ -5,9 +5,12 @@ use core::{
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
 };
-use std::alloc::{GlobalAlloc, Layout, handle_alloc_error};
+use std::{
+    alloc::{GlobalAlloc, Layout, handle_alloc_error},
+    ptr::NonNull,
+};
 
-use crate::{GLOBAL_ALLOCATOR, allocator::NvAllocator};
+use crate::GLOBAL_ALLOCATOR;
 use panics::slice_error;
 
 unsafe impl<T> Sync for KVec<T> where T: Sync {}
@@ -148,8 +151,11 @@ impl<T> KVec<T> {
     pub fn with_capacity(capacity: usize) -> Self {
         // We shouldn't be storing ZST's in any use case, but if we do, just return a dangling pointer.
         let layout = Layout::array::<T>(capacity).unwrap();
-        let ptr = unsafe { NvAllocator::new(true).alloc(Layout::array::<T>(capacity).unwrap()) }
-            as *mut T;
+        let ptr = if size_of::<T>() > 0 && capacity > 0 {
+            (unsafe { GLOBAL_ALLOCATOR.alloc(layout) } as *mut T)
+        } else {
+            NonNull::dangling().as_ptr()
+        };
         if ptr.is_null() {
             handle_alloc_error(layout);
         }
@@ -552,10 +558,7 @@ impl<T> Drop for KVec<T> {
             // null
             if cap > 0 {
                 core::ptr::slice_from_raw_parts_mut(self.as_ptr(), len).drop_in_place();
-                GLOBAL_ALLOCATOR.dealloc(
-                    self.ptr as _,
-                    Layout::array::<T>(self.capacity()).unwrap_unchecked(),
-                );
+                GLOBAL_ALLOCATOR.dealloc(self.ptr as _, Layout::array::<T>(cap).unwrap_unchecked());
             }
         }
     }
