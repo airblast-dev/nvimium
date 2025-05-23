@@ -9,7 +9,7 @@ use super::LuaRefT;
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq)]
-pub struct LuaRef(LuaRefT, PhantomData<*mut LuaRefT>);
+pub struct LuaRef(pub(crate) LuaRefT, PhantomData<*mut LuaRefT>);
 
 /// # Panics
 ///
