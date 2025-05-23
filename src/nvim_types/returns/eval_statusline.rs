@@ -3,7 +3,7 @@ use std::mem::ManuallyDrop;
 use crate::nvim_types::{Array, Dict, Integer, KVec, string::OwnedThinString};
 
 #[derive(Debug)]
-pub struct EvalStatusLineDict {
+pub struct EvalStatusLine {
     pub chars: OwnedThinString,
     pub width: Integer,
     pub highlights: Option<KVec<HighlightItem>>,
@@ -15,7 +15,7 @@ pub struct HighlightItem {
     pub groups: Array,
 }
 
-impl EvalStatusLineDict {
+impl EvalStatusLine {
     pub fn from_c_func_ret(mut d: ManuallyDrop<Dict>) -> Self {
         let s = d
             .remove_skip_key_drop("str")
