@@ -2,7 +2,7 @@ use std::mem::ManuallyDrop;
 
 use crate::nvim_types::{Array, Dict, Object};
 
-use super::utils::remove_keys;
+use super::utils::skip_drop_remove_keys;
 
 #[derive(Debug)]
 pub struct Context {
@@ -15,8 +15,8 @@ pub struct Context {
 
 impl Context {
     pub fn from_c_func_ret(ctx: &mut Dict) -> Self {
-        let [regs, jumps, bufs, gvars, funcs, ..] =
-            remove_keys(&[c"regs", c"jumps", c"bufs", c"gvars", c"funcs"], ctx, None)
+        let [regs, jumps, bufs, gvars, funcs] =
+            skip_drop_remove_keys(ctx, &["regs", "jumps", "bufs", "gvars", "funcs"], None)
                 .unwrap()
                 .map(|arr| {
                     if matches!(*arr, Object::Array(_)) {

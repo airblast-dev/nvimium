@@ -1,66 +1,47 @@
-use std::{mem::MaybeUninit, ptr::NonNull};
+use std::mem::{ManuallyDrop, MaybeUninit};
 
 use crate::nvim_types::{Dict, Object};
 
 /// Removes the keys without dropping them and
 #[inline(never)]
-pub(crate) unsafe fn remove_keys(
-    len: usize,
-    mut keys: NonNull<&'static str>,
-    mut out: NonNull<MaybeUninit<Object>>,
+unsafe fn remove_keys(
+    keys: &[&'static str],
+    out: &mut [MaybeUninit<Object>],
     d: &mut Dict,
-    missing_key: Option<fn(&'static str) -> Option<Object>>,
+    missing_key: fn(&'static str) -> Option<Object>,
 ) -> Result<(), &'static str> {
-    let mut i = 0;
-    // an array length of 20 should enough for all return values
-    // based on the std libraries comments this is unlikely to unroll which is good for binary size
-    while i < len {
-        let key = unsafe { keys.read() };
+    match keys.iter().zip(out.iter_mut()).try_for_each(|(key, obj)| {
         let Some(val) = d
-            .remove_skip_key_drop(key)
-            .or_else(|| missing_key.and_then(|f| f(key)))
+            .remove_skip_key_drop(*key)
+            .or_else(|| missing_key(key))
             .map(MaybeUninit::new)
         else {
-            return Err(key);
-        };
-        unsafe {
-            out.write(val);
-            keys = keys.add(1);
-            out = out.add(1);
+            return Err(*key);
         };
 
-        i += 1;
+        *obj = val;
+        Ok(())
+    }) {
+        Ok(()) => Ok(()),
+        Err(err) => Err(err),
     }
-
-    Ok(())
 }
 
-macro_rules! extract_owned_kv {
-    (
-        $collector:ident,
-        $s:ident, $matches:pat $(, $extract:expr)? $(, $fallback:expr)?
-    ) => {
-        if let Some($matches) = d.remove_skip_key_drop(stringify!($s)) {
-            $extract($ident);
-        } else {
-            $fallback($ident);
-        }
-    };
-}
+pub(crate) fn skip_drop_remove_keys<const N: usize>(
+    d: &mut Dict,
+    keys: &'static [&'static str; N],
+    missing_key: Option<fn(&'static str) -> Option<Object>>,
+) -> Result<[ManuallyDrop<Object>; N], &'static str> {
+    let mut objects = [const { MaybeUninit::uninit() }; N];
+    unsafe {
+        remove_keys(
+            keys.as_slice(),
+            &mut objects,
+            d,
+            missing_key.unwrap_or(|_| None),
+        )
+    }?;
 
-macro_rules! extract_ref_kv {
-    (
-        $collector:ident,
-        $s:ident, $matches:pat $(, $extract:expr)? $(, $fallback:expr)?
-    ) => {
-        if let Some($matches) = d
-            .remove_skip_key_drop(stringify!($s))
-            .map(::std::mem::ManuallyDrop::new)
-            .deref()
-        {
-            $extract($ident);
-        } else {
-            $fallback($ident);
-        }
-    };
+    // cant use transmute with arrays in this context
+    Ok(unsafe { ((&raw const objects) as *const [ManuallyDrop<Object>; N]).read() })
 }

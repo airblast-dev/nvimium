@@ -1,8 +1,8 @@
 use std::mem::ManuallyDrop;
 
-use crate::nvim_types::{string::OwnedThinString, Boolean, Dict, Object};
+use crate::nvim_types::{Boolean, Dict, Object, string::OwnedThinString};
 
-use super::utils::remove_keys;
+use super::utils::skip_drop_remove_keys;
 
 #[derive(Clone, Debug)]
 pub struct Mode {
@@ -12,7 +12,7 @@ pub struct Mode {
 
 impl Mode {
     pub fn from_c_func_ret(d: &mut Dict) -> Self {
-        let [mode, blocking, ..] = remove_keys(&[c"mode", c"blocking"], d, None).unwrap();
+        let [mode, blocking] = skip_drop_remove_keys(d, &["mode", "blocking"], None).unwrap();
         Self {
             mode: if matches!(*mode, Object::String(_)) {
                 ManuallyDrop::into_inner(mode).into_string().unwrap()
@@ -23,7 +23,7 @@ impl Mode {
                 ManuallyDrop::into_inner(blocking).into_bool().unwrap()
             } else {
                 panic!()
-            }
+            },
         }
     }
 }
