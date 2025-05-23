@@ -150,15 +150,16 @@ impl<T> KVec<T> {
     /// This function is guaranteed to at least allocate for `capacity` elements.
     pub fn with_capacity(capacity: usize) -> Self {
         // We shouldn't be storing ZST's in any use case, but if we do, just return a dangling pointer.
-        let layout = Layout::array::<T>(capacity).unwrap();
         let ptr = if size_of::<T>() > 0 && capacity > 0 {
-            (unsafe { GLOBAL_ALLOCATOR.alloc(layout) } as *mut T)
+            let layout = Layout::array::<T>(capacity).unwrap();
+            let ptr = (unsafe { GLOBAL_ALLOCATOR.alloc(layout) } as *mut T);
+            if ptr.is_null() {
+                handle_alloc_error(layout);
+            }
+            ptr
         } else {
             NonNull::dangling().as_ptr()
         };
-        if ptr.is_null() {
-            handle_alloc_error(layout);
-        }
 
         Self {
             len: 0,
