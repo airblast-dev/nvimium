@@ -1,6 +1,9 @@
 use crate::{
     nvim_funcs::c_funcs::global,
-    nvim_types::{Arena, arena_finish, arena_mem_free, returns::get_hl::HighlightGroups},
+    nvim_types::{
+        Arena,
+        returns::{get_hl::HighlightGroups, get_keymap::Keymaps},
+    },
 };
 use std::{mem::ManuallyDrop, ops::DerefMut};
 
@@ -257,11 +260,11 @@ pub fn get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpace, Error> {
     }
 }
 
-pub fn get_keymap(mode: KeyMapMode) -> Array {
+pub fn get_keymap(mode: KeyMapMode) -> Keymaps {
     call_check();
-    let arr = unsafe { global::nvim_get_keymap(mode, core::ptr::null_mut()) };
-    // TODO: fix memory leak, probably should create a specialized struct as well
-    ManuallyDrop::into_inner(arr.clone())
+    let mut arena = Arena::EMPTY;
+    let mut arr = unsafe { global::nvim_get_keymap(mode, &mut arena) };
+    Keymaps::from_c_func_ret(&mut arr)
 }
 
 pub fn get_mark<S: AsThinString>(name: S) -> Result<Array, Error> {
@@ -614,6 +617,7 @@ pub fn strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
 mod tests {
     use crate as nvimium;
     use crate::nvim_funcs::vimscript::exec2;
+    use crate::nvim_types::returns::get_keymap::Keymap;
     use crate::nvim_types::{
         Array, AsThinString, Dict, Object, OwnedThinString, String, Window,
         func_types::{
@@ -721,31 +725,14 @@ mod tests {
 
         // we dont actually have to do this but this ensures that there isn't an already existing
         // keymap removing the risk of false positives
-        let found = keymaps
-            .0
-            .into_iter()
-            .filter_map(|d| d.into_dict())
-            .any(|d| {
-                let Some(lhs) = d.get(c"lhs".as_thinstr()) else {
-                    return false;
-                };
-                let Some(rhs) = d.get(c"rhs".as_thinstr()) else {
-                    return false;
-                };
-                let Some(nowait) = d.get(c"nowait".as_thinstr()) else {
-                    return false;
-                };
-
-                nowait == &Object::Integer(1)
-                    && lhs
-                        == &Object::String(OwnedThinString::from(
-                            c"aasdsadasdasdasdasdas".as_thinstr(),
-                        ))
-                    && rhs
-                        == &Object::String(OwnedThinString::from(
-                            c":lua vim.api.nvim_set_current_line('HELLOO')".as_thinstr(),
-                        ))
-            });
+        let found = keymaps.maps.into_iter().any(|keymap| {
+            Keymap {
+                lhs: OwnedThinString::from("aasdsadasdasdasdasdas"),
+                rhs: OwnedThinString::from(":lua vim.api.nvim_set_current_line('HELLOO')").into(),
+                nowait: true,
+                ..Default::default()
+            } == keymap
+        });
         assert!(!found);
         super::set_keymap(
             KeyMapMode::MODE_OP_PENDING,
@@ -755,31 +742,19 @@ mod tests {
         )
         .unwrap();
         let keymaps = super::get_keymap(KeyMapMode::MODE_OP_PENDING);
-        let found = keymaps
-            .0
-            .into_iter()
-            .filter_map(|d| d.into_dict())
-            .any(|d| {
-                let Some(lhs) = d.get(c"lhs".as_thinstr()) else {
-                    return false;
-                };
-                let Some(rhs) = d.get(c"rhs".as_thinstr()) else {
-                    return false;
-                };
-                let Some(nowait) = d.get(c"nowait".as_thinstr()) else {
-                    return false;
-                };
-
-                nowait == &Object::Integer(1)
-                    && lhs
-                        == &Object::String(OwnedThinString::from(
-                            c"aasdsadasdasdasdasdas".as_thinstr(),
-                        ))
-                    && rhs
-                        == &Object::String(OwnedThinString::from(
-                            c":lua vim.api.nvim_set_current_line('HELLOO')".as_thinstr(),
-                        ))
-            });
+        let found = keymaps.maps.into_iter().any(|keymap| {
+            Keymap {
+                lhs: OwnedThinString::from("aasdsadasdasdasdasdas"),
+                rhs: OwnedThinString::from(":lua vim.api.nvim_set_current_line('HELLOO')").into(),
+                nowait: true,
+                ..Default::default()
+            } == Keymap {
+                lhs: keymap.lhs,
+                rhs: keymap.rhs,
+                nowait: keymap.nowait,
+                ..Default::default()
+            }
+        });
         assert!(found);
         let res = super::del_keymap(KeyMapMode::MODE_OP_PENDING, c"aasdsadasdasdasdasdas");
         assert!(res.is_ok());
