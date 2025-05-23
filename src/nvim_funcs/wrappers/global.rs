@@ -19,7 +19,7 @@ use crate::nvim_types::{
     },
     returns::{
         channel_info::ChannelInfo, color_map::ColorMap, context::Context,
-        eval_statusline::EvalStatusLineDict, get_mode::Mode,
+        eval_statusline::EvalStatusLine, get_mode::Mode,
     },
     tab_page::TabPage,
     window::Window,
@@ -107,14 +107,14 @@ pub fn err_writeln<S: AsThinString>(s: S) {
 pub fn eval_statusline<S: AsThinString>(
     s: S,
     opts: &EvalStatusLineOpts,
-) -> Result<EvalStatusLineDict, Error> {
+) -> Result<EvalStatusLine, Error> {
     call_check();
     tri! {
         let mut err;
         unsafe { global::nvim_eval_statusline(s.as_thinstr(), opts, core::ptr::null_mut(), &mut err) },
         Ok(ret) => {
             let ret = unsafe { ManuallyDrop::new( ret.assume_init() ) };
-            Ok(EvalStatusLineDict::from_c_func_ret(ret))
+            Ok(EvalStatusLine::from_c_func_ret(ret))
         }
     }
 }
