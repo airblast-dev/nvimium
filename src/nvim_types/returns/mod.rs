@@ -5,3 +5,4 @@ pub mod eval_statusline;
 pub mod get_hl;
 pub mod get_mode;
 pub mod utils;
+pub mod get_keymap;
