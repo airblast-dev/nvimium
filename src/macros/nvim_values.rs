@@ -234,7 +234,7 @@ macro_rules! const_dict {
             const ARR: [::core::mem::MaybeUninit<Kv>; COUNT] = {
                 use core::mem::MaybeUninit;
                 #[allow(unused_mut)]
-                let mut arr: [MaybeUninit<Kv>; COUNT] = [const { MaybeUninit::uninit() }; COUNT];
+                let mut arr: [MaybeUninit<Kv>; COUNT] = [const { MaybeUninit::zeroed() }; COUNT];
                 #[allow(unused)]
                 let mut _i = 0;
                 $(
