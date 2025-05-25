@@ -2,6 +2,7 @@ pub mod comp_unique_id;
 pub mod masked_builder;
 pub mod nvim_values;
 pub mod one_of_objects;
+pub mod thinstring;
 pub mod tri;
 
 #[macro_export]
