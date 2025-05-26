@@ -135,11 +135,11 @@ mod tests {
         let res = super::eval(expr).unwrap().into_dict().unwrap();
         let expected = Dict::from_iter([
             (
-                String::from("blue"),
+                NvString::from("blue"),
                 Object::String(OwnedThinString::from("#0000ff")),
             ),
             (
-                String::from("red"),
+                NvString::from("red"),
                 Object::String(OwnedThinString::from("#ff0000")),
             ),
         ]);

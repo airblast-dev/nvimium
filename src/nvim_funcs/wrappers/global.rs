@@ -676,11 +676,11 @@ mod tests {
     pub fn nvim_get_color_map() {
         let map = super::get_color_map();
         let color = map
-            .get_with_name(String::from("Blue").as_thinstr())
+            .get_with_name(NvString::from("Blue").as_thinstr())
             .expect("color not found");
         assert_eq!([0, 0, 255], color);
         let color = map
-            .get_with_name(String::from("Red").as_thinstr())
+            .get_with_name(NvString::from("Red").as_thinstr())
             .expect("color not found");
         assert_eq!([255, 0, 0], color);
     }
