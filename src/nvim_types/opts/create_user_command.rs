@@ -205,18 +205,6 @@ impl From<UserCommandRange> for UserCommandRangeInner {
     }
 }
 
-impl From<Integer> for UserCommandRangeInner {
-    fn from(value: Integer) -> Self {
-        Self(unsafe { ObjectRef::new(ObjectTag::Integer, &value) })
-    }
-}
-
-impl From<Boolean> for UserCommandRangeInner {
-    fn from(value: Boolean) -> Self {
-        Self(unsafe { ObjectRef::new(ObjectTag::Bool, &value) })
-    }
-}
-
 masked_builder! {
     pub struct CreateUserCommandOpts<'a> {
         addr: UserCommandAddr,
