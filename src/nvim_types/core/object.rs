@@ -1,4 +1,6 @@
 use core::{fmt::Debug, mem::ManuallyDrop};
+use std::marker::PhantomData;
+use std::mem::transmute;
 
 use super::{array::Array, dictionary::Dict};
 
@@ -20,17 +22,17 @@ use super::{
 #[repr(C, u32)]
 pub enum Object {
     #[default]
-    Null = 0,
-    Bool(Boolean),
-    Integer(Integer),
-    Float(Float),
-    String(OwnedThinString),
-    Array(Array),
-    Dict(Dict),
-    LuaRef(LuaRef),
-    Buffer(Buffer),
-    Window(Window),
-    TabPage(TabPage),
+    Null = ObjectTag::Null as u32,
+    Bool(Boolean) = ObjectTag::Bool as u32,
+    Integer(Integer) = ObjectTag::Integer as u32,
+    Float(Float) = ObjectTag::Float as u32,
+    String(OwnedThinString) = ObjectTag::String as u32,
+    Array(Array) = ObjectTag::Array as u32,
+    Dict(Dict) = ObjectTag::Dict as u32,
+    LuaRef(LuaRef) = ObjectTag::LuaRef as u32,
+    Buffer(Buffer) = ObjectTag::Buffer as u32,
+    Window(Window) = ObjectTag::Window as u32,
+    TabPage(TabPage) = ObjectTag::TabPage as u32,
 }
 
 impl Clone for Object {
@@ -311,6 +313,7 @@ impl<'a> From<&'a Object> for Borrowed<'a, Object> {
 }
 
 #[repr(u32)]
+#[derive(Clone, Copy, Debug)]
 pub enum ObjectTag {
     Null = 0,
     Bool,
@@ -330,56 +333,69 @@ pub enum ObjectTag {
 /// Same as [`Object`] but accepts any type that has a valid layout for a Neovim object
 #[doc(hidden)]
 #[repr(C)]
-pub struct ObjectRef {
+#[derive(Clone, Copy)]
+pub struct ObjectRef<'a> {
     tag: ObjectTag,
-    // the value could be stored as anything with a size and layout of usize
-    // this allows miri to keep track of the pointers provenance so we can remove some workarounds
-    // for miri tests
-    val: [*mut (); 3],
+    val: [usize; 3],
+    __lf: PhantomData<&'a mut ()>,
 }
 
-impl ObjectRef {
+impl<'a> Debug for ObjectRef<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // Object has the same alignment and size as ObjectRef
+        let obj: &Object = unsafe { transmute(self) };
+        f.debug_struct("ObjectRef")
+            .field("object", obj)
+            .finish_non_exhaustive()
+    }
+}
+
+impl<'a> ObjectRef<'a> {
     /// Initialize an [`ObjectRef`] with `T`
     ///
     /// # Safety
     ///
     /// Calling this function requires the tag and value to match the layout of its equal [`Object`]
-    pub const unsafe fn new<T>(tag: ObjectTag, val: &T) -> Self {
+    pub const unsafe fn new<T: Sized>(tag: ObjectTag, val: &T) -> Self {
+        assert!(size_of::<T>() <= size_of::<usize>() * 3);
         let mut r = ObjectRef {
             tag,
-            val: [core::ptr::null_mut(); 3],
+            val: [0; 3],
+            __lf: PhantomData::<&'a mut ()>,
         };
         let val = unsafe { (val as *const T).cast::<ManuallyDrop<T>>().read() };
         unsafe { r.val.as_mut_ptr().cast::<ManuallyDrop<T>>().write(val) };
         r
     }
 
-    pub const fn from_th(val: ThinString<'static>) -> Self {
+    pub fn from_th(val: ThinString<'static>) -> ObjectRef<'static> {
         // This is hand written instead of using ObjectRef::new to be able to test with miri
         // maybe do this for other types as well?
         let addr = val.as_ptr();
         let len = val.len();
         ObjectRef {
             tag: ObjectTag::String,
-            val: [addr as _, len as _, core::ptr::null_mut()],
+            val: [addr.expose_provenance(), len, 0],
+            __lf: PhantomData,
         }
     }
 }
 
-impl From<&'static ThinString<'static>> for ObjectRef {
+impl From<&'static ThinString<'static>> for ObjectRef<'static> {
     fn from(value: &'static ThinString) -> Self {
         Self::from_th(*value)
     }
 }
 
-impl From<&'static Array> for ObjectRef {
+impl From<&'static Array> for ObjectRef<'static> {
     fn from(value: &'static Array) -> Self {
-        let addr = value.as_ptr() as usize;
+        let addr = value.as_ptr().expose_provenance();
         let len = value.len();
         let cap = value.capacity();
         ObjectRef {
             tag: ObjectTag::Array,
-            val: [len as _, cap as _, addr as _],
+            val: [len, cap, addr],
+            __lf: PhantomData,
         }
     }
 }
@@ -391,11 +407,11 @@ mod tests {
 
     use super::ObjectRef;
 
-    impl ObjectRef {
+    impl ObjectRef<'static> {
         fn convert_back(self) -> ThinString<'static> {
             let addr = self.val[0];
             let ptr = addr as *mut _;
-            unsafe { ThinString::new(self.val[1] as usize, ptr) }
+            unsafe { ThinString::new(self.val[1], ptr) }
         }
     }
 
