@@ -10,3 +10,4 @@ pub mod paste;
 pub mod select_popupmenu_item;
 pub mod set_hl;
 pub mod set_keymap;
+pub mod create_user_command;
