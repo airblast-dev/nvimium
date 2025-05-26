@@ -1,6 +1,6 @@
 use crate::nvim_types::ThinString;
 
-macro_rules! fast_th {
+macro_rules! mode {
     ($(#[$meta:meta])* $ident:ident, $lit:literal) => {
         $(#[$meta])*
         pub const $ident: KeyMapMode =
@@ -11,26 +11,26 @@ macro_rules! fast_th {
 // also in a few other places but this function is the actual check call
 // src/nvim/mapping.c 0.10.0 l:973
 impl KeyMapMode {
-    fast_th!(EMPTY, c"");
-    fast_th!(INSERT, c"i");
-    fast_th!(CMD_INSERT, c"l");
-    fast_th!(CMD, c"c");
-    fast_th!(NORMAL, c"n");
-    fast_th!(VISUAL_SELECT, c"v");
-    fast_th!(VISUAL, c"x");
-    fast_th!(SELECT, c"s");
-    fast_th!(MODE_OP_PENDING, c"o");
-    fast_th!(MODE_TERMINAL, c"t");
+    mode!(EMPTY, c"");
+    mode!(INSERT, c"i");
+    mode!(CMD_INSERT, c"l");
+    mode!(CMD, c"c");
+    mode!(NORMAL, c"n");
+    mode!(VISUAL_SELECT, c"v");
+    mode!(VISUAL, c"x");
+    mode!(SELECT, c"s");
+    mode!(MODE_OP_PENDING, c"o");
+    mode!(MODE_TERMINAL, c"t");
 
-    fast_th!(
+    mode!(
         /// Only accepted when setting a keymap
         ABREVIATION_INSERT, c"ia"
     );
-    fast_th!(
+    mode!(
         /// Only accepted when setting a keymap
         ABREVIATION_CMD, c"ca"
     );
-    fast_th!(
+    mode!(
         /// Only accepted when setting a keymap
         ABREVIATION_INSERT_CMD, c"!a"
     );
