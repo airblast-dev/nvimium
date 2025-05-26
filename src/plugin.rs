@@ -75,12 +75,12 @@ macro_rules! plugin {
                             Ok(k) => $crate::nvim_types::lua::IntoLua::push(&k, lstate),
                             Err(err) => {
                                 use std::fmt::Write;
-                                use $crate::nvim_types::{String, ThinString};
+                                use $crate::nvim_types::{NvString, ThinString};
                                 use $crate::{
                                     nvim_funcs::global::echo,
                                     nvim_types::{func_types::echo::Echo, opts::echo::EchoOpts},
                                 };
-                                let mut msg = <String as ::std::default::Default>::default();
+                                let mut msg = <NvString as ::std::default::Default>::default();
                                 // TODO: add fallback messages
                                 let _ = ::std::write!(&mut msg, "Nvimium Error: {}", err);
                                 let _ = echo(
