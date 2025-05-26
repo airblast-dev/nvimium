@@ -55,9 +55,9 @@ static EMPTY: ThinString<'static> = ThinString::from_null_terminated(c"".to_byte
 // TODO: Rather than to limit the API for niche systems find an alternative if possible.
 const _: () = assert!(size_of::<u8>() == size_of::<c_char>());
 
-/// A String type that can be passed to wrapper functions
+/// A String type that can be passed to neovim functions
 ///
-/// Compared to [`std`] types, [`String`] is like a null terminated [`Vec<u8>`].
+/// Compared to [`std`] types, [`NvString`] is like a null terminated [`Vec<u8>`].
 ///
 /// Neovim does not always check if a null byte is before the end of the string. Some functions
 /// work fine with null bytes in the middle of the string others do not. Generally pushing a null
@@ -87,7 +87,7 @@ const _: () = assert!(size_of::<u8>() == size_of::<c_char>());
 /// This means you should provide a [`ThinString`] when calling C bindings directly.
 #[repr(C)]
 #[derive(Eq)]
-pub struct String {
+pub struct NvString {
     // TODO: check feasability of overallocating some bytes to store capacity in allocation
     // This might allow us to introduce some optimizations in the API.
     data: *mut c_char,
@@ -101,7 +101,7 @@ pub struct String {
 // here.
 //
 // anything else should be implemented on ThinString
-impl String {
+impl NvString {
     #[inline(always)]
     fn new() -> Self {
         Self::with_capacity(0)
@@ -288,7 +288,7 @@ impl String {
     }
 }
 
-impl Clone for String {
+impl Clone for NvString {
     fn clone(&self) -> Self {
         let mut s = Self::with_capacity(self.len);
         s.push(self.as_slice());
@@ -302,29 +302,29 @@ impl Clone for String {
     }
 }
 
-impl Default for String {
+impl Default for NvString {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<B: AsRef<[u8]>> From<B> for String {
+impl<B: AsRef<[u8]>> From<B> for NvString {
     fn from(value: B) -> Self {
         let s = value.as_ref();
-        let mut st = String::with_capacity(s.len());
+        let mut st = NvString::with_capacity(s.len());
         st.push(s);
         st
     }
 }
 
-impl<'a> From<ThinString<'a>> for String {
+impl<'a> From<ThinString<'a>> for NvString {
     fn from(value: ThinString<'a>) -> Self {
         let th = value.as_thinstr();
         Self::from(th.as_slice())
     }
 }
 
-impl<'a> Extend<&'a [u8]> for String {
+impl<'a> Extend<&'a [u8]> for NvString {
     fn extend<T: IntoIterator<Item = &'a [u8]>>(&mut self, iter: T) {
         let mut iter = iter.into_iter();
         while let Some(sl) = iter.next() {
@@ -334,7 +334,7 @@ impl<'a> Extend<&'a [u8]> for String {
     }
 }
 
-impl std::io::Write for String {
+impl std::io::Write for NvString {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         self.push(buf);
         Ok(buf.len())
@@ -360,7 +360,7 @@ impl std::io::Write for String {
     }
 }
 
-impl std::fmt::Write for String {
+impl std::fmt::Write for NvString {
     fn write_str(&mut self, s: &str) -> std::fmt::Result {
         self.reserve(s.len());
         self.push(s);
@@ -368,13 +368,13 @@ impl std::fmt::Write for String {
     }
 }
 
-impl Hash for String {
+impl Hash for NvString {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         state.write(self.as_slice_with_null());
     }
 }
 
-impl Debug for String {
+impl Debug for NvString {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let l = std::string::String::from_utf8_lossy(self.as_thinstr().as_slice());
         let mut ds = f.debug_struct("String");
@@ -388,99 +388,99 @@ impl Debug for String {
     }
 }
 
-impl PartialEq for String {
+impl PartialEq for NvString {
     fn eq(&self, other: &Self) -> bool {
         self.as_slice() == other.as_slice()
     }
 }
 
-impl<'a> PartialEq<ThinString<'a>> for String {
+impl<'a> PartialEq<ThinString<'a>> for NvString {
     fn eq(&self, other: &ThinString<'a>) -> bool {
         self.as_thinstr() == *other
     }
 }
 
-impl PartialEq<str> for String {
+impl PartialEq<str> for NvString {
     fn eq(&self, other: &str) -> bool {
         self.as_slice() == other.as_bytes()
     }
 }
 
-impl PartialEq<&str> for String {
+impl PartialEq<&str> for NvString {
     fn eq(&self, other: &&str) -> bool {
         self.as_slice() == other.as_bytes()
     }
 }
 
-impl PartialEq<[u8]> for String {
+impl PartialEq<[u8]> for NvString {
     fn eq(&self, other: &[u8]) -> bool {
         self.as_slice() == other
     }
 }
 
-impl PartialEq<&[u8]> for String {
+impl PartialEq<&[u8]> for NvString {
     fn eq(&self, other: &&[u8]) -> bool {
         self.as_slice() == *other
     }
 }
 
-impl PartialEq<String> for str {
-    fn eq(&self, other: &String) -> bool {
+impl PartialEq<NvString> for str {
+    fn eq(&self, other: &NvString) -> bool {
         self.as_bytes() == other.as_slice()
     }
 }
 
-impl PartialEq<String> for &str {
-    fn eq(&self, other: &String) -> bool {
+impl PartialEq<NvString> for &str {
+    fn eq(&self, other: &NvString) -> bool {
         self.as_bytes() == other.as_slice()
     }
 }
 
-impl PartialEq<String> for [u8] {
-    fn eq(&self, other: &String) -> bool {
+impl PartialEq<NvString> for [u8] {
+    fn eq(&self, other: &NvString) -> bool {
         self == other.as_slice()
     }
 }
 
-impl PartialEq<String> for &[u8] {
-    fn eq(&self, other: &String) -> bool {
+impl PartialEq<NvString> for &[u8] {
+    fn eq(&self, other: &NvString) -> bool {
         *self == other.as_slice()
     }
 }
 
-impl PartialEq<OwnedThinString> for String {
+impl PartialEq<OwnedThinString> for NvString {
     fn eq(&self, other: &OwnedThinString) -> bool {
         self.as_thinstr() == other.as_thinstr()
     }
 }
 
-impl PartialOrd for String {
+impl PartialOrd for NvString {
     fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         self.as_thinstr().partial_cmp(&other.as_thinstr())
     }
 }
 
-impl PartialOrd<ThinString<'_>> for String {
+impl PartialOrd<ThinString<'_>> for NvString {
     fn partial_cmp(&self, other: &ThinString<'_>) -> Option<core::cmp::Ordering> {
         self.as_thinstr().partial_cmp(other)
     }
 }
 
-impl PartialOrd<OwnedThinString> for String {
+impl PartialOrd<OwnedThinString> for NvString {
     fn partial_cmp(&self, other: &OwnedThinString) -> Option<core::cmp::Ordering> {
         self.as_thinstr().partial_cmp(&other.as_thinstr())
     }
 }
 
-unsafe impl Sync for String {}
-unsafe impl Send for String {}
+unsafe impl Sync for NvString {}
+unsafe impl Send for NvString {}
 
 const _: () = assert!(
     core::mem::size_of::<usize>() + core::mem::size_of::<ThinString>()
-        == core::mem::size_of::<String>()
+        == core::mem::size_of::<NvString>()
 );
 
-impl Drop for String {
+impl Drop for NvString {
     fn drop(&mut self) {
         debug_assert!(!self.data.is_null());
         unsafe { debug_assert_eq!(*self.data.add(self.len()), 0) };
@@ -617,8 +617,8 @@ impl PartialEq for ThinString<'_> {
     }
 }
 
-impl PartialEq<String> for ThinString<'_> {
-    fn eq(&self, other: &String) -> bool {
+impl PartialEq<NvString> for ThinString<'_> {
+    fn eq(&self, other: &NvString) -> bool {
         *self == other.as_thinstr()
     }
 }
@@ -673,8 +673,8 @@ impl PartialOrd for ThinString<'_> {
     }
 }
 
-impl PartialOrd<String> for ThinString<'_> {
-    fn partial_cmp(&self, other: &String) -> Option<core::cmp::Ordering> {
+impl PartialOrd<NvString> for ThinString<'_> {
+    fn partial_cmp(&self, other: &NvString) -> Option<core::cmp::Ordering> {
         self.partial_cmp(&other.as_thinstr())
     }
 }
@@ -793,7 +793,7 @@ impl Clone for OwnedThinString {
 
 impl Default for OwnedThinString {
     fn default() -> Self {
-        String::default().into()
+        NvString::default().into()
     }
 }
 
@@ -828,8 +828,8 @@ impl<'a> From<ThinString<'a>> for OwnedThinString {
     }
 }
 
-impl From<String> for OwnedThinString {
-    fn from(value: String) -> Self {
+impl From<NvString> for OwnedThinString {
+    fn from(value: NvString) -> Self {
         Self(value.leak())
     }
 }
@@ -926,8 +926,8 @@ impl<'a> PartialEq<ThinString<'a>> for OwnedThinString {
     }
 }
 
-impl PartialEq<String> for OwnedThinString {
-    fn eq(&self, other: &String) -> bool {
+impl PartialEq<NvString> for OwnedThinString {
+    fn eq(&self, other: &NvString) -> bool {
         self.as_thinstr() == other.as_thinstr()
     }
 }
@@ -938,8 +938,8 @@ impl PartialOrd for OwnedThinString {
     }
 }
 
-impl PartialOrd<String> for OwnedThinString {
-    fn partial_cmp(&self, other: &String) -> Option<core::cmp::Ordering> {
+impl PartialOrd<NvString> for OwnedThinString {
+    fn partial_cmp(&self, other: &NvString) -> Option<core::cmp::Ordering> {
         self.as_thinstr().partial_cmp(&other.as_thinstr())
     }
 }
@@ -982,7 +982,7 @@ pub unsafe trait AsThinString {
     fn as_thinstr(&self) -> ThinString<'_>;
 }
 
-unsafe impl AsThinString for String {
+unsafe impl AsThinString for NvString {
     fn as_thinstr(&self) -> ThinString<'_> {
         self.as_thinstr()
     }
@@ -1035,11 +1035,11 @@ unsafe impl AsThinString for CString {
 
 #[cfg(all(test, miri))]
 mod string_alloc {
-    use super::String;
+    use super::NvString;
 
     #[test]
     fn new() {
-        let s = String::new();
+        let s = NvString::new();
         assert_eq!(s.capacity().get(), 1);
         assert_eq!(s.len(), 0);
         assert_eq!(unsafe { *s.data }, 0);
@@ -1047,7 +1047,7 @@ mod string_alloc {
 
     #[test]
     fn capacity() {
-        let mut s = String::new();
+        let mut s = NvString::new();
         assert_eq!(s.capacity().get(), 1);
         s.reserve_exact(5);
         assert_eq!(s.capacity().get(), 6);
@@ -1055,18 +1055,18 @@ mod string_alloc {
 
     #[test]
     fn with_capacity() {
-        let s = String::with_capacity(0);
+        let s = NvString::with_capacity(0);
         assert_eq!(s.capacity().get(), 1);
         assert_eq!(unsafe { *s.data }, 0);
 
-        let s = String::with_capacity(10);
+        let s = NvString::with_capacity(10);
         assert_eq!(s.capacity().get(), 11);
         assert_eq!(unsafe { *s.data }, 0);
     }
 
     #[test]
     fn reserve() {
-        let mut s = String::new();
+        let mut s = NvString::new();
         s.reserve(2);
         assert_eq!(s.capacity().get(), 4);
         assert_eq!(s.len(), 0);
@@ -1080,7 +1080,7 @@ mod string_alloc {
 
     #[test]
     fn reserve_exact() {
-        let mut s = String::new();
+        let mut s = NvString::new();
         assert_eq!(unsafe { *s.data }, 0);
 
         s.reserve_exact(1);
@@ -1096,7 +1096,7 @@ mod string_alloc {
 
     #[test]
     fn as_thinstr() {
-        let s = String::new();
+        let s = NvString::new();
         let th = s.as_thinstr();
         assert_eq!(unsafe { *th.data }, 0);
         assert_eq!(th.data, s.data);
@@ -1106,7 +1106,7 @@ mod string_alloc {
 
     #[test]
     fn push() {
-        let mut s = String::new();
+        let mut s = NvString::new();
         assert_eq!(unsafe { *s.data }, 0);
         s.push(b"abc");
         assert_eq!(s.capacity().get(), 4);
@@ -1123,8 +1123,8 @@ mod string_alloc {
     #[test]
     fn clone() {
         // growing
-        let s = String::from("Hello");
-        let mut s1 = String::new();
+        let s = NvString::from("Hello");
+        let mut s1 = NvString::new();
         s1.clone_from(&s);
         assert_eq!(s1.as_slice_with_null(), s.as_slice_with_null());
         assert_eq!(s1.len(), 5);
@@ -1132,8 +1132,8 @@ mod string_alloc {
         assert_eq!(s1.len() + 1, s1.capacity().get());
 
         // shrinking
-        let s = String::from("hi");
-        let mut s1 = String::from("Hello");
+        let s = NvString::from("hi");
+        let mut s1 = NvString::from("Hello");
         s1.clone_from(&s);
         assert_eq!(s1.as_slice_with_null(), s.as_slice_with_null());
         assert_eq!(s1.len(), 2);
@@ -1145,11 +1145,11 @@ mod string_alloc {
 mod string_fmt {
     use std::io::Write;
 
-    use crate::nvim_types::{String, ThinString};
+    use crate::nvim_types::{NvString, ThinString};
 
     #[test]
     fn debug_string() {
-        let f = format!("{:?}", String::new());
+        let f = format!("{:?}", NvString::new());
         let pre_ptr = &f[0..15];
         let post_ptr = {
             let len_start = f.find("len:").unwrap();
@@ -1173,12 +1173,12 @@ mod string_fmt {
 
     #[test]
     fn fmt() {
-        let mut s = String::new();
+        let mut s = NvString::new();
         s.write_fmt(format_args!("{}-{}-{}", "hi", "bye", 5))
             .unwrap();
         assert_eq!(s, "hi-bye-5");
 
-        let mut s = String::new();
+        let mut s = NvString::new();
         write!(s, "{}-{}-{}", 1, 2, 3).unwrap();
         assert_eq!(s, "1-2-3");
     }
@@ -1186,10 +1186,10 @@ mod string_fmt {
 
 #[cfg(test)]
 mod thinstr {
-    use super::{String, ThinString, ThinStringError};
+    use super::{NvString, ThinString, ThinStringError};
 
-    fn new_s() -> String {
-        let mut s = String::new();
+    fn new_s() -> NvString {
+        let mut s = NvString::new();
         s.push(b"aasdas");
         s
     }
@@ -1268,7 +1268,7 @@ mod thinstr {
 
     #[test]
     fn is_empty() {
-        let mut s = String::new();
+        let mut s = NvString::new();
         assert!(s.as_thinstr().is_empty());
         s.push("bawawa");
         assert!(!s.as_thinstr().is_empty());
@@ -1288,11 +1288,11 @@ mod thinstr {
 
 #[cfg(test)]
 mod owned_thin_string {
-    use super::{OwnedThinString, String};
+    use super::{OwnedThinString, NvString};
 
     #[test]
     fn from_string() {
-        let s = String::from("Hello");
+        let s = NvString::from("Hello");
         let os = OwnedThinString::from(s);
         assert_eq!(os, "Hello");
     }

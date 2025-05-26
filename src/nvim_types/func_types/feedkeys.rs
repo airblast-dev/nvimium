@@ -1,6 +1,6 @@
 use core::fmt::Display;
 
-use crate::nvim_types::{AsThinString, String, ThinString};
+use crate::nvim_types::{AsThinString, NvString, ThinString};
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Default, Hash)]
@@ -22,7 +22,7 @@ impl Display for FeedKeysModeKind {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct FeedKeysMode(String);
+pub struct FeedKeysMode(NvString);
 
 impl FeedKeysMode {
     /// Initialize a new [`FeedKeysMode`]
@@ -55,7 +55,7 @@ impl<T: AsRef<[FeedKeysModeKind]>> From<T> for FeedKeysMode {
         // assert the size to avoid that case
         const _: () = assert!(core::mem::size_of::<FeedKeysModeKind>() == 1);
         Self(unsafe {
-            String::from(core::mem::transmute::<&[FeedKeysModeKind], &[u8]>(
+            NvString::from(core::mem::transmute::<&[FeedKeysModeKind], &[u8]>(
                 value.as_ref(),
             ))
         })
@@ -64,7 +64,7 @@ impl<T: AsRef<[FeedKeysModeKind]>> From<T> for FeedKeysMode {
 
 #[cfg(all(test, miri))]
 mod tests {
-    use crate::nvim_types::String;
+    use crate::nvim_types::NvString;
 
     use super::{FeedKeysMode, FeedKeysModeKind};
 
@@ -77,6 +77,6 @@ mod tests {
         ];
         let mode = FeedKeysMode::from(kinds);
 
-        assert_eq!(mode.0, String::from("mx!"));
+        assert_eq!(mode.0, NvString::from("mx!"));
     }
 }

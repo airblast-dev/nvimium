@@ -17,7 +17,7 @@ use mlua_sys::{
 use rand::{SeedableRng, distr::Distribution, rngs::SmallRng};
 use thread_lock::init_lua_ptr;
 
-use crate::nvim_types::{String, lua::utils::handle_callback_err_ret};
+use crate::nvim_types::{NvString, lua::utils::handle_callback_err_ret};
 
 use super::core::FromLuaMany;
 
@@ -60,7 +60,7 @@ fn metatable_key(l: *mut lua_State) -> i32 {
             let dist = rand::distr::Uniform::new(32_u8, 128_u8).unwrap();
             let c_char_iter =
                 dist.sample_iter(SmallRng::seed_from_u64(&raw const TYPE_NAME as u64));
-            let mut s = String::with_capacity(FALLBACK_TYPE_NAME.count_bytes() + RAND_CHAR_COUNT);
+            let mut s = NvString::with_capacity(FALLBACK_TYPE_NAME.count_bytes() + RAND_CHAR_COUNT);
             for c in c_char_iter.take(RAND_CHAR_COUNT) {
                 s.push([c]);
             }

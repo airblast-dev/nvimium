@@ -619,7 +619,7 @@ mod tests {
     use crate::nvim_funcs::vimscript::exec2;
     use crate::nvim_types::returns::get_keymap::Keymap;
     use crate::nvim_types::{
-        Array, AsThinString, Dict, Object, OwnedThinString, String, Window,
+        Array, AsThinString, Dict, Object, OwnedThinString, NvString, Window,
         func_types::{
             echo::Echo,
             feedkeys::{FeedKeysMode, FeedKeysModeKind},

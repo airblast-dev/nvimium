@@ -178,7 +178,7 @@ impl ColorMap {
 #[cfg(test)]
 mod tests {
     use crate::nvim_types::{
-        Dict, Object, {OwnedThinString, String},
+        Dict, Object, {OwnedThinString, NvString},
     };
 
     use super::ColorMap;
@@ -188,18 +188,18 @@ mod tests {
         let mut dict = Dict::default();
         let colors: [(OwnedThinString, Object); 3] =
             [("red", 255 << 16), ("green", 255 << 8), ("blue", 255)]
-                .map(|(s, c)| (OwnedThinString::from(String::from(s)), Object::Integer(c)));
+                .map(|(s, c)| (OwnedThinString::from(NvString::from(s)), Object::Integer(c)));
         for (name, val) in colors {
             dict.insert(name, val);
         }
 
         let c_map = ColorMap::from_c_func_ret(&mut dict);
         drop(dict);
-        assert_eq!(Some([255, 0, 0]), c_map.get_with_name(String::from("red")));
+        assert_eq!(Some([255, 0, 0]), c_map.get_with_name(NvString::from("red")));
         assert_eq!(
             Some([0, 255, 0]),
-            c_map.get_with_name(String::from("green"))
+            c_map.get_with_name(NvString::from("green"))
         );
-        assert_eq!(Some([0, 0, 255]), c_map.get_with_name(String::from("blue")));
+        assert_eq!(Some([0, 0, 255]), c_map.get_with_name(NvString::from("blue")));
     }
 }

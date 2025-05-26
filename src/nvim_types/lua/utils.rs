@@ -4,7 +4,7 @@ use mlua_sys::{lua_State, lua_checkstack, lua_error};
 
 use crate::{
     nvim_funcs::global::echo,
-    nvim_types::{AsThinString, String, ThinString, func_types::echo::Echo, opts::echo::EchoOpts},
+    nvim_types::{AsThinString, NvString, ThinString, func_types::echo::Echo, opts::echo::EchoOpts},
     plugin::IntoLua,
 };
 
@@ -15,7 +15,7 @@ use crate::{
 #[inline(never)]
 pub(super) unsafe fn handle_callback_err_ret(l: *mut lua_State, err: &dyn Error) {
     use std::fmt::Write;
-    let mut s = String::default();
+    let mut s = NvString::default();
     write!(s, "Error: {}", &err).unwrap();
     if let Err(echo_err) = echo(&Echo::message(s), true, EchoOpts::default().err(true)) {
         if echo(

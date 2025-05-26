@@ -5,7 +5,7 @@ use core::{
 
 use libc::{c_char, strlen};
 
-use super::string::{AsThinString, String, ThinString};
+use super::string::{AsThinString, NvString, ThinString};
 
 // Any platform that uses more than a byte as `c_char` limits the API in a few places.
 // TODO: Rather than to limit the API for niche systems find an alternative if possible.
@@ -60,7 +60,7 @@ impl Error {
     }
 
     pub fn exception(th: ThinString) -> Self {
-        let s = String::from(th);
+        let s = NvString::from(th);
         let ptr = s.as_ptr();
         core::mem::forget(s);
         Self {

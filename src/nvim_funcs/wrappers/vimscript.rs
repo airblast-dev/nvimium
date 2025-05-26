@@ -91,7 +91,7 @@ mod tests {
     use crate::nvim_funcs::wrappers::global::{feedkeys, list_bufs, set_current_buf};
 
     use crate::nvim_types::{
-        Array, Buffer, Dict, Object, OwnedThinString, String,
+        Array, Buffer, Dict, Object, OwnedThinString, NvString,
         func_types::feedkeys::{FeedKeysMode, FeedKeysModeKind},
         kvec::KVec,
     };

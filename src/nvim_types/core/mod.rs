@@ -30,6 +30,6 @@ pub use kvec::KVec;
 pub use lua_ref::LuaRef;
 pub use namespace::NameSpace;
 pub use object::Object;
-pub use string::{AsThinString, OwnedThinString, String, ThinString};
+pub use string::{AsThinString, OwnedThinString, NvString, ThinString};
 pub use tab_page::TabPage;
 pub use window::Window;
