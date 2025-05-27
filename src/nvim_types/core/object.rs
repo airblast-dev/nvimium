@@ -312,7 +312,7 @@ impl<'a> From<&'a Object> for Borrowed<'a, Object> {
     }
 }
 
-#[repr(u32)]
+#[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum ObjectTag {
     Null = 0,
