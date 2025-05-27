@@ -19,20 +19,20 @@ use super::{
 //
 // For the enum values see src/nvim/api/private/defs.h 0.10.0 l:93
 #[derive(Debug, Default, PartialEq)]
-#[repr(C, u32)]
+#[repr(C)]
 pub enum Object {
     #[default]
-    Null = ObjectTag::Null as u32,
-    Bool(Boolean) = ObjectTag::Bool as u32,
-    Integer(Integer) = ObjectTag::Integer as u32,
-    Float(Float) = ObjectTag::Float as u32,
-    String(OwnedThinString) = ObjectTag::String as u32,
-    Array(Array) = ObjectTag::Array as u32,
-    Dict(Dict) = ObjectTag::Dict as u32,
-    LuaRef(LuaRef) = ObjectTag::LuaRef as u32,
-    Buffer(Buffer) = ObjectTag::Buffer as u32,
-    Window(Window) = ObjectTag::Window as u32,
-    TabPage(TabPage) = ObjectTag::TabPage as u32,
+    Null,
+    Bool(Boolean),
+    Integer(Integer),
+    Float(Float),
+    String(OwnedThinString),
+    Array(Array),
+    Dict(Dict),
+    LuaRef(LuaRef),
+    Buffer(Buffer),
+    Window(Window),
+    TabPage(TabPage),
 }
 
 impl Clone for Object {
