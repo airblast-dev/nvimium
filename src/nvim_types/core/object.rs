@@ -1,6 +1,7 @@
 use core::{fmt::Debug, mem::ManuallyDrop};
 use std::marker::PhantomData;
 use std::mem::transmute;
+use std::ops::Deref;
 
 use super::{array::Array, dictionary::Dict};
 
@@ -367,6 +368,16 @@ impl<'a> ObjectRef<'a> {
         unsafe { r.val.as_mut_ptr().cast::<ManuallyDrop<T>>().write(val) };
         r
     }
+
+    /// # Safety
+    ///
+    /// Same safety rules as [`ObjectRef::new`] also apply here.
+    /// If passing `T` that should be dropped, it must be handled manually.
+    pub unsafe fn new_moved<T>(tag: ObjectTag, val: T) -> Self {
+        assert!(size_of::<T>() <= size_of::<usize>() * 3);
+        let val = ManuallyDrop::new(val);
+        unsafe { ObjectRef::new(tag, val.deref()) }
+    }
 }
 
 impl<'a> From<ThinString<'a>> for ObjectRef<'a> {
@@ -391,7 +402,7 @@ impl<'a> From<&'a Array> for ObjectRef<'a> {
 #[cfg(test)]
 mod tests {
 
-    use crate::nvim_types::{object::ObjectTag, ThinString};
+    use crate::nvim_types::{ThinString, object::ObjectTag};
 
     use super::ObjectRef;
 
