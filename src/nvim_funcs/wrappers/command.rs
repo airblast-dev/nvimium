@@ -30,9 +30,12 @@ pub fn buf_del_user_command<TH: AsThinString>(buf: Buffer, name: TH) -> Result<(
     }
 }
 
+#[cfg(all(not(miri), feature = "testing"))]
 mod tests {
+    use crate as nvimium;
     use crate::{
         nvim_funcs::vimscript::exec2,
+        nvim_test,
         nvim_types::{
             AsThinString, Buffer,
             opts::{
@@ -47,20 +50,23 @@ mod tests {
 
     use super::buf_create_user_command;
 
+    #[nvim_test::nvim_test]
     fn buf_create_del_user_command() {
         buf_create_user_command(
             Buffer::new(0),
             c"MyCmdNvimium".as_thinstr(),
-            c"echoerr".as_thinstr(),
+            &c"echoerr",
             CreateUserCommandOpts::default()
                 .complete(UserCommandCompleteKind::MESSAGES)
-                .nargs(UserCommandNarg::ONE)
                 .force(true)
                 .addr(UserCommandAddr::ARGUMENTS),
         )
         .unwrap();
 
         exec2(c"MyCmdNvimium", &ExecOpts::default()).unwrap_err();
-        exec2(c"MyCmdNvimium", &ExecOpts::default()).unwrap_err();
+        exec2(c"MyCmdNvimium \"hello\"", &ExecOpts::default()).unwrap();
+
+        let messages = exec2(c"messages", &ExecOpts::default()).unwrap();
+        panic!("{:?}", messages);
     }
 }
