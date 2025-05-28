@@ -1,7 +1,8 @@
 use core::{fmt::Debug, mem::ManuallyDrop};
-use std::marker::PhantomData;
-use std::mem::transmute;
-use std::ops::Deref;
+use std::ffi::c_void;
+use std::mem::{MaybeUninit, transmute};
+
+use libc::memcpy;
 
 use super::{array::Array, dictionary::Dict};
 
@@ -329,16 +330,62 @@ pub enum ObjectTag {
     TabPage,
 }
 
-// TODO: this sucks, find a way to pin its size without using the magic array whilst supporting different
-// types
 /// Same as [`Object`] but accepts any type that has a valid layout for a Neovim object
 #[doc(hidden)]
 #[repr(C)]
-#[derive(Clone, Copy)]
 pub struct ObjectRef<'a> {
     pub tag: ObjectTag,
-    pub val: [usize; 3],
-    __lf: PhantomData<&'a mut ()>,
+    pub(crate) val: ObjectRefVal<'a>,
+}
+
+impl<'a> Clone for ObjectRef<'a> {
+    fn clone(&self) -> Self {
+        let mut cloned: MaybeUninit<ObjectRef<'a>> = MaybeUninit::uninit();
+        unsafe {
+            memcpy(
+                (&raw mut cloned) as *mut c_void,
+                (self as *const ObjectRef<'a>) as *const c_void,
+                size_of::<Self>(),
+            );
+            cloned.assume_init()
+        }
+    }
+}
+
+impl ObjectRef<'static> {
+    pub(crate) const fn new_bool(n: Boolean) -> Self {
+        Self {
+            tag: ObjectTag::Bool,
+            val: ObjectRefVal { bool: n },
+        }
+    }
+    pub(crate) const fn new_int(n: Integer) -> Self {
+        Self {
+            tag: ObjectTag::Integer,
+            val: ObjectRefVal { num: n },
+        }
+    }
+    pub(crate) const fn new_th(v: ThinString<'static>) -> Self {
+        Self {
+            tag: ObjectTag::String,
+            val: ObjectRefVal { string: v },
+        }
+    }
+}
+
+#[repr(C)]
+pub(crate) union ObjectRefVal<'a> {
+    nums: [usize; 3],
+    pub bool: Boolean,
+    pub num: Integer,
+    pub float: Float,
+    pub string: ThinString<'a>,
+    pub array: ManuallyDrop<Array>,
+    pub dict: ManuallyDrop<Dict>,
+    pub buffer: Buffer,
+    pub window: Window,
+    pub tab_page: TabPage,
+    pub lua_ref: ManuallyDrop<LuaRef>,
 }
 
 impl<'a> Debug for ObjectRef<'a> {
@@ -351,82 +398,46 @@ impl<'a> Debug for ObjectRef<'a> {
     }
 }
 
-impl<'a> ObjectRef<'a> {
-    /// Initialize an [`ObjectRef`] with `T`
-    ///
-    /// # Safety
-    ///
-    /// Calling this function requires the tag and value to match the layout of its equal [`Object`]
-    ///
-    /// # Note
-    ///
-    /// This functions will not retain provenance of values with pointers.
-    /// Instead prefer [`ObjectRef`]'s [`From`] implementations.
-    pub const unsafe fn new<T: Sized>(tag: ObjectTag, val: &T) -> Self {
-        assert!(size_of::<T>() <= size_of::<usize>() * 3);
-        let mut r = ObjectRef {
-            tag,
-            val: [0; 3],
-            __lf: PhantomData::<&'a mut ()>,
-        };
-        let val = unsafe { (val as *const T).cast::<ManuallyDrop<T>>().read() };
-        unsafe { r.val.as_mut_ptr().cast::<ManuallyDrop<T>>().write(val) };
-        r
-    }
-
-    /// # Safety
-    ///
-    /// Same safety rules as [`ObjectRef::new`] also apply here.
-    /// If passing `T` that should be dropped, it must be handled manually.
-    ///
-    /// # Note
-    ///
-    /// This functions will not retain provenance of values with pointers.
-    /// Instead prefer [`ObjectRef`]'s [`From`] implementations.
-    pub unsafe fn new_moved<T>(tag: ObjectTag, val: T) -> Self {
-        assert!(size_of::<T>() <= size_of::<usize>() * 3);
-        let val = ManuallyDrop::new(val);
-        unsafe { ObjectRef::new(tag, val.deref()) }
-    }
-}
-
 impl<'a> From<ThinString<'a>> for ObjectRef<'a> {
     fn from(value: ThinString<'a>) -> Self {
         Self {
             tag: ObjectTag::String,
-            val: [value.as_ptr().expose_provenance(), value.len(), 0],
-            __lf: PhantomData::<&'a mut ()>,
+            val: ObjectRefVal { string: value },
         }
     }
 }
 
 impl<'a> From<&'a Array> for ObjectRef<'a> {
     fn from(value: &'a Array) -> Self {
-        let addr = value.as_ptr().expose_provenance();
-        let len = value.len();
-        let cap = value.capacity();
         ObjectRef {
             tag: ObjectTag::Array,
-            val: [len, cap, addr],
-            __lf: PhantomData,
+            val: ObjectRefVal {
+                array: ManuallyDrop::new(unsafe { (value as *const Array).read() }),
+            },
+        }
+    }
+}
+
+impl From<LuaRef> for ObjectRef<'static> {
+    fn from(value: LuaRef) -> Self {
+        Self {
+            tag: ObjectTag::LuaRef,
+            val: ObjectRefVal {
+                lua_ref: ManuallyDrop::new(value),
+            },
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-
-    use std::ptr::with_exposed_provenance;
-
     use crate::nvim_types::ThinString;
 
     use super::ObjectRef;
 
     impl ObjectRef<'static> {
         fn convert_back(self) -> ThinString<'static> {
-            let addr = self.val[0];
-            let ptr = with_exposed_provenance(addr);
-            unsafe { ThinString::new(self.val[1], ptr) }
+            unsafe { self.val.string }
         }
     }
 
