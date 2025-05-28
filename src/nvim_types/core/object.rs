@@ -357,6 +357,11 @@ impl<'a> ObjectRef<'a> {
     /// # Safety
     ///
     /// Calling this function requires the tag and value to match the layout of its equal [`Object`]
+    ///
+    /// # Note
+    ///
+    /// This functions will not retain provenance of values with pointers.
+    /// Instead prefer [`ObjectRef`]'s [`From`] implementations.
     pub const unsafe fn new<T: Sized>(tag: ObjectTag, val: &T) -> Self {
         assert!(size_of::<T>() <= size_of::<usize>() * 3);
         let mut r = ObjectRef {
@@ -373,6 +378,11 @@ impl<'a> ObjectRef<'a> {
     ///
     /// Same safety rules as [`ObjectRef::new`] also apply here.
     /// If passing `T` that should be dropped, it must be handled manually.
+    ///
+    /// # Note
+    ///
+    /// This functions will not retain provenance of values with pointers.
+    /// Instead prefer [`ObjectRef`]'s [`From`] implementations.
     pub unsafe fn new_moved<T>(tag: ObjectTag, val: T) -> Self {
         assert!(size_of::<T>() <= size_of::<usize>() * 3);
         let val = ManuallyDrop::new(val);
@@ -382,7 +392,11 @@ impl<'a> ObjectRef<'a> {
 
 impl<'a> From<ThinString<'a>> for ObjectRef<'a> {
     fn from(value: ThinString<'a>) -> Self {
-        unsafe { Self::new(ObjectTag::String, &value) }
+        Self {
+            tag: ObjectTag::String,
+            val: [value.as_ptr().expose_provenance(), value.len(), 0],
+            __lf: PhantomData::<&'a mut ()>,
+        }
     }
 }
 
@@ -402,14 +416,16 @@ impl<'a> From<&'a Array> for ObjectRef<'a> {
 #[cfg(test)]
 mod tests {
 
-    use crate::nvim_types::{ThinString, object::ObjectTag};
+    use std::ptr::with_exposed_provenance;
+
+    use crate::nvim_types::ThinString;
 
     use super::ObjectRef;
 
     impl ObjectRef<'static> {
         fn convert_back(self) -> ThinString<'static> {
             let addr = self.val[0];
-            let ptr = addr as *mut _;
+            let ptr = with_exposed_provenance(addr);
             unsafe { ThinString::new(self.val[1], ptr) }
         }
     }
@@ -417,7 +433,7 @@ mod tests {
     #[test]
     fn object_ref_readback() {
         const TH: ThinString<'_> = ThinString::from_null_terminated(b"Hello\0");
-        let oref = unsafe { ObjectRef::new(ObjectTag::String, &TH) };
+        let oref = ObjectRef::from(TH);
         assert_eq!(oref.convert_back(), "Hello");
     }
 }
