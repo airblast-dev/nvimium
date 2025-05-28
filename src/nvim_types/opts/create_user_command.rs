@@ -4,7 +4,8 @@ use crate::{
     masked_builder,
     nvim_types::{
         AsThinString, Boolean, Integer, Object, ThinString,
-        lua::{FromLua, Function},
+        args::user_command_complete::UserCommandCompleteArgs,
+        lua::Function,
         object::{ObjectRef, ObjectTag},
         object_subs::BoolOrInteger,
     },
@@ -131,31 +132,6 @@ const _: () = assert!(
     size_of::<UserCommandComplete>() == size_of::<Object>()
         && align_of::<UserCommandComplete>() == align_of::<Object>()
 );
-
-pub struct UserCommandCompleteArgs<'a> {
-    pub arg_lead: ThinString<'a>,
-    pub cmd: ThinString<'a>,
-    pub cursor_pos: Integer,
-}
-
-impl<'a> crate::nvim_types::lua::core::FromLuaMany for UserCommandCompleteArgs<'a> {
-    unsafe fn get(
-        l: *mut mlua_sys::lua_State,
-        to_pop: &mut i32,
-    ) -> crate::nvim_types::lua::core::Result<Self> {
-        unsafe {
-            let arg_lead = ThinString::get(l, -3, to_pop)?;
-            let cmd = ThinString::get(l, -2, to_pop)?;
-            let cursor_pos = <Integer as FromLua>::get(l, -1, to_pop)?;
-
-            Ok(Self {
-                arg_lead,
-                cmd,
-                cursor_pos,
-            })
-        }
-    }
-}
 
 /// The number of arguments accepted by the user command
 #[repr(transparent)]

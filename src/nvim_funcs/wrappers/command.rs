@@ -3,7 +3,7 @@ use thread_lock::call_check;
 use crate::{
     nvim_funcs::c_funcs::command::{nvim_buf_create_user_command, nvim_buf_del_user_command},
     nvim_types::{
-        AsThinString, Buffer, Channel, Error, ThinString, args::create_user_command::Command,
+        AsThinString, Buffer, Channel, Error, ThinString, func_types::create_user_command::Command,
         opts::create_user_command::CreateUserCommandOpts,
     },
     tri,

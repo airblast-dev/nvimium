@@ -1,6 +1,5 @@
 use crate::nvim_types::{
-    Buffer, Channel, Error, ThinString, args::create_user_command::Command,
-    opts::create_user_command::CreateUserCommandOpts,
+    func_types::create_user_command::Command, opts::create_user_command::CreateUserCommandOpts, Buffer, Channel, Error, ThinString
 };
 
 unsafe extern "C" {
