@@ -313,9 +313,9 @@ impl<'a> From<&'a Object> for Borrowed<'a, Object> {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ObjectTag {
-    Null = 0,
+    Null,
     Bool,
     Integer,
     Float,
@@ -335,8 +335,8 @@ pub enum ObjectTag {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct ObjectRef<'a> {
-    tag: ObjectTag,
-    val: [usize; 3],
+    pub tag: ObjectTag,
+    pub val: [usize; 3],
     __lf: PhantomData<&'a mut ()>,
 }
 
@@ -367,28 +367,16 @@ impl<'a> ObjectRef<'a> {
         unsafe { r.val.as_mut_ptr().cast::<ManuallyDrop<T>>().write(val) };
         r
     }
+}
 
-    pub fn from_th(val: ThinString<'static>) -> ObjectRef<'static> {
-        // This is hand written instead of using ObjectRef::new to be able to test with miri
-        // maybe do this for other types as well?
-        let addr = val.as_ptr();
-        let len = val.len();
-        ObjectRef {
-            tag: ObjectTag::String,
-            val: [addr.expose_provenance(), len, 0],
-            __lf: PhantomData,
-        }
+impl<'a> From<ThinString<'a>> for ObjectRef<'a> {
+    fn from(value: ThinString<'a>) -> Self {
+        unsafe { Self::new(ObjectTag::String, &value) }
     }
 }
 
-impl From<&'static ThinString<'static>> for ObjectRef<'static> {
-    fn from(value: &'static ThinString) -> Self {
-        Self::from_th(*value)
-    }
-}
-
-impl From<&'static Array> for ObjectRef<'static> {
-    fn from(value: &'static Array) -> Self {
+impl<'a> From<&'a Array> for ObjectRef<'a> {
+    fn from(value: &'a Array) -> Self {
         let addr = value.as_ptr().expose_provenance();
         let len = value.len();
         let cap = value.capacity();
@@ -403,7 +391,7 @@ impl From<&'static Array> for ObjectRef<'static> {
 #[cfg(test)]
 mod tests {
 
-    use crate::nvim_types::ThinString;
+    use crate::nvim_types::{object::ObjectTag, ThinString};
 
     use super::ObjectRef;
 
@@ -418,7 +406,7 @@ mod tests {
     #[test]
     fn object_ref_readback() {
         const TH: ThinString<'_> = ThinString::from_null_terminated(b"Hello\0");
-        let oref = ObjectRef::from(&TH);
+        let oref = unsafe { ObjectRef::new(ObjectTag::String, &TH) };
         assert_eq!(oref.convert_back(), "Hello");
     }
 }
