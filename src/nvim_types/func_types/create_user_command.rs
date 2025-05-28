@@ -1,17 +1,24 @@
+use std::mem::ManuallyDrop;
+
 use crate::nvim_types::{
-    AsThinString, LuaRef,
-    object::{ObjectRef, ObjectTag},
+    object::{ObjectRef, ObjectTag}, AsThinString, ThinString
 };
 
 #[repr(transparent)]
 pub struct Command<'a>(ObjectRef<'a>);
 
 impl<'a> Command<'a> {
-    pub fn cmd<TH: AsThinString>(cmd: &'a TH) -> Self {
-        Self(ObjectRef::from(cmd.as_thinstr()))
+    pub(crate) fn cmd(cmd: ThinString<'a>) -> Self {
+        Self(ObjectRef::from(cmd))
     }
     // TODO: add lua callback support
     fn callback() {}
+}
+
+impl<'a, TH: AsThinString> From<&'a TH> for Command<'a> {
+    fn from(value: &'a TH) -> Self {
+        Self::cmd(value.as_thinstr())
+    }
 }
 
 // Command only takes a thinstring or a LuaRef
@@ -19,7 +26,7 @@ impl<'a> Command<'a> {
 impl<'a> Drop for Command<'a> {
     fn drop(&mut self) {
         if self.0.tag == ObjectTag::LuaRef {
-            unsafe { LuaRef::new(self.0.val[0] as _) };
+            unsafe { ManuallyDrop::drop(&mut self.0.val.lua_ref) };
         }
     }
 }
