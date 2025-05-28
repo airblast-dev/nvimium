@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, mem::ManuallyDrop};
 
 use crate::{
     masked_builder,
@@ -18,7 +18,7 @@ pub struct UserCommandAddr(ObjectRef<'static>);
 
 macro_rules! uca {
     ($vis:vis $name:ident = $val:literal) => {
-        $vis const $name: UserCommandAddr = UserCommandAddr(unsafe { ObjectRef::new(ObjectTag::String, &th!($val) ) });
+        $vis const $name: UserCommandAddr = UserCommandAddr(ObjectRef::new_th(th!($val) ));
     };
 }
 impl UserCommandAddr {
@@ -112,7 +112,7 @@ pub struct UserCommandComplete(ObjectRef<'static>);
 
 impl From<UserCommandCompleteKind> for UserCommandComplete {
     fn from(value: UserCommandCompleteKind) -> Self {
-        Self(unsafe { ObjectRef::new(ObjectTag::String, &value.0) })
+        Self(ObjectRef::from(value.0))
     }
 }
 
@@ -124,7 +124,15 @@ impl<
 {
     fn from(value: F) -> Self {
         let lref = Function::wrap(value).into_luaref();
-        Self(unsafe { ObjectRef::new_moved(ObjectTag::LuaRef, lref) })
+        Self(ObjectRef::from(lref))
+    }
+}
+
+impl Drop for UserCommandComplete {
+    fn drop(&mut self) {
+        if self.0.tag == ObjectTag::LuaRef {
+            unsafe { ManuallyDrop::drop(&mut self.0.val.lua_ref) };
+        }
     }
 }
 
@@ -139,16 +147,11 @@ const _: () = assert!(
 pub struct UserCommandNarg(ObjectRef<'static>);
 
 impl UserCommandNarg {
-    pub const ZERO: UserCommandNarg =
-        UserCommandNarg(unsafe { ObjectRef::new(ObjectTag::Integer, &0) });
-    pub const ONE: UserCommandNarg =
-        UserCommandNarg(unsafe { ObjectRef::new(ObjectTag::Integer, &1) });
-    pub const ZERO_OR_MORE: UserCommandNarg =
-        UserCommandNarg(unsafe { ObjectRef::new(ObjectTag::String, &th!("*")) });
-    pub const ZERO_OR_ONE: UserCommandNarg =
-        UserCommandNarg(unsafe { ObjectRef::new(ObjectTag::String, &th!("?")) });
-    pub const ONE_OR_MORE: UserCommandNarg =
-        UserCommandNarg(unsafe { ObjectRef::new(ObjectTag::String, &th!("+")) });
+    pub const ZERO: UserCommandNarg = UserCommandNarg(ObjectRef::new_int(0));
+    pub const ONE: UserCommandNarg = UserCommandNarg(ObjectRef::new_int(1));
+    pub const ZERO_OR_MORE: UserCommandNarg = UserCommandNarg(ObjectRef::new_th(th!("*")));
+    pub const ZERO_OR_ONE: UserCommandNarg = UserCommandNarg(ObjectRef::new_th(th!("?")));
+    pub const ONE_OR_MORE: UserCommandNarg = UserCommandNarg(ObjectRef::new_th(th!("+")));
 }
 
 #[derive(Clone, Debug)]
@@ -166,12 +169,10 @@ pub enum UserCommandRange {
 struct UserCommandRangeInner(ObjectRef<'static>);
 impl From<UserCommandRange> for UserCommandRangeInner {
     fn from(value: UserCommandRange) -> Self {
-        let r = unsafe {
-            match value {
-                UserCommandRange::Allowed => ObjectRef::new(ObjectTag::Bool, &true),
-                UserCommandRange::WholeBuffer => ObjectRef::new(ObjectTag::String, &th!("%")),
-                UserCommandRange::AllowedDefault(n) => ObjectRef::new(ObjectTag::Integer, &n),
-            }
+        let r = match value {
+            UserCommandRange::Allowed => ObjectRef::new_bool(true),
+            UserCommandRange::WholeBuffer => ObjectRef::new_th(th!("%")),
+            UserCommandRange::AllowedDefault(n) => ObjectRef::new_int(n),
         };
 
         Self(r)
@@ -205,14 +206,13 @@ masked_builder! {
 }
 
 impl<'a> CreateUserCommandOpts<'a> {
-    pub fn desc<TH: 'a + AsThinString>(&mut self, desc: TH) -> &mut Self {
+    pub fn desc<TH: Into<ThinString<'a>>>(&mut self, desc: TH) -> &mut Self {
         if self.mask & (1 << 7) == 1 << 7 {
             unsafe {
                 self.desc.assume_init_drop();
             }
         }
-        self.desc
-            .write(unsafe { ObjectRef::new(ObjectTag::String, &desc.as_thinstr()) });
+        self.desc.write(ObjectRef::from(desc.into()));
         self.mask |= 1 << 7;
         self
     }
