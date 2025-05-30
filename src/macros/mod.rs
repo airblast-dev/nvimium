@@ -1,4 +1,5 @@
 pub mod comp_unique_id;
+mod hash_face;
 pub mod masked_builder;
 pub mod nvim_values;
 pub mod one_of_objects;
