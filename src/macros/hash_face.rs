@@ -1,8 +1,8 @@
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct KeyValue<const N: usize> {
+    val: [&'static str; N],
     key: usize,
     len: usize,
-    val: [&'static str; N],
 }
 
 impl<const N: usize> KeyValue<N> {
@@ -15,12 +15,13 @@ impl<const N: usize> KeyValue<N> {
     }
 
     const fn append(&mut self, s: &'static str) {
-        self.val[self.len] = s;
+        self.val[self.len as usize] = s;
         self.len += 1;
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
+#[repr(Rust)]
 struct Bucket<const N: usize, const SUM_LEN: usize> {
     len: usize,
     kvs: [KeyValue<N>; SUM_LEN],
@@ -39,7 +40,9 @@ impl<const N: usize, const SUM_LEN: usize> Bucket<N, SUM_LEN> {
                 self.kvs[kv_idx].append(s);
             }
             None => {
-                self.kvs[self.find_kv_idx(0).unwrap()].append(s);
+                let new = self.next();
+                new.key = key as u16;
+                new.append(s);
                 self.len += 1;
             }
         }
@@ -48,7 +51,7 @@ impl<const N: usize, const SUM_LEN: usize> Bucket<N, SUM_LEN> {
     const fn find_kv_idx(&self, key: usize) -> Option<usize> {
         let mut i = 0;
         while i < self.len {
-            if self.kvs[i].key == key {
+            if (self.kvs[i].key as usize) == key {
                 return Some(i);
             }
             i += 1;
@@ -56,7 +59,11 @@ impl<const N: usize, const SUM_LEN: usize> Bucket<N, SUM_LEN> {
         None
     }
 
-    const fn keys(&self) -> [usize; SUM_LEN] {
+    const fn next(&mut self) -> &mut KeyValue<N> {
+        &mut self.kvs[self.len]
+    }
+
+    const fn keys(&self) -> [u16; SUM_LEN] {
         let mut keys = [0; SUM_LEN];
         let mut i = 0;
         while i < self.len {
@@ -69,7 +76,7 @@ impl<const N: usize, const SUM_LEN: usize> Bucket<N, SUM_LEN> {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct LenPos<const N: usize, const SUM_LEN: usize> {
     pos: usize,
     bucket: Bucket<N, SUM_LEN>,
@@ -84,6 +91,7 @@ impl<const N: usize, const SUM_LEN: usize> LenPos<N, SUM_LEN> {
     }
 }
 
+#[derive(Debug)]
 struct LenPosBuckets<const N: usize, const SUM_LEN: usize> {
     len: usize,
     len_pos: [LenPos<N, SUM_LEN>; SUM_LEN],
@@ -95,6 +103,19 @@ impl<const N: usize, const SUM_LEN: usize> LenPosBuckets<N, SUM_LEN> {
             len: 0,
             len_pos: [LenPos::empty(); SUM_LEN],
         }
+    }
+
+    const fn find_pos_bucket(&mut self, pos: usize) -> Option<&mut LenPos<N, SUM_LEN>> {
+        let mut i = 0;
+        while i < SUM_LEN {
+            if self.len_pos[i].pos == pos {
+                return Some(&mut self.len_pos[i]);
+            }
+
+            i += 1;
+        }
+
+        None
     }
 }
 
@@ -132,9 +153,9 @@ const fn extend_arr<T: Copy>(len: &mut usize, arr: &mut [T], ext_len: usize, ext
 ///
 /// Various methods are implemented to make this easier to read.
 /// https://github.com/neovim/neovim/blob/6c4ddf607f0b0b4b72c4a949d796853aa77db08f/src/gen/hashy.lua#L15C1-L15C35
-const fn build_buckets<const N: usize, const SUM_LEN: usize>(
+fn build_buckets<const N: usize, const SUM_LEN: usize>(
     strings: &[&'static str; N],
-) -> (LenPosBuckets<SUM_LEN, SUM_LEN>, usize, usize) {
+) -> (LenPosBuckets<SUM_LEN, SUM_LEN>, usize) {
     let mut len_buckets: Bucket<N, N> = Bucket::empty();
     let mut max_len = 0;
     let mut i = 0;
@@ -149,105 +170,76 @@ const fn build_buckets<const N: usize, const SUM_LEN: usize>(
     }
 
     let mut len_pos_buckets = LenPosBuckets::<SUM_LEN, SUM_LEN>::empty();
-    let mut worst_buck_size = 0;
 
-    let mut len = 0;
-    let iter_limit = if max_len > len_buckets.len {
-        len_buckets.len
-    } else {
-        max_len
-    };
-    while len < iter_limit {
-        let strs = len_buckets.kvs[len];
+    let mut len = 1;
+    while len <= max_len {
+        let strs_idx = len_buckets.find_kv_idx(len);
+        if let Some(strs_idx) = strs_idx {
+            let strs = &len_buckets.kvs[strs_idx];
 
-        let mut best_pos = 0;
-        let mut min_size = strs.len * 2;
-        let mut best_bucket = Bucket::empty();
+            let mut best_pos = 0;
+            let mut min_size = strs.len * 2;
+            let mut best_bucket = Bucket::empty();
 
-        let mut pos = 0;
-        while pos < len {
-            let mut try_bucket = Bucket::<SUM_LEN, SUM_LEN>::empty();
-            let mut stri = 0;
-            while stri < strs.len {
-                let s = strs.val[stri];
-                let pos_char = s.as_bytes()[pos] as usize;
-                try_bucket.append(pos_char, s);
+            let mut pos = 1;
+            while pos <= len {
+                let mut try_bucket = Bucket::empty();
 
-                stri += 1;
-            }
+                let mut strs_i = 0;
+                // for _, str in ipairs(strs) do
+                while strs_i < (strs.len as usize) {
+                    let s = strs.val[strs_i];
+                    if s.len() >= pos {
+                        let pos_char = s.as_bytes()[pos - 1];
 
-            let mut max_size = 1;
-            let mut pos_strs_i = 0;
-            while pos_strs_i < try_bucket.len {
-                let pos_strs = try_bucket.kvs[pos_strs_i];
-                if max_size < try_bucket.len {
-                    max_size = pos_strs.len;
+                        try_bucket.append(pos_char as usize, s);
+                    };
+
+                    strs_i += 1;
                 }
 
-                pos_strs_i += 1;
+                let mut max_size = 1;
+                let mut pos_strs_i = 0;
+                // for _, pos_strs in pairs(try_bucket) do
+                while pos_strs_i < SUM_LEN {
+                    let l = try_bucket.kvs[pos_strs_i].len;
+                    if max_size < l {
+                        max_size = l;
+                    }
+
+                    pos_strs_i += 1;
+                }
+
+                if max_size < min_size {
+                    best_pos = pos;
+                    min_size = max_size;
+                    best_bucket = try_bucket;
+                }
+
+                pos += 1;
             }
 
-            if max_size < min_size {
-                best_pos = pos;
-                min_size = max_size;
-                best_bucket = try_bucket;
-            }
-
-            pos += 1;
-        }
-
-        len_pos_buckets.len_pos[len] = LenPos {
-            pos: best_pos,
-            bucket: best_bucket,
-        };
-
-        if worst_buck_size < min_size {
-            worst_buck_size = min_size
+            let b = &mut len_pos_buckets.len_pos[len - 1];
+            b.bucket = best_bucket;
+            b.pos = best_pos;
+            len_pos_buckets.len += 1;
         }
 
         len += 1;
     }
 
-    (len_pos_buckets, max_len, worst_buck_size)
+    (len_pos_buckets, max_len)
 }
 
-const fn reorder<const N: usize, const SUM_LEN: usize>(
-    len_pos_buckets: LenPosBuckets<SUM_LEN, SUM_LEN>,
-    max_len: usize,
-) -> [&'static str; N] {
-    let mut new_order = [""; N];
-    let mut new_order_len = 0;
-    let iter_count = if len_pos_buckets.len > max_len {
-        max_len
-    } else {
-        len_pos_buckets.len
-    };
+#[cfg(test)]
+mod tests {
 
-    let mut len = 0;
-    while len < iter_count {
-        let vals = &len_pos_buckets.len_pos[len];
-        let pos_buck = &vals.bucket;
-        let mut keys = pos_buck.keys();
-        if pos_buck.len > 1 {
-            sort_ints(&mut keys);
-            let mut i = 0;
-            while i < pos_buck.len {
-                let c = keys[i];
-                let buck = &pos_buck.kvs[pos_buck.find_kv_idx(c).unwrap()];
-                extend_arr(&mut new_order_len, &mut new_order, buck.len, &buck.val);
+    use super::build_buckets;
 
-                i += 1;
-            }
-        } else {
-            new_order[new_order_len] = pos_buck.kvs[pos_buck.find_kv_idx(keys[0]).unwrap()].val[0];
-            new_order_len += 1;
-        }
-        len += 1;
+    #[test]
+    fn ab() {
+        const MAX_UNQIUE_CHAR_COUNT: usize = 60;
+        let buckets = build_buckets::<2, 60>(&["abcdse", "b23"]);
+        panic!("{:#?}", buckets);
     }
-
-    new_order
-}
-
-const fn strs_to_indexes<const N: usize>(orig: &[&'static str; N], ordered: [&'static str; N]) -> [usize; N]{
-    [0; N]
 }
