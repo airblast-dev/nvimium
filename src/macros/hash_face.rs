@@ -13,9 +13,19 @@
 // The longest strings length out of the provided strings.
 //
 //
-// We could over allocate in some cases but this makes it easy to cause a stack overflow in some
-// cases. Instead the generics are expected to be calculated outside this function, then stored in
-// a constant and then passed as a const generic to [`build_buckets`].
+// The reason this module is filled with generics is to avoid stack overflows in tests. Since we
+// want all of the functions to be const, we have to calculate a proper minimum required size.
+// A safe over allocation just results in stack overflows.
+//
+// So the solution? const generics. 
+// Each generic is used to determine the required maximum space to run the hash function. This
+// grossly over allocates but doesn't cause a stack overflow and only allocates the theoretical
+// maximum space needed. 
+//
+// (technically we could be smarter and pre calculate some of the required
+// space by computing values outside and provide them as generics but this is complex enough as it is 
+// with 3 const generics. if ever needed this should be the first solution to try as it will
+// probably save a tons of space)
 
 /// They key and value like in a Lua table
 ///
