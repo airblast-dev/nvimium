@@ -17,15 +17,19 @@
 // want all of the functions to be const, we have to calculate a proper minimum required size.
 // A safe over allocation just results in stack overflows.
 //
-// So the solution? const generics. 
+// So the solution? const generics.
 // Each generic is used to determine the required maximum space to run the hash function. This
 // grossly over allocates but doesn't cause a stack overflow and only allocates the theoretical
-// maximum space needed. 
+// maximum space needed.
 //
 // (technically we could be smarter and pre calculate some of the required
-// space by computing values outside and provide them as generics but this is complex enough as it is 
+// space by computing values outside and provide them as generics but this is complex enough as it is
 // with 3 const generics. if ever needed this should be the first solution to try as it will
 // probably save a tons of space)
+
+use crate::macros::constified::str_eq;
+
+use super::constified::{extend_arr, sort_ints};
 
 /// They key and value like in a Lua table
 ///
@@ -159,43 +163,6 @@ impl<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>
     }
 }
 
-const fn sort_ints(arr: &mut [u8]) {
-    loop {
-        let mut i = 1;
-        let mut swapped = false;
-        while i < arr.len() {
-            if arr[i - 1] > arr[i] {
-                arr.swap(i - 1, i);
-                swapped = true;
-            }
-            i += 1;
-        }
-
-        if !swapped {
-            break;
-        }
-    }
-}
-
-const fn extend_arr<T: Copy + std::fmt::Debug>(
-    len: &mut usize,
-    arr: &mut [T],
-    ext_len: usize,
-    ext_arr: &[T],
-) {
-    let mut i = 0;
-    let mut start = *len;
-    let end = *len + ext_len;
-    while start < end {
-        arr[start] = ext_arr[i];
-
-        start += 1;
-        i += 1;
-    }
-
-    *len += ext_len;
-}
-
 /// A straight forward implementation of the `build_pos_hash` function.
 ///
 /// Intended to be used in const context as it can use a gigantic amount of stack space.
@@ -323,53 +290,11 @@ const fn sorted_fields_shifts<const N: usize, const SUM_LEN: usize, const MAX_LE
     new_order
 }
 
-pub const fn strings_len_sum(strings: &[&'static str]) -> usize {
-    let mut i = 0;
-    let mut sum = 0;
-    while i < strings.len() {
-        let s = strings[i];
-
-        sum += s.len();
-
-        i += 1;
-    }
-
-    sum
-}
-
-pub const fn strings_len_max(strings: &[&'static str]) -> usize {
-    let mut i = 0;
-    let mut max = 0;
-    while i < strings.len() {
-        let s = strings[i];
-
-        if max < s.len() {
-            max = s.len();
-        }
-
-        i += 1;
-    }
-
-    max
-}
-
-pub const fn str_eq(s1: &'static str, s2: &'static str) -> bool {
-    s1.len() == s2.len()
-        && 'a: {
-            let mut i = 0;
-            while i < s1.len() {
-                if s1.as_bytes()[i] != s2.as_bytes()[i] {
-                    break 'a false;
-                }
-
-                i += 1;
-            }
-
-            true
-        }
-}
-
-pub(crate) const fn fields_to_bit_shifts<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>(
+pub(crate) const fn fields_to_bit_shifts<
+    const N: usize,
+    const SUM_LEN: usize,
+    const MAX_LEN: usize,
+>(
     strings: &[&'static str; N],
 ) -> [usize; N] {
     let len_pos_buckets: LenPosBuckets<N, SUM_LEN, MAX_LEN> = build_buckets(strings);

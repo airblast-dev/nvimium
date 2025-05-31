@@ -1,11 +1,12 @@
 pub mod comp_unique_id;
+mod constified;
 mod hash_face;
 pub mod masked_builder;
+pub mod masked_builder2;
 pub mod nvim_values;
 pub mod one_of_objects;
 pub mod thinstring;
 pub mod tri;
-pub mod masked_builder2;
 
 #[macro_export]
 macro_rules! builder {
