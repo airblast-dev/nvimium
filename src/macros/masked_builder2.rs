@@ -14,13 +14,12 @@ macro_rules! masked_builder2 {
         }
 
         impl $(<$($lf),*>)? $struct_name $(<$($lf),*>)? {
-          const __FIELDS_SLICE: &[&'static str] = &crate::macros::masked_builder2::gen_field_names!(
+          const FIELD_COUNT: usize = crate::macros::masked_builder2::count_tts!($($field_name),*);
+          const FIELDS: [&'static str; Self::FIELD_COUNT] = crate::macros::masked_builder2::gen_field_names!(
               $($field_name),+
           );
-          const FIELD_COUNT: usize = Self::__FIELDS_SLICE.len();
-          const FIELDS: [&str; Self::FIELD_COUNT] = unsafe {* ((Self::__FIELDS_SLICE as *const [&'static str]) as *const [&'static str; Self::FIELD_COUNT]) };
-          const FIELD_MAX_LEN: usize = crate::macros::hash_face::strings_len_max(&Self::FIELDS);
-          const FIELDS_SUM_LEN: usize = crate::macros::hash_face::strings_len_sum(&Self::FIELDS);
+          const FIELD_MAX_LEN: usize = crate::macros::constified::strings_len_max(&Self::FIELDS);
+          const FIELDS_SUM_LEN: usize = crate::macros::constified::strings_len_sum(&Self::FIELDS);
           const MASK_OFFSETS: [usize; Self::FIELD_COUNT] =  crate::macros::hash_face::fields_to_bit_shifts::<
               { Self::FIELD_COUNT }, { Self::FIELDS_SUM_LEN }, { Self::FIELD_MAX_LEN }
             >(&Self::FIELDS);
@@ -68,6 +67,16 @@ macro_rules! select_field_attr {
     };
 }
 pub(crate) use select_field_attr;
+
+// https://veykril.github.io/tlborm/decl-macros/building-blocks/counting.html#bit-twiddling
+#[doc(hidden)]
+macro_rules! count_tts {
+    () => { 0 };
+    ($odd:tt $(, $a:tt, $b:tt)*) => { ($crate::count_tts!($($a),*) << 1) | 1 };
+    ($($a:tt, $even:tt),*) => { $crate::count_tts!($($a),*) << 1 };
+}
+
+pub(crate) use count_tts;
 
 #[cfg(test)]
 mod tests {
@@ -128,6 +137,6 @@ mod tests {
         assert_eq!(A::FIELDS_SUM_LEN, 7);
         assert_eq!(A::FIELD_COUNT, 2);
         assert_eq!(A::FIELD_MAX_LEN, 6);
-        assert_eq!(A::__FIELDS_SLICE, A::FIELDS.as_slice());
+        panic!("{:?}", A::MASK_OFFSETS);
     }
 }
