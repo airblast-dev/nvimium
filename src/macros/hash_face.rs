@@ -17,8 +17,6 @@
 // cases. Instead the generics are expected to be calculated outside this function, then stored in
 // a constant and then passed as a const generic to [`build_buckets`].
 
-use std::ptr::slice_from_raw_parts_mut;
-
 /// They key and value like in a Lua table
 ///
 /// The length should actually be a usize but its fairly easy to cause a stack overflow in tests so
@@ -281,6 +279,11 @@ const fn sorted_fields_shifts<const N: usize, const SUM_LEN: usize, const MAX_LE
             pos: _pos,
             bucket: pos_buck,
         } = &mut vals;
+        // SAFETY: keys returns a nonnull and correctly aligned pointer and at least pos_buck.len items are
+        // guaranteed to exist
+        //
+        // We are required to do this as we have no other way to get a sub slice of an array in
+        // const context without unsafe
         let keys =
             unsafe { std::slice::from_raw_parts_mut(pos_buck.keys().as_mut_ptr(), pos_buck.len) };
         sort_ints(keys);
