@@ -313,6 +313,79 @@ const fn sorted_fields_shifts<const N: usize, const SUM_LEN: usize, const MAX_LE
     new_order
 }
 
+pub const fn strings_len_sum(strings: &[&'static str]) -> usize {
+    let mut i = 0;
+    let mut sum = 0;
+    while i < strings.len() {
+        let s = strings[i];
+
+        sum += s.len();
+
+        i += 1;
+    }
+
+    sum
+}
+
+pub const fn strings_len_max(strings: &[&'static str]) -> usize {
+    let mut i = 0;
+    let mut max = 0;
+    while i < strings.len() {
+        let s = strings[i];
+
+        if max < s.len() {
+            max = s.len();
+        }
+
+        i += 1;
+    }
+
+    max
+}
+
+pub const fn str_eq(s1: &'static str, s2: &'static str) -> bool {
+    s1.len() == s2.len()
+        && 'a: {
+            let mut i = 0;
+            while i < s1.len() {
+                if s1.as_bytes()[i] != s2.as_bytes()[i] {
+                    break 'a false;
+                }
+
+                i += 1;
+            }
+
+            true
+        }
+}
+
+pub const fn fields_to_bit_shifts<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>(
+    strings: &[&'static str; N],
+) -> [usize; N] {
+    let len_pos_buckets: LenPosBuckets<N, SUM_LEN, MAX_LEN> = build_buckets(strings);
+    let reordered = sorted_fields_shifts(len_pos_buckets);
+
+    let mut shifts = [0; N];
+
+    let mut i = 0;
+    while i < N {
+        let original = strings[i];
+        let mut x = i;
+        while x < N {
+            let moved = reordered[x];
+            if str_eq(original, moved) {
+                shifts[i] = x;
+            }
+
+            x += 1;
+        }
+
+        i += 1;
+    }
+
+    todo!()
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -322,7 +395,6 @@ mod tests {
 
     #[test]
     fn ab() {
-        // max 31
         let buckets = build_buckets::<2, 9, 6>(&["abcdse", "b23"]);
         panic!("{:#?}", sorted_fields_shifts(buckets));
     }
