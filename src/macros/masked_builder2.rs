@@ -1,3 +1,4 @@
+// the things i do to not write proc macros...
 macro_rules! masked_builder2 {
     (
         $struct_vis:vis struct $struct_name:ident $(<$($lf:lifetime),*>)? {
