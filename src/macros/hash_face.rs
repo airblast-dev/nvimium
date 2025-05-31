@@ -329,12 +329,6 @@ mod tests {
     use super::build_buckets;
 
     #[test]
-    fn ab() {
-        let buckets = build_buckets::<2, 9, 6>(&["abcdse", "b23"]);
-        panic!("{:#?}", sorted_fields_shifts(buckets));
-    }
-
-    #[test]
     fn win_config() {
         const FIELDS: [&str; 22] = [
             "row",
