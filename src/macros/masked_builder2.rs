@@ -47,6 +47,9 @@ macro_rules! gen_field_names {
 pub(crate) use gen_field_names;
 
 /// Checks if the field needs to be renamed before being hashed for the bit index of the field
+///
+/// uses a pushdown accum and a macro branch to determine if a alternative name was specified.
+/// In neovim this is required in a few places where field names and Rust keywords clash.
 macro_rules! select_field_attr {
     (@ACC [$($acc:tt)*] #[builder_field(rename = $rename:literal)] $($tt:tt)*) => {
         select_field_attr!(@ACC [$rename] $($tt)* )
