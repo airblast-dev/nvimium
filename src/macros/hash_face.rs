@@ -17,6 +17,8 @@
 // cases. Instead the generics are expected to be calculated outside this function, then stored in
 // a constant and then passed as a const generic to [`build_buckets`].
 
+use std::ptr::slice_from_raw_parts_mut;
+
 /// They key and value like in a Lua table
 ///
 /// The length should actually be a usize but its fairly easy to cause a stack overflow in tests so
@@ -167,7 +169,7 @@ const fn sort_ints(arr: &mut [u8]) {
     }
 }
 
-fn extend_arr<T: Copy + std::fmt::Debug>(
+const fn extend_arr<T: Copy + std::fmt::Debug>(
     len: &mut usize,
     arr: &mut [T],
     ext_len: usize,
@@ -266,7 +268,7 @@ const fn build_buckets<const N: usize, const SUM_LEN: usize, const MAX_LEN: usiz
     len_pos_buckets
 }
 
-fn sorted_fields_shifts<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>(
+const fn sorted_fields_shifts<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>(
     mut len_pos_buckets: LenPosBuckets<N, SUM_LEN, MAX_LEN>,
 ) -> [&'static str; N] {
     let mut new_order = [""; N];
@@ -279,8 +281,9 @@ fn sorted_fields_shifts<const N: usize, const SUM_LEN: usize, const MAX_LEN: usi
             pos: _pos,
             bucket: pos_buck,
         } = &mut vals;
-        let mut keys = pos_buck.keys();
-        sort_ints(&mut keys[0..pos_buck.len]);
+        let keys =
+            unsafe { std::slice::from_raw_parts_mut(pos_buck.keys().as_mut_ptr(), pos_buck.len) };
+        sort_ints(keys);
 
         if pos_buck.len > 1 {
             let mut ci = 0;
@@ -322,7 +325,7 @@ mod tests {
     }
 
     #[test]
-    fn fields() {
+    fn win_config() {
         const FIELDS: [&str; 22] = [
             "row",
             "col",
