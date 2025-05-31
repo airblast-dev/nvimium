@@ -1,8 +1,37 @@
+// The generics are a bit confusing so heres a quick explanation:
+//
+// # N
+//
+// The number of strings to hash.
+//
+// # SUM_LEN
+//
+// The sum of the length of all provided strings.
+//
+// # MAX_LEN
+//
+// The longest strings length out of the provided strings.
+//
+//
+// We could over allocate in some cases but this makes it easy to cause a stack overflow in some
+// cases. Instead the generics are expected to be calculated outside this function, then stored in
+// a constant and then passed as a const generic to [`build_buckets`].
+
+/// They key and value like in a Lua table
+///
+/// The length should actually be a usize but its fairly easy to cause a stack overflow in tests so
+/// we store a u16.
+///
+/// This also means we support up to [`u16::MAX`] fields.
 #[derive(Clone, Copy, Debug)]
 struct KeyValue<const N: usize> {
+    // this is a single ascii char
+    //
+    // technically can be invalid UTF-8 as well but in this context we are storing a single byte
+    // from a structs field name which we already know is only ascii in Neovim
+    key: u8,
+    len: u16,
     val: [&'static str; N],
-    key: usize,
-    len: usize,
 }
 
 impl<const N: usize> KeyValue<N> {
@@ -21,7 +50,6 @@ impl<const N: usize> KeyValue<N> {
 }
 
 #[derive(Clone, Copy, Debug)]
-#[repr(Rust)]
 struct Bucket<const N: usize, const SUM_LEN: usize> {
     len: usize,
     kvs: [KeyValue<N>; SUM_LEN],
@@ -41,7 +69,7 @@ impl<const N: usize, const SUM_LEN: usize> Bucket<N, SUM_LEN> {
             }
             None => {
                 let new = self.next();
-                new.key = key as u16;
+                new.key = key as u8;
                 new.append(s);
                 self.len += 1;
             }
@@ -51,7 +79,7 @@ impl<const N: usize, const SUM_LEN: usize> Bucket<N, SUM_LEN> {
     const fn find_kv_idx(&self, key: usize) -> Option<usize> {
         let mut i = 0;
         while i < self.len {
-            if (self.kvs[i].key as usize) == key {
+            if self.kvs[i].key == key as u8 {
                 return Some(i);
             }
             i += 1;
@@ -63,7 +91,7 @@ impl<const N: usize, const SUM_LEN: usize> Bucket<N, SUM_LEN> {
         &mut self.kvs[self.len]
     }
 
-    const fn keys(&self) -> [u16; SUM_LEN] {
+    const fn keys(&self) -> [u8; SUM_LEN] {
         let mut keys = [0; SUM_LEN];
         let mut i = 0;
         while i < self.len {
@@ -92,22 +120,24 @@ impl<const N: usize, const SUM_LEN: usize> LenPos<N, SUM_LEN> {
 }
 
 #[derive(Debug)]
-struct LenPosBuckets<const N: usize, const SUM_LEN: usize> {
+struct LenPosBuckets<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize> {
     len: usize,
-    len_pos: [LenPos<N, SUM_LEN>; SUM_LEN],
+    len_pos: [LenPos<N, SUM_LEN>; MAX_LEN],
 }
 
-impl<const N: usize, const SUM_LEN: usize> LenPosBuckets<N, SUM_LEN> {
+impl<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>
+    LenPosBuckets<N, SUM_LEN, MAX_LEN>
+{
     const fn empty() -> Self {
         Self {
             len: 0,
-            len_pos: [LenPos::empty(); SUM_LEN],
+            len_pos: [LenPos::empty(); MAX_LEN],
         }
     }
 
     const fn find_pos_bucket(&mut self, pos: usize) -> Option<&mut LenPos<N, SUM_LEN>> {
         let mut i = 0;
-        while i < SUM_LEN {
+        while i < MAX_LEN {
             if self.len_pos[i].pos == pos {
                 return Some(&mut self.len_pos[i]);
             }
@@ -119,7 +149,7 @@ impl<const N: usize, const SUM_LEN: usize> LenPosBuckets<N, SUM_LEN> {
     }
 }
 
-const fn sort_ints(arr: &mut [usize]) {
+const fn sort_ints(arr: &mut [u8]) {
     loop {
         let mut i = 1;
         let mut swapped = false;
@@ -137,14 +167,24 @@ const fn sort_ints(arr: &mut [usize]) {
     }
 }
 
-const fn extend_arr<T: Copy>(len: &mut usize, arr: &mut [T], ext_len: usize, ext_arr: &[T]) {
+fn extend_arr<T: Copy + std::fmt::Debug>(
+    len: &mut usize,
+    arr: &mut [T],
+    ext_len: usize,
+    ext_arr: &[T],
+) {
     let mut i = 0;
-    while i < ext_len {
-        arr[*len] = ext_arr[i];
-        *len += 1;
+    let mut start = *len;
+    let end = *len + ext_len;
+    dbg!(ext_arr);
+    while start < end {
+        arr[start] = ext_arr[i];
 
+        start += 1;
         i += 1;
     }
+
+    *len += ext_len;
 }
 
 /// A straight forward implementation of the `build_pos_hash` function.
@@ -153,26 +193,22 @@ const fn extend_arr<T: Copy>(len: &mut usize, arr: &mut [T], ext_len: usize, ext
 ///
 /// Various methods are implemented to make this easier to read.
 /// https://github.com/neovim/neovim/blob/6c4ddf607f0b0b4b72c4a949d796853aa77db08f/src/gen/hashy.lua#L15C1-L15C35
-fn build_buckets<const N: usize, const SUM_LEN: usize>(
+const fn build_buckets<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>(
     strings: &[&'static str; N],
-) -> (LenPosBuckets<SUM_LEN, SUM_LEN>, usize) {
+) -> LenPosBuckets<N, SUM_LEN, MAX_LEN> {
     let mut len_buckets: Bucket<N, N> = Bucket::empty();
-    let mut max_len = 0;
     let mut i = 0;
 
     while i < N {
         let s = strings[i];
         len_buckets.append(s.len(), s);
-        if max_len < s.len() {
-            max_len = s.len();
-        }
         i += 1;
     }
 
-    let mut len_pos_buckets = LenPosBuckets::<SUM_LEN, SUM_LEN>::empty();
+    let mut len_pos_buckets = LenPosBuckets::<N, SUM_LEN, MAX_LEN>::empty();
 
     let mut len = 1;
-    while len <= max_len {
+    while len <= MAX_LEN {
         let strs_idx = len_buckets.find_kv_idx(len);
         if let Some(strs_idx) = strs_idx {
             let strs = &len_buckets.kvs[strs_idx];
@@ -228,18 +264,77 @@ fn build_buckets<const N: usize, const SUM_LEN: usize>(
         len += 1;
     }
 
-    (len_pos_buckets, max_len)
+    len_pos_buckets
+}
+
+fn sorted_fields_shifts<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>(
+    mut len_pos_buckets: LenPosBuckets<N, SUM_LEN, MAX_LEN>,
+) -> [&'static str; N] {
+    let mut new_order = [""; N];
+    let mut new_order_len = 0;
+    let mut len = 1;
+    while len <= MAX_LEN {
+        let vals = len_pos_buckets.len_pos[len - 1];
+
+        let LenPos {
+            pos: _pos,
+            bucket: pos_buck,
+        } = vals;
+        let keys = pos_buck.keys();
+
+        if pos_buck.len > 1 {
+            let mut ci = 0;
+            while ci < pos_buck.len {
+                let buck = pos_buck.kvs[pos_buck.find_kv_idx(keys[ci] as usize).unwrap()];
+
+                extend_arr(
+                    &mut new_order_len,
+                    &mut new_order,
+                    buck.len as usize,
+                    &buck.val,
+                );
+
+                ci += 1;
+            }
+        } else if pos_buck.len == 1 {
+            let b = pos_buck.kvs[pos_buck.find_kv_idx(keys[0] as usize).unwrap()];
+            extend_arr(&mut new_order_len, &mut new_order, 1, &[b.val[0]]);
+        }
+
+        len += 1;
+    }
+
+    new_order
 }
 
 #[cfg(test)]
 mod tests {
 
+    use crate::macros::hash_face::{LenPosBuckets, sorted_fields_shifts};
+
     use super::build_buckets;
 
     #[test]
     fn ab() {
-        const MAX_UNQIUE_CHAR_COUNT: usize = 60;
-        let buckets = build_buckets::<2, 60>(&["abcdse", "b23"]);
-        panic!("{:#?}", buckets);
+        // max 31
+        let buckets = build_buckets::<2, 9, 6>(&["abcdse", "b23"]);
+        panic!("{:#?}", sorted_fields_shifts(buckets));
+    }
+
+    #[test]
+    fn fields() {
+        const FIELDS: [&str; 6] = [
+            "bold",
+            "standout",
+            "strikethrough",
+            "underline",
+            "undercurl",
+            "underdouble",
+        ];
+
+        const LEN_POS_BUCKETS: LenPosBuckets<6, 43, 15> = build_buckets(&FIELDS);
+        let s = sorted_fields_shifts(LEN_POS_BUCKETS);
+
+        panic!("{:#?}", s);
     }
 }
