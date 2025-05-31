@@ -261,9 +261,9 @@ const fn sorted_fields_shifts<const N: usize, const SUM_LEN: usize, const MAX_LE
         //
         // We are required to do this as we have no other way to get a sub slice of an array in
         // const context without unsafe
-        let keys =
-            unsafe { std::slice::from_raw_parts_mut(pos_buck.keys().as_mut_ptr(), pos_buck.len) };
-        sort_ints(keys);
+        let mut keys = pos_buck.keys();
+
+        sort_ints(&mut keys, pos_buck.len);
 
         if pos_buck.len > 1 {
             let mut ci = 0;
@@ -318,7 +318,7 @@ pub(crate) const fn fields_to_bit_shifts<
         i += 1;
     }
 
-    todo!()
+    shifts
 }
 
 #[cfg(test)]

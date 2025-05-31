@@ -1,8 +1,8 @@
-pub(super) const fn sort_ints(arr: &mut [u8]) {
+pub(super) const fn sort_ints<const N: usize>(arr: &mut [u8; N], len: usize) {
     loop {
         let mut i = 1;
         let mut swapped = false;
-        while i < arr.len() {
+        while i < len {
             if arr[i - 1] > arr[i] {
                 arr.swap(i - 1, i);
                 swapped = true;
@@ -129,11 +129,11 @@ mod tests {
     #[test]
     fn sort_ints() {
         let mut to_sort = [5, 4, 3, 2, 1];
-        super::sort_ints(&mut to_sort);
+        super::sort_ints(&mut to_sort, 5);
         assert_eq!(to_sort, [1, 2, 3, 4, 5]);
 
         let mut to_sort = [1, 2, 3, 4, 5];
-        super::sort_ints(&mut to_sort);
+        super::sort_ints(&mut to_sort, 5);
         assert_eq!(to_sort, [1, 2, 3, 4, 5]);
     }
 }
