@@ -2,7 +2,7 @@ macro_rules! masked_builder2 {
     (
         $struct_vis:vis struct $struct_name:ident $(<$($lf:lifetime),*>)? {
             $(
-                $(#[$attributes:meta])*
+                $(#[$($attributes:tt)+])*
                 $field_vis:vis $field_name:ident: $field_type:ty,
             )+
         }
@@ -10,19 +10,27 @@ macro_rules! masked_builder2 {
 
         $struct_vis struct $struct_name $(<$($lf),*>)? {
             mask: u64,
-            $($field_vis $field_name: $field_type),*
+            $($field_vis $field_name: ::core::mem::MaybeUninit<$field_type>),*
         }
 
         impl $(<$($lf),*>)? $struct_name $(<$($lf),*>)? {
           const FIELD_COUNT: usize = crate::macros::masked_builder2::count_tts!($($field_name),*);
           const FIELDS: [&'static str; Self::FIELD_COUNT] = crate::macros::masked_builder2::gen_field_names!(
-              $($field_name),+
+              $(
+                  $(#[$($attributes)+])*
+                  $field_name
+              ),+
           );
           const FIELD_MAX_LEN: usize = crate::macros::constified::strings_len_max(&Self::FIELDS);
           const FIELDS_SUM_LEN: usize = crate::macros::constified::strings_len_sum(&Self::FIELDS);
           const MASK_OFFSETS: [usize; Self::FIELD_COUNT] =  crate::macros::hash_face::fields_to_bit_shifts::<
               { Self::FIELD_COUNT }, { Self::FIELDS_SUM_LEN }, { Self::FIELD_MAX_LEN }
             >(&Self::FIELDS);
+
+          crate::macros::masked_builder2::gen_setters!($(
+            $(#[$($attributes)+])*
+            $field_name: $field_type
+          ),+);
         }
     };
 }
@@ -67,6 +75,28 @@ macro_rules! select_field_attr {
     };
 }
 pub(crate) use select_field_attr;
+
+macro_rules! gen_setters {
+    (@IDX $idx:expr, $(#[$attributes:meta])* $field_name:ident: $arg:ty $(, $($tt:tt)* )?) => {
+        pub fn $field_name<T: Into<$arg>>(&mut self, $field_name: T) -> &mut Self {
+            let mask: u64 = Self::MASK_OFFSETS[$idx] as u64;
+            if self.mask & mask == mask {
+                unsafe { self.$field_name.assume_init_drop() };
+            }
+
+            self.mask |= 1 << mask;
+            self.$field_name = ::core::mem::MaybeUninit::new($field_name.into());
+            self
+        }
+
+        crate::macros::masked_builder2::gen_setters!(@IDX $idx + 1 $(, $($tt)* )?);
+    };
+    (@IDX $idx:expr $(,)?) => {};
+    ($($tt:tt)+) => {
+        crate::macros::masked_builder2::gen_setters!(@IDX 0, $($tt)+);
+    };
+}
+pub(crate) use gen_setters;
 
 // https://veykril.github.io/tlborm/decl-macros/building-blocks/counting.html#bit-twiddling
 #[doc(hidden)]
@@ -129,14 +159,15 @@ mod tests {
     fn masked_builder2() {
         masked_builder2!(
             struct A {
+                #[builder_field(rename = "bca")]
                 pub asdasd: usize,
                 pub b: usize,
             }
         );
 
-        assert_eq!(A::FIELDS_SUM_LEN, 7);
+        assert_eq!(A::FIELDS_SUM_LEN, 4);
         assert_eq!(A::FIELD_COUNT, 2);
-        assert_eq!(A::FIELD_MAX_LEN, 6);
-        panic!("{:?}", A::MASK_OFFSETS);
+        assert_eq!(A::FIELD_MAX_LEN, 3);
+        assert_eq!(A::FIELDS, ["bca", "b"]);
     }
 }
