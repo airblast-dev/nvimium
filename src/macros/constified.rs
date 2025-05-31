@@ -118,8 +118,8 @@ mod tests {
         let mut arr = [0_usize; 20];
         let mut arr_len = 0;
         super::extend_arr(&mut arr_len, &mut arr, 3, &[3; 3]);
-        super::extend_arr(&mut arr_len, &mut arr, 3, &[4; 4]);
-        super::extend_arr(&mut arr_len, &mut arr, 3, &[5; 2]);
+        super::extend_arr(&mut arr_len, &mut arr, 4, &[4; 4]);
+        super::extend_arr(&mut arr_len, &mut arr, 2, &[5; 2]);
         assert_eq!(
             arr,
             [3, 3, 3, 4, 4, 4, 4, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
