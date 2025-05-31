@@ -1,6 +1,4 @@
-use crate::masked_builder;
-
-use crate::nvim_types::{Boolean, Integer, string::ThinString, window::Window};
+use crate::{macros::masked_builder::masked_builder, nvim_types::{string::ThinString, window::Window, Boolean, Integer}};
 
 masked_builder!(
     #[derive(Clone)]

@@ -1,6 +1,4 @@
-use crate::masked_builder;
-
-use crate::nvim_types::Array;
+use crate::{macros::masked_builder::masked_builder, nvim_types::Array};
 
 masked_builder! {
     #[repr(C)]

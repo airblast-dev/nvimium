@@ -1,6 +1,7 @@
-use crate::masked_builder;
-
-use crate::nvim_types::{Boolean, HlGroupId, Integer, OwnedThinString, object_subs::StringOrInt};
+use crate::{
+    macros::masked_builder::masked_builder,
+    nvim_types::{Boolean, HlGroupId, Integer, OwnedThinString, object_subs::StringOrInt},
+};
 
 masked_builder! {
     #[repr(C)]
@@ -15,24 +16,24 @@ masked_builder! {
         underdashed: Boolean,
         italic: Boolean,
         reverse: Boolean,
-        #[builder(skip)]
+        #[builder_fn_skip]
         altfont: Boolean,
         nocombine: Boolean,
         default: Boolean,
         cterm: StringOrInt,
         foreground: StringOrInt,
-        #[builder(skip)]
+        #[builder_fn_skip]
         fg: StringOrInt,
         background: StringOrInt,
-        #[builder(skip)]
+        #[builder_fn_skip]
         bg: StringOrInt,
         ctermfg: StringOrInt,
         ctermbg: StringOrInt,
         special: StringOrInt,
-        #[builder(skip)]
+        #[builder_fn_skip]
         sp: StringOrInt,
         link: HlGroupId,
-        #[builder(skip)]
+        #[builder_fn_skip]
         global_link: HlGroupId,
         fallback: Boolean,
         blend: Integer,
@@ -40,7 +41,7 @@ masked_builder! {
         bg_indexed: Boolean,
         force: Boolean,
         // it is unsound to not skip this as neovim will free this if the mask is set
-        #[builder(skip)]
-        url: OwnedThinString
+        #[builder_fn_skip]
+        url: OwnedThinString,
     }
 }

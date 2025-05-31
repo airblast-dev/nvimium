@@ -1,321 +1,206 @@
-// TODO: replace meta fragments with ident to allow better comparison in macros?
-
-#[macro_export]
+// the things i do to not write proc macros...
 macro_rules! masked_builder {
     (
-        $(#[$meta:meta])*
-        $pub:vis struct $ident:ident$(< $( $lf:lifetime ),* >)? {
-            $(
-                $(#[builder($skip:meta)])?
-                $(#[field_meta = $field_meta:meta])*
-                $(#[func_meta = $func_meta:meta])*
-                $vis:vis $field:ident: $field_ty:ty
-            ), *$(,)?
-        }
+        $(#[$($struct_attrs:tt)+])*
+        $struct_vis:vis struct $struct_name:ident {}
     ) => {
-
-        $(#[$meta])*
-        $pub struct $ident$(<$($lf),*>),* {
-            mask: u64,
-            $(
-                $(#[$field_meta])*
-                $vis $field: ::core::mem::MaybeUninit<$field_ty>
-            ),*
+        $(#[$($struct_attrs)+])*
+        $struct_vis struct $struct_name {
+            mask: u64
         }
 
-        impl$(<$($lf),*>)? $ident$(<$($lf),*>),* {
-            $crate::func_gen_masked!(
-                $(
-                    $(#[builder($skip)])?
-                    $(
-                        #[func_meta = $func_meta]
-                    )*
-                    $field: $field_ty,
-                )*
-            );
-        }
-
-        impl $(<$($lf),*>)? Default for $ident $(<$($lf),*>)?  {
+        impl Default for $struct_name {
             fn default() -> Self {
                 unsafe { core::mem::zeroed() }
             }
         }
+    };
+    (
+        $(#[$($struct_attrs:tt)+])*
+        $struct_vis:vis struct $struct_name:ident $(<$($lf:lifetime),*>)? {
+            $(
+                $(#[$($attributes:tt)+])*
+                $field_vis:vis $field_name:ident: $field_type:ty,
+            )+
+        }
+    ) => {
 
-        impl $(<$($lf),*>)? Drop for $ident $(<$($lf),*>)? {
-            fn drop(&mut self) {
-
-                // the first bit is unused so the masks value being 1 or 0 means no fields were set
-                if self.mask <= 1 {
-                    return;
-                }
-
-                // TODO: might be possible to optimize this with tagged scope and comparisons
-                #[allow(unused_mut)]
-                let mut _base_mask = 1;
-                $(
-                    if self.mask & _base_mask == _base_mask {
-                        unsafe { self.$field.assume_init_drop() }
-                    }
-                    _base_mask <<= 1;
-                )*
-
-            }
+        $(#[$($struct_attrs)+])*
+        $struct_vis struct $struct_name $(<$($lf),*>)? {
+            mask: u64,
+            $($field_vis $field_name: ::core::mem::MaybeUninit<$field_type>),*
         }
 
-        impl $(<$($lf),*>)? ::core::fmt::Debug for $ident $(<$($lf),*>)? {
-            #[allow(unreachable_code)]
-            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                let mut _base_mask = 1;
-                #[allow(unused)]
-                use $crate::macros::masked_builder::Uninit;
-                #[allow(unused)]
-                use ::core::marker::PhantomData;
+        mod builder {
+          pub(super) const FIELD_COUNT: usize = crate::macros::masked_builder::count_tts!($($field_name),*);
+          pub(super) const FIELDS: [&'static str; FIELD_COUNT] = crate::macros::masked_builder::gen_field_names!(
+              $(
+                  $(#[$($attributes)+])*
+                  $field_name
+              ),+
+          );
+          pub(super) const FIELD_MAX_LEN: usize = crate::macros::constified::strings_len_max(&FIELDS);
+          pub(super) const FIELDS_SUM_LEN: usize = crate::macros::constified::strings_len_sum(&FIELDS);
+          pub(super) const MASK_OFFSETS: [u64; FIELD_COUNT] =  crate::macros::hash_face::fields_to_bit_shifts::<
+              { FIELD_COUNT }, { FIELDS_SUM_LEN }, { FIELD_MAX_LEN }
+            >(&FIELDS);
+
+        }
+        impl $(<$($lf),*>)? $struct_name $(<$($lf),*>)? {
 
 
-                #[allow(unused)]
-                let mut field: &dyn ::core::fmt::Debug;
-                #[allow(unused)]
-                let mut un: Uninit;
-                f.debug_struct(stringify!($ident))
-                    $(
-                        .field(stringify!($field), {
-                            let ret = if self.mask & _base_mask == _base_mask {
-                                ( unsafe { self.$field.assume_init_ref() } as &dyn ::core::fmt::Debug )
-                            } else {
-                                un = $crate::macros::masked_builder::Uninit(::core::any::type_name::<$field_ty>());
-                                &un
-                            };
-                            _base_mask <<= 1;
-                            ret
-                        })
-                    )*
-                    .finish()
+          crate::macros::masked_builder::gen_setters!($(
+            $(#[$($attributes)+])*
+            $field_name: $field_type
+          ),+);
+        }
+
+        impl $(<$($lf),*>)? Default for $struct_name $(<$($lf),*>)? {
+            fn default() -> Self {
+                unsafe { core::mem::zeroed() }
             }
         }
     };
 }
 
-#[doc(hidden)]
-pub struct Uninit(#[doc(hidden)] pub &'static str);
+pub(crate) use masked_builder;
 
-impl ::core::fmt::Debug for Uninit {
-    #[inline(never)]
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        write!(f, "Uninit<{}>", self.0)
-    }
+/// Macro for generating stringified fields that allows renaming.
+///
+/// Basically a helper macro for masked builder
+macro_rules! gen_field_names {
+    (
+        $(
+            $(#[$($attr:tt)+])*
+            $field_name:ident
+        ),+
+    ) => {
+        [
+            $( crate::macros::masked_builder::select_field_attr!($(#[$($attr)+])* $field_name) ),+
+        ]
+    };
 }
 
-#[doc(hidden)]
-#[macro_export]
-macro_rules! func_gen_masked {
-    (
-        $(#[func_meta = $func_meta:meta])*
-        $field:ident: $field_ty:ty,
-        $(
-            $(#[builder($inner_skip:meta)])?
-            $(#[func_meta = $inner_func_meta:meta])*
-            $inner:ident: $inner_ty:ty,
-        )*
-    ) => {
-        $(#[$func_meta])*
-        pub fn $field<T: Into<$field_ty>>(&mut self, $field: T) -> &mut Self {
-            if self.mask & 1 == 1 {
-                $crate::macros::masked_builder::cold();
-                unsafe { self.$field.assume_init_drop() }
+pub(crate) use gen_field_names;
+
+/// Checks if the field needs to be renamed before being hashed for the bit index of the field
+///
+/// uses a pushdown accum and a macro branch to determine if a alternative name was specified.
+/// In neovim this is required in a few places where field names and Rust keywords clash.
+macro_rules! select_field_attr {
+    (@ACC [$($acc:tt)*] #[builder_field(rename = $rename:literal)] $($tt:tt)*) => {
+        crate::macros::masked_builder::select_field_attr!(@ACC [$rename] $($tt)* )
+    };
+    (@ACC [$($acc:tt)*] #[$other_attr:meta] $($tt:tt)*) => {
+       crate::macros::masked_builder::select_field_attr!(@ACC [$($acc)*] $($tt)* )
+    };
+    (@ACC [$($acc:tt)+] $field_name:ident) => {{
+        $($acc)+
+    }};
+    (@ACC [] $field_name:ident) => {
+        ::core::stringify!($field_name)
+    };
+    ($($tt:tt)+) => {
+        crate::macros::masked_builder::select_field_attr!(@ACC [] $($tt)+)
+    };
+}
+pub(crate) use select_field_attr;
+
+macro_rules! gen_setters {
+    (@IDX $idx:expr, #[builder_fn_skip] $field_name:ident: $arg:ty $(, $($tt:tt)* )?) => {
+        crate::macros::masked_builder::gen_setters!(@IDX $idx + 1 $(, $($tt)* )?);
+    };
+    (@IDX $idx:expr, $(#[$attributes:meta])* $field_name:ident: $arg:ty $(, $($tt:tt)* )?) => {
+        pub fn $field_name<T: Into<$arg>>(&mut self, $field_name: T) -> &mut Self {
+            let mask: u64 = builder::MASK_OFFSETS[$idx] as u64;
+            if self.mask & mask == mask {
+                unsafe { self.$field_name.assume_init_drop() };
             }
-            self.mask |= 1;
-            self.$field.write($field.into());
+
+            self.mask |= 1 << mask;
+            self.$field_name = ::core::mem::MaybeUninit::new($field_name.into());
             self
         }
-        $crate::func_gen_masked_inner!(
-            2,
-            $(
-                $(#[builder($inner_skip)])?
-                $( #[func_meta = $inner_func_meta] )*
-                $inner: $inner_ty,
-            )*
-        );
+
+        crate::macros::masked_builder::gen_setters!(@IDX $idx + 1 $(, $($tt)* )?);
     };
-    (
-        #[builder($skip:meta)]
-        $field:ident: $field_ty:ty,
-        $(
-            $(#[builder($inner_skip:meta)])?
-            $(#[func_meta = $inner_func_meta:meta])*
-            $inner:ident: $inner_ty:ty,
-        )*
-    ) => {
-        $crate::func_gen_masked_inner!(
-            4,
-            $(
-                $(#[builder($inner_skip)])?
-                $( #[func_meta = $inner_func_meta] )*
-                $inner: $inner_ty,
-            )*
-        );
+    (@IDX $idx:expr $(,)?) => {};
+    ($($tt:tt)+) => {
+        crate::macros::masked_builder::gen_setters!(@IDX 0, $($tt)+);
     };
-    () => {}
+}
+pub(crate) use gen_setters;
+
+// https://veykril.github.io/tlborm/decl-macros/building-blocks/counting.html#bit-twiddling
+#[doc(hidden)]
+macro_rules! count_tts {
+    () => { 0 };
+    ($odd:tt $(, $a:tt, $b:tt)*) => { ($crate::count_tts!($($a),*) << 1) | 1 };
+    ($($a:tt, $even:tt),*) => { $crate::count_tts!($($a),*) << 1 };
 }
 
-#[doc(hidden)]
-#[macro_export]
-macro_rules! func_gen_masked_inner {
-
-    (
-        $mask:expr,
-        #[builder($skip:meta)]
-        $field:ident: $field_ty:ty,
-        $(
-            $( #[builder($inner_skip:meta)] )?
-            $( #[func_meta = $inner_func_meta:meta] )*
-            $inner:ident: $inner_ty:ty,
-        )*
-    ) => {
-        $crate::func_gen_masked_inner!(
-            $mask << 1,
-            $(
-                $(#[builder($inner_skip)])?
-                $(#[func_meta = $inner_func_meta])*
-                $inner: $inner_ty,
-            )*
-        );
-    };
-    (
-        $mask:expr,
-        $(#[func_meta = $func_meta:meta])*
-        $field:ident: $field_ty:ty,
-        $(
-            $( #[builder($inner_skip:meta)] )?
-            $( #[func_meta = $inner_func_meta:meta] )*
-            $inner:ident: $inner_ty:ty,
-        )*
-    ) => {
-        $(#[$func_meta])*
-        pub fn $field<T: Into<$field_ty>>(&mut self, $field: T) -> &mut Self {
-            if self.mask & $mask == $mask {
-                $crate::macros::masked_builder::cold();
-                unsafe { self.$field.assume_init_drop() };
-            }
-            self.mask |= $mask;
-            self.$field.write($field.into());
-            self
-        }
-        $crate::func_gen_masked_inner!(
-            $mask << 1,
-            $(
-                $(#[builder($inner_skip)])?
-                $(#[func_meta = $inner_func_meta])*
-                $inner: $inner_ty,
-            )*
-        );
-    };
-    ($mask:expr $(,)?) => {};
-}
-
-#[cold]
-#[inline(never)]
-#[doc(hidden)]
-pub fn cold() {}
+pub(crate) use count_tts;
 
 #[cfg(test)]
-#[allow(unused)]
 mod tests {
-    use std::{borrow::Cow, mem::MaybeUninit, num::NonZeroUsize};
 
     #[test]
-    fn builder_masked() {
+    fn select_field_attr() {
+        let h = select_field_attr!(hello);
+        assert_eq!("hello", h);
+
+        let goodbye = select_field_attr!(
+            #[even_more_attributes]
+            #[builder_field(rename = "goodbye")]
+            #[even_more_attributes]
+            hello
+        );
+
+        assert_eq!("goodbye", goodbye);
+    }
+
+    #[test]
+    fn gen_field_names() {
+        let single = gen_field_names!(
+            #[even_more_attributes]
+            #[builder_field(rename = "epic_name")]
+            #[even_more_attributes]
+            bad_name
+        );
+
+        assert_eq!(single, ["epic_name"]);
+
+        let many = gen_field_names!(
+            #[sasdsad]
+            #[asdsadasdasd]
+            asdasd,
+            #[some_attr]
+            #[my_attr]
+            #[builder_field(rename = "cool_name")]
+            terrible_field_name,
+            #[even_more_attributes]
+            #[builder_field(rename = "epic_name")]
+            #[even_more_attributes]
+            bad_name
+        );
+
+        assert_eq!(many, ["asdasd", "cool_name", "epic_name",]);
+    }
+
+    #[test]
+    #[allow(unused)]
+    fn masked_builder() {
         masked_builder!(
-            struct A<'a> {
-                a: u32,
-                b: &'a str,
-                c: bool,
+            struct A {
+                #[builder_field(rename = "bca")]
+                pub asdasd: usize,
+                pub b: usize,
             }
         );
-        let mut c = A {
-            mask: 0,
-            a: MaybeUninit::new(2),
-            b: MaybeUninit::new(""),
-            c: MaybeUninit::new(true),
-        };
-        c.a(20_u32);
-        assert_eq!(c.mask, 1);
-        c.b("hello");
-        assert_eq!(c.mask, 1 | 2);
-        c.c(false);
-        assert_eq!(c.mask, 1 | 2 | 4);
 
-        unsafe {
-            assert!(!c.c.assume_init());
-            assert_eq!(c.a.assume_init(), 20_u32);
-            assert_eq!(c.b.assume_init(), "hello");
-        }
-        masked_builder! {
-            struct B<'a> {
-                #[func_meta = doc(hidden)]
-                a: u32,
-                b: u64,
-                c: Cow<'a, str>,
-            }
-        };
-
-        let mut c = B {
-            mask: 0,
-            a: MaybeUninit::new(1),
-            b: MaybeUninit::new(2),
-            c: MaybeUninit::zeroed(),
-        };
-
-        c.a(5_u32);
-        assert_eq!(c.mask, 1);
-        c.b(6_u64);
-        assert_eq!(c.mask, 1 | 2);
-        c.c("HAHAHA".to_owned());
-        unsafe {
-            assert_eq!(c.c.assume_init_ref(), "HAHAHA");
-            assert_eq!(c.mask, 1 | 2 | 4);
-
-            assert_eq!(c.a.assume_init(), 5_u32);
-            assert_eq!(c.b.assume_init(), 6_u64);
-        }
-
-        B::default();
-
-        masked_builder! {
-            struct C {
-                a: String,
-                b: String,
-                c: NonZeroUsize,
-            }
-        }
-
-        let mut c = C::default();
-
-        #[rustfmt::skip]
-        assert_eq!(
-"C {
-    a: Uninit<alloc::string::String>,
-    b: Uninit<alloc::string::String>,
-    c: Uninit<core::num::nonzero::NonZero<usize>>,
-}",
-            format!("{:#?}", c)
-        );
-        c.a("Hello");
-
-        #[rustfmt::skip]
-        assert_eq!(
-"C {
-    a: \"Hello\",
-    b: Uninit<alloc::string::String>,
-    c: Uninit<core::num::nonzero::NonZero<usize>>,
-}", format!("{:#?}", c));
-        c.c(NonZeroUsize::new(5).unwrap());
-
-        #[rustfmt::skip]
-        assert_eq!(
-"C {
-    a: \"Hello\",
-    b: Uninit<alloc::string::String>,
-    c: 5,
-}", format!("{:#?}", c));
+        assert_eq!(builder::FIELDS_SUM_LEN, 4);
+        assert_eq!(builder::FIELD_COUNT, 2);
+        assert_eq!(builder::FIELD_MAX_LEN, 3);
+        assert_eq!(builder::FIELDS, ["bca", "b"]);
     }
 }

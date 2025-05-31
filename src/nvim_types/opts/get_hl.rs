@@ -1,6 +1,4 @@
-use crate::masked_builder;
-
-use crate::nvim_types::{Boolean, Integer, string::ThinString};
+use crate::{macros::masked_builder::masked_builder, nvim_types::{string::ThinString, Boolean, Integer}};
 
 masked_builder!(
     #[repr(C)]

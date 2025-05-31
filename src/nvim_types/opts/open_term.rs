@@ -1,8 +1,7 @@
 use std::error::Error;
 use std::mem::MaybeUninit;
 
-use crate::masked_builder;
-
+use crate::macros::masked_builder::masked_builder;
 use crate::nvim_types::args::open_term_cb::OpenTermOnInputArgs;
 use crate::nvim_types::lua::Function;
 use crate::nvim_types::{Boolean, lua_ref::LuaRef};
@@ -11,7 +10,7 @@ use crate::nvim_types::{Boolean, lua_ref::LuaRef};
 masked_builder! {
     #[repr(C)]
     pub struct OpenTermOpts {
-        #[builder(skip)]
+        #[builder_fn_skip]
         on_input: LuaRef,
         force_crlf: Boolean,
     }

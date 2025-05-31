@@ -1,15 +1,9 @@
 use std::{error::Error, mem::ManuallyDrop};
 
 use crate::{
-    masked_builder,
-    nvim_types::{
-        AsThinString, Boolean, Integer, Object, ThinString,
-        args::user_command_complete::UserCommandCompleteArgs,
-        lua::Function,
-        object::{ObjectRef, ObjectTag},
-        object_subs::BoolOrInteger,
-    },
-    th,
+    macros::masked_builder::masked_builder, nvim_types::{
+        args::user_command_complete::UserCommandCompleteArgs, lua::Function, object::{ObjectRef, ObjectTag}, object_subs::BoolOrInteger, AsThinString, Boolean, Integer, Object, ThinString
+    }, th
 };
 
 #[repr(transparent)]
@@ -188,14 +182,14 @@ masked_builder! {
         complete: UserCommandComplete,
         count: BoolOrInteger,
         // with a neovim string
-        #[builder(skip)]
+        #[builder_fn_skip]
         desc: ObjectRef<'a>,
         force: Boolean,
         keepscript: Boolean,
         nargs: UserCommandNarg,
         // with a lua ref
         preview: Object,
-        #[builder(skip)]
+        #[builder_fn_skip]
         // unlike the others this is skipped because the generated function signature contains
         // the internal struct as a trait bound
         // this type is kind of annoying as its hard to express the requirements of this value with the type

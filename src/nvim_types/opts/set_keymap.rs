@@ -1,8 +1,7 @@
 use std::error::Error;
 use std::mem::MaybeUninit;
 
-use crate::masked_builder;
-
+use crate::macros::masked_builder::masked_builder;
 use crate::nvim_types::lua::Function;
 use crate::nvim_types::{Boolean, lua_ref::LuaRef, string::ThinString};
 
@@ -16,7 +15,7 @@ masked_builder! {
         expr: Boolean,
         unique: Boolean,
         // Manually implemented
-        #[builder(skip)]
+        #[builder_fn_skip]
         callback: LuaRef,
         desc: ThinString<'a>,
         replace_keycodes: Boolean,
