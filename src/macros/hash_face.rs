@@ -176,7 +176,6 @@ fn extend_arr<T: Copy + std::fmt::Debug>(
     let mut i = 0;
     let mut start = *len;
     let end = *len + ext_len;
-    dbg!(ext_arr);
     while start < end {
         arr[start] = ext_arr[i];
 
@@ -274,13 +273,14 @@ fn sorted_fields_shifts<const N: usize, const SUM_LEN: usize, const MAX_LEN: usi
     let mut new_order_len = 0;
     let mut len = 1;
     while len <= MAX_LEN {
-        let vals = len_pos_buckets.len_pos[len - 1];
+        let mut vals = &mut len_pos_buckets.len_pos[len - 1];
 
         let LenPos {
             pos: _pos,
             bucket: pos_buck,
-        } = vals;
-        let keys = pos_buck.keys();
+        } = &mut vals;
+        let mut keys = pos_buck.keys();
+        sort_ints(&mut keys[0..pos_buck.len]);
 
         if pos_buck.len > 1 {
             let mut ci = 0;
@@ -296,8 +296,8 @@ fn sorted_fields_shifts<const N: usize, const SUM_LEN: usize, const MAX_LEN: usi
 
                 ci += 1;
             }
-        } else if pos_buck.len == 1 {
-            let b = pos_buck.kvs[pos_buck.find_kv_idx(keys[0] as usize).unwrap()];
+        } else if let Some(b_idx) = pos_buck.find_kv_idx(keys[0] as usize) {
+            let b = &pos_buck.kvs[b_idx];
             extend_arr(&mut new_order_len, &mut new_order, 1, &[b.val[0]]);
         }
 
@@ -323,18 +323,86 @@ mod tests {
 
     #[test]
     fn fields() {
-        const FIELDS: [&str; 6] = [
-            "bold",
-            "standout",
-            "strikethrough",
-            "underline",
-            "undercurl",
-            "underdouble",
+        const FIELDS: [&str; 22] = [
+            "row",
+            "col",
+            "width",
+            "height",
+            "anchor",
+            "relative",
+            "split",
+            "win",
+            "bufpos",
+            "external",
+            "focusable",
+            "vertical",
+            "zindex",
+            "border",
+            "title",
+            "title_pos",
+            "footer",
+            "footer_pos",
+            "style",
+            "noautocmd",
+            "fixed",
+            "hide",
         ];
 
-        const LEN_POS_BUCKETS: LenPosBuckets<6, 43, 15> = build_buckets(&FIELDS);
+        const EXPECTED: [&str; 22] = [
+            "col",
+            "row",
+            "win",
+            "hide",
+            "width",
+            "split",
+            "title",
+            "fixed",
+            "style",
+            "anchor",
+            "bufpos",
+            "height",
+            "zindex",
+            "footer",
+            "border",
+            "external",
+            "relative",
+            "vertical",
+            "focusable",
+            "noautocmd",
+            "title_pos",
+            "footer_pos",
+        ];
+
+        const SUM_LEN: usize = const {
+            let mut sum = 0;
+            let mut i = 0;
+            while i < EXPECTED.len() {
+                sum += EXPECTED[i].len();
+
+                i += 1;
+            }
+
+            sum
+        };
+
+        const MAX_LEN: usize = const {
+            let mut max = 0;
+            let mut i = 0;
+            while i < EXPECTED.len() {
+                if max < EXPECTED[i].len() {
+                    max = EXPECTED[i].len();
+                }
+
+                i += 1;
+            }
+
+            max
+        };
+
+        const LEN_POS_BUCKETS: LenPosBuckets<22, SUM_LEN, MAX_LEN> = build_buckets(&FIELDS);
+        //panic!("{:#?}", LEN_POS_BUCKETS);
         let s = sorted_fields_shifts(LEN_POS_BUCKETS);
 
-        panic!("{:#?}", s);
+        assert_eq!(s, EXPECTED);
     }
 }
