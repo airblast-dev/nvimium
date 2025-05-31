@@ -305,11 +305,11 @@ pub(crate) const fn fields_to_bit_shifts<
     let mut i = 0;
     while i < N {
         let original = strings[i];
-        let mut x = i;
+        let mut x = 0;
         while x < N {
             let moved = reordered[x];
             if str_eq(original, moved) {
-                shifts[i] = x as u64;
+                shifts[i] = x as u64 + 1;
             }
 
             x += 1;
