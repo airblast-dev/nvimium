@@ -359,7 +359,7 @@ pub const fn str_eq(s1: &'static str, s2: &'static str) -> bool {
         }
 }
 
-pub const fn fields_to_bit_shifts<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>(
+pub(crate) const fn fields_to_bit_shifts<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>(
     strings: &[&'static str; N],
 ) -> [usize; N] {
     let len_pos_buckets: LenPosBuckets<N, SUM_LEN, MAX_LEN> = build_buckets(strings);
