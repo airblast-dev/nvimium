@@ -23,7 +23,7 @@ macro_rules! masked_builder2 {
           );
           const FIELD_MAX_LEN: usize = crate::macros::constified::strings_len_max(&Self::FIELDS);
           const FIELDS_SUM_LEN: usize = crate::macros::constified::strings_len_sum(&Self::FIELDS);
-          const MASK_OFFSETS: [usize; Self::FIELD_COUNT] =  crate::macros::hash_face::fields_to_bit_shifts::<
+          const MASK_OFFSETS: [u64; Self::FIELD_COUNT] =  crate::macros::hash_face::fields_to_bit_shifts::<
               { Self::FIELD_COUNT }, { Self::FIELDS_SUM_LEN }, { Self::FIELD_MAX_LEN }
             >(&Self::FIELDS);
 

@@ -296,11 +296,11 @@ pub(crate) const fn fields_to_bit_shifts<
     const MAX_LEN: usize,
 >(
     strings: &[&'static str; N],
-) -> [usize; N] {
+) -> [u64; N] {
     let len_pos_buckets: LenPosBuckets<N, SUM_LEN, MAX_LEN> = build_buckets(strings);
     let reordered = sorted_fields_shifts(len_pos_buckets);
 
-    let mut shifts = [0; N];
+    let mut shifts = [0_u64; N];
 
     let mut i = 0;
     while i < N {
@@ -309,7 +309,7 @@ pub(crate) const fn fields_to_bit_shifts<
         while x < N {
             let moved = reordered[x];
             if str_eq(original, moved) {
-                shifts[i] = x;
+                shifts[i] = x as u64;
             }
 
             x += 1;
@@ -407,7 +407,6 @@ mod tests {
         };
 
         const LEN_POS_BUCKETS: LenPosBuckets<22, SUM_LEN, MAX_LEN> = build_buckets(&FIELDS);
-        //panic!("{:#?}", LEN_POS_BUCKETS);
         let s = sorted_fields_shifts(LEN_POS_BUCKETS);
 
         assert_eq!(s, EXPECTED);
