@@ -23,6 +23,7 @@ use std::mem::ManuallyDrop;
 //
 // TLDR; every function here can only accept a ThinString as its string type.
 unsafe extern "C" {
+    pub fn nvim_chan_send<'a>(chan: Channel, bytes: ThinString<'a>, err: *mut Error);
     pub fn nvim_create_buf(
         listed: Boolean,
         scratch: Boolean,

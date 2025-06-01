@@ -1,7 +1,7 @@
 use crate::{
-    nvim_funcs::c_funcs::global,
+    nvim_funcs::c_funcs::global::{self, nvim_chan_send},
     nvim_types::{
-        Arena,
+        Arena, ThinString,
         returns::{get_hl::HighlightGroups, get_keymap::Keymaps},
     },
 };
@@ -26,6 +26,14 @@ use crate::nvim_types::{
 };
 use crate::tri;
 use thread_lock::call_check;
+
+pub fn chan_send<S: AsThinString>(chan: Channel, bytes: S) -> Result<(), Error> {
+    call_check();
+    tri! {
+        let mut err;
+        unsafe { nvim_chan_send(chan, bytes.as_thinstr(), &mut err) },
+    }
+}
 
 /// Create a new buffer
 ///
