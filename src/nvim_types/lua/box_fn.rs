@@ -10,9 +10,7 @@ use std::{
 
 use libc::c_int;
 use mlua_sys::{
-    LUA_REGISTRYINDEX, lua_State, lua_checkstack, lua_newuserdata, lua_pop, lua_pushcclosure,
-    lua_pushcfunction, lua_pushlightuserdata, lua_rawgeti, lua_setfield, lua_setmetatable,
-    lua_tolightuserdata, lua_touserdata, lua_upvalueindex, luaL_newmetatable, luaL_ref,
+    luaL_newmetatable, luaL_ref, lua_State, lua_checkstack, lua_gettop, lua_newuserdata, lua_pop, lua_pushcclosure, lua_pushcfunction, lua_pushlightuserdata, lua_rawgeti, lua_setfield, lua_setmetatable, lua_tolightuserdata, lua_touserdata, lua_type, lua_upvalueindex, LUA_REGISTRYINDEX
 };
 use rand::{SeedableRng, distr::Distribution, rngs::SmallRng};
 use thread_lock::init_lua_ptr;
