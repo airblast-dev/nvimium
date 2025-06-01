@@ -33,6 +33,7 @@ pub fn buf_del_user_command<TH: AsThinString>(buf: Buffer, name: TH) -> Result<(
 #[cfg(all(not(miri), feature = "testing"))]
 mod tests {
     use crate as nvimium;
+    use crate::nvim_types::{Object, OwnedThinString};
     use crate::{
         nvim_funcs::vimscript::exec2,
         nvim_test,
@@ -55,18 +56,20 @@ mod tests {
         buf_create_user_command(
             Buffer::new(0),
             c"MyCmdNvimium".as_thinstr(),
-            &c"echoerr",
+            &c":echomsg \"hello\"",
             CreateUserCommandOpts::default()
                 .complete(UserCommandCompleteKind::MESSAGES)
                 .force(true)
-                .addr(UserCommandAddr::ARGUMENTS),
+                .nargs(UserCommandNarg::ZERO_OR_MORE),
         )
         .unwrap();
 
-        exec2(c"MyCmdNvimium", &ExecOpts::default()).unwrap_err();
-        exec2(c"MyCmdNvimium \"hello\"", &ExecOpts::default()).unwrap();
+        exec2(c":MyCmdNvimium", &ExecOpts::default()).unwrap();
 
-        let messages = exec2(c"messages", &ExecOpts::default()).unwrap();
-        panic!("{:?}", messages);
+        let messages = exec2(c":messages", ExecOpts::default().output(true)).unwrap();
+        assert_eq!(
+            messages.get(c"output").unwrap(),
+            &Object::String(OwnedThinString::from(c"hello"))
+        );
     }
 }

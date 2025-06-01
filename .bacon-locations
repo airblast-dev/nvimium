@@ -1,0 +1,446 @@
+warning|:|test-cdylib/src/run.rs|:|14|:|14|:|12|:|19|:|field `target_dir` is never read|:|[0m[1m[33mwarning[0m[0m[1m: field `target_dir` is never read[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mtest-cdylib/src/run.rs:17:9[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m14[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub struct Project {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m            [0m[0m[1m[38;5;12m-------[0m[0m [0m[0m[1m[38;5;12mfield in this struct[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m17[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub target_dir: PathBuf,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m         [0m[0m[1m[33m^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `Project` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(dead_code)]` on by default[0m
+
+|:|none
+warning|:|test-cdylib/src/run.rs|:|17|:|17|:|9|:|19|:|field `target_dir` is never read|:|[0m[1m[33mwarning[0m[0m[1m: field `target_dir` is never read[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mtest-cdylib/src/run.rs:17:9[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m14[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub struct Project {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m            [0m[0m[1m[38;5;12m-------[0m[0m [0m[0m[1m[38;5;12mfield in this struct[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m17[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub target_dir: PathBuf,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m         [0m[0m[1m[33m^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `Project` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(dead_code)]` on by default[0m
+
+|:|none
+warning|:|test-cdylib/src/lib.rs|:|29|:|30|:|5|:|20|:|unit tests in doctest are not executed|:|[0m[1m[33mwarning[0m[0m[1m: unit tests in doctest are not executed[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mtest-cdylib/src/lib.rs:29:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m29[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m//! #[test][0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m _____^[0m
+[0m[1m[38;5;12m30[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m[0m [0m[0m//! fn api_gen_test() {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|___________________^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#test_attr_in_doctest[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::test_attr_in_doctest)]` on by default[0m
+
+|:|none
+warning|:|test-cdylib/src/lib.rs|:|45|:|46|:|5|:|20|:|unit tests in doctest are not executed|:|[0m[1m[33mwarning[0m[0m[1m: unit tests in doctest are not executed[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mtest-cdylib/src/lib.rs:45:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m45[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m//! #[test][0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m _____^[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m[0m [0m[0m//! fn api_gen_test() {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|___________________^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#test_attr_in_doctest[0m
+
+|:|none
+warning|:|test-cdylib/src/run.rs|:|14|:|14|:|12|:|19|:|field `target_dir` is never read|:|[0m[1m[33mwarning[0m[0m[1m: field `target_dir` is never read[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mtest-cdylib/src/run.rs:17:9[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m14[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub struct Project {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m            [0m[0m[1m[38;5;12m-------[0m[0m [0m[0m[1m[38;5;12mfield in this struct[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m17[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub target_dir: PathBuf,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m         [0m[0m[1m[33m^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `Project` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(dead_code)]` on by default[0m
+
+|:|none
+warning|:|test-cdylib/src/run.rs|:|17|:|17|:|9|:|19|:|field `target_dir` is never read|:|[0m[1m[33mwarning[0m[0m[1m: field `target_dir` is never read[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mtest-cdylib/src/run.rs:17:9[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m14[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub struct Project {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m            [0m[0m[1m[38;5;12m-------[0m[0m [0m[0m[1m[38;5;12mfield in this struct[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m17[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub target_dir: PathBuf,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m         [0m[0m[1m[33m^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `Project` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(dead_code)]` on by default[0m
+
+|:|none
+warning|:|test-cdylib/src/lib.rs|:|29|:|30|:|5|:|20|:|unit tests in doctest are not executed|:|[0m[1m[33mwarning[0m[0m[1m: unit tests in doctest are not executed[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mtest-cdylib/src/lib.rs:29:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m29[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m//! #[test][0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m _____^[0m
+[0m[1m[38;5;12m30[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m[0m [0m[0m//! fn api_gen_test() {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|___________________^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#test_attr_in_doctest[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::test_attr_in_doctest)]` on by default[0m
+
+|:|none
+warning|:|test-cdylib/src/lib.rs|:|45|:|46|:|5|:|20|:|unit tests in doctest are not executed|:|[0m[1m[33mwarning[0m[0m[1m: unit tests in doctest are not executed[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mtest-cdylib/src/lib.rs:45:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m45[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m//! #[test][0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m _____^[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|[0m[0m [0m[0m//! fn api_gen_test() {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[33m|___________________^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#test_attr_in_doctest[0m
+
+|:|none
+warning|:|test-cdylib/tests/load_example.rs|:|5|:|5|:|10|:|73|:|function call inside of `expect`|:|[0m[1m[33mwarning[0m[0m[1m: function call inside of `expect`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0mtest-cdylib/tests/load_example.rs:5:10[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m5[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m        .expect(&format!("failed to open library: {}", dylib.display()));[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m          [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[33mhelp: try: `unwrap_or_else(|_| panic!("failed to open library: {}", dylib.display()))`[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#expect_fun_call[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::expect_fun_call)]` on by default[0m
+
+|:|none
+help|:|test-cdylib/tests/load_example.rs|:|5|:|5|:|10|:|73|:|try|:|none|:|unwrap_or_else(|_| panic!("failed to open library: {}", dylib.display()))
+warning|:|test-cdylib/tests/load_lib.rs|:|5|:|5|:|10|:|73|:|function call inside of `expect`|:|[0m[1m[33mwarning[0m[0m[1m: function call inside of `expect`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0mtest-cdylib/tests/load_lib.rs:5:10[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m5[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m        .expect(&format!("failed to open library: {}", dylib.display()));[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m          [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[33mhelp: try: `unwrap_or_else(|_| panic!("failed to open library: {}", dylib.display()))`[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#expect_fun_call[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::expect_fun_call)]` on by default[0m
+
+|:|none
+help|:|test-cdylib/tests/load_lib.rs|:|5|:|5|:|10|:|73|:|try|:|none|:|unwrap_or_else(|_| panic!("failed to open library: {}", dylib.display()))
+warning|:|src/nvim_types/nvalloc/mod.rs|:|8|:|8|:|20|:|30|:|unused imports: `AtomicBool` and `Ordering`|:|[0m[1m[33mwarning[0m[0m[1m: unused imports: `AtomicBool` and `Ordering`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/nvalloc/mod.rs:8:20[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m8[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    sync::atomic::{AtomicBool, Ordering},[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                    [0m[0m[1m[33m^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_imports)]` on by default[0m
+
+|:|none
+warning|:|src/nvim_types/nvalloc/mod.rs|:|8|:|8|:|32|:|40|:|unused imports: `AtomicBool` and `Ordering`|:|[0m[1m[33mwarning[0m[0m[1m: unused imports: `AtomicBool` and `Ordering`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/nvalloc/mod.rs:8:20[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m8[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    sync::atomic::{AtomicBool, Ordering},[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                    [0m[0m[1m[33m^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_imports)]` on by default[0m
+
+|:|none
+help|:|src/nvim_types/nvalloc/mod.rs|:|7|:|8|:|17|:|41|:|remove the unused imports|:|none|:|
+warning|:|src/nvim_types/lua/core/mod.rs|:|18|:|18|:|36|:|47|:|unused import: `lua_pushnil`|:|[0m[1m[33mwarning[0m[0m[1m: unused import: `lua_pushnil`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/core/mod.rs:18:36[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m18[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse mlua_sys::{lua_State, lua_pop, lua_pushnil};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                    [0m[0m[1m[33m^^^^^^^^^^^[0m
+
+|:|none
+help|:|src/nvim_types/lua/core/mod.rs|:|18|:|18|:|34|:|47|:|remove the unused import|:|none|:|
+warning|:|src/nvim_types/nvalloc/mod.rs|:|8|:|8|:|20|:|30|:|unused imports: `AtomicBool` and `Ordering`|:|[0m[1m[33mwarning[0m[0m[1m: unused imports: `AtomicBool` and `Ordering`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/nvalloc/mod.rs:8:20[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m8[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    sync::atomic::{AtomicBool, Ordering},[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                    [0m[0m[1m[33m^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_imports)]` on by default[0m
+
+|:|none
+warning|:|src/nvim_types/nvalloc/mod.rs|:|8|:|8|:|32|:|40|:|unused imports: `AtomicBool` and `Ordering`|:|[0m[1m[33mwarning[0m[0m[1m: unused imports: `AtomicBool` and `Ordering`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/nvalloc/mod.rs:8:20[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m8[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    sync::atomic::{AtomicBool, Ordering},[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                    [0m[0m[1m[33m^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_imports)]` on by default[0m
+
+|:|none
+help|:|src/nvim_types/nvalloc/mod.rs|:|7|:|8|:|17|:|41|:|remove the unused imports|:|none|:|
+warning|:|src/nvim_types/lua/core/mod.rs|:|18|:|18|:|36|:|47|:|unused import: `lua_pushnil`|:|[0m[1m[33mwarning[0m[0m[1m: unused import: `lua_pushnil`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/core/mod.rs:18:36[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m18[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse mlua_sys::{lua_State, lua_pop, lua_pushnil};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                    [0m[0m[1m[33m^^^^^^^^^^^[0m
+
+|:|none
+help|:|src/nvim_types/lua/core/mod.rs|:|18|:|18|:|34|:|47|:|remove the unused import|:|none|:|
+warning|:|src/nvim_types/lua/box_fn.rs|:|131|:|131|:|20|:|21|:|unused variable: `r`|:|[0m[1m[33mwarning[0m[0m[1m: unused variable: `r`[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/box_fn.rs:131:20[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m131[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                Ok(r) => 0,[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                    [0m[0m[1m[33m^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_r`[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_variables)]` on by default[0m
+
+|:|none
+help|:|src/nvim_types/lua/box_fn.rs|:|131|:|131|:|20|:|21|:|if this is intentional, prefix it with an underscore|:|none|:|_r
+warning|:|src/nvim_types/lua/fn_ptr.rs|:|37|:|37|:|28|:|29|:|unused variable: `r`|:|[0m[1m[33mwarning[0m[0m[1m: unused variable: `r`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/fn_ptr.rs:37:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m37[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                        Ok(r) => 0,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[33m^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_r`[0m
+
+|:|none
+help|:|src/nvim_types/lua/fn_ptr.rs|:|37|:|37|:|28|:|29|:|if this is intentional, prefix it with an underscore|:|none|:|_r
+warning|:|src/nvim_types/arena.rs|:|50|:|50|:|19|:|30|:|function `arena_alloc` is never used|:|[0m[1m[33mwarning[0m[0m[1m: function `arena_alloc` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/arena.rs:50:19[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m50[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub(crate) fn arena_alloc(arena: *mut Arena, size: usize, align: bool) -> *mut c_void;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                   [0m[0m[1m[33m^^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(dead_code)]` on by default[0m
+
+|:|none
+warning|:|src/nvim_types/func_types/create_user_command.rs|:|10|:|10|:|1|:|21|:|associated function `callback` is never used|:|[0m[1m[33mwarning[0m[0m[1m: associated function `callback` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/func_types/create_user_command.rs:15:8[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m10[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mimpl<'a> Command<'a> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m--------------------[0m[0m [0m[0m[1m[38;5;12massociated function in this implementation[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m15[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    fn callback() {}[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m        [0m[0m[1m[33m^^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_types/func_types/create_user_command.rs|:|15|:|15|:|8|:|16|:|associated function `callback` is never used|:|[0m[1m[33mwarning[0m[0m[1m: associated function `callback` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/func_types/create_user_command.rs:15:8[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m10[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mimpl<'a> Command<'a> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m--------------------[0m[0m [0m[0m[1m[38;5;12massociated function in this implementation[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m15[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    fn callback() {}[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m        [0m[0m[1m[33m^^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_types/lua/mod.rs|:|43|:|43|:|1|:|14|:|associated function `from_fn` is never used|:|[0m[1m[33mwarning[0m[0m[1m: associated function `from_fn` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/mod.rs:44:19[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mimpl Function {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m-------------[0m[0m [0m[0m[1m[38;5;12massociated function in this implementation[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub(crate) fn from_fn<F: 'static + Fn(A) -> R + Unpin, A: FromLua, R: IntoLua>(f: F) -> Self {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                   [0m[0m[1m[33m^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_types/lua/mod.rs|:|44|:|44|:|19|:|26|:|associated function `from_fn` is never used|:|[0m[1m[33mwarning[0m[0m[1m: associated function `from_fn` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/mod.rs:44:19[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mimpl Function {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m-------------[0m[0m [0m[0m[1m[38;5;12massociated function in this implementation[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub(crate) fn from_fn<F: 'static + Fn(A) -> R + Unpin, A: FromLua, R: IntoLua>(f: F) -> Self {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                   [0m[0m[1m[33m^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_types/lua/closure.rs|:|13|:|13|:|4|:|16|:|function `closure_drop` is never used|:|[0m[1m[33mwarning[0m[0m[1m: function `closure_drop` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/closure.rs:13:4[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m13[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn closure_drop<F: Fn(A) -> R + Unpin, A: FromLua, R>() -> ([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^^^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_types/lua/closure.rs|:|46|:|46|:|8|:|16|:|function `register` is never used|:|[0m[1m[33mwarning[0m[0m[1m: function `register` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/closure.rs:46:8[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub fn register<F: 'static + Fn(A) -> R + Unpin, A: FromLua, R: IntoLua>([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m        [0m[0m[1m[33m^^^^^^^^[0m
+
+|:|none
+warning|:|src/macros/hash_face.rs|:|142|:|143|:|1|:|39|:|method `find_pos_bucket` is never used|:|[0m[1m[33mwarning[0m[0m[1m: method `find_pos_bucket` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/macros/hash_face.rs:152:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m142[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m/[0m[0m [0m[0mimpl<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>[0m
+[0m[1m[38;5;12m143[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    LenPosBuckets<N, SUM_LEN, MAX_LEN>[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|______________________________________-[0m[0m [0m[0m[1m[38;5;12mmethod in this implementation[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m152[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m    const fn find_pos_bucket(&mut self, pos: usize) -> Option<&mut LenPos<N, SUM_LEN>> {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                [0m[0m[1m[33m^^^^^^^^^^^^^^^[0m
+
+|:|none
+warning|:|src/macros/hash_face.rs|:|152|:|152|:|14|:|29|:|method `find_pos_bucket` is never used|:|[0m[1m[33mwarning[0m[0m[1m: method `find_pos_bucket` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/macros/hash_face.rs:152:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m142[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m/[0m[0m [0m[0mimpl<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>[0m
+[0m[1m[38;5;12m143[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    LenPosBuckets<N, SUM_LEN, MAX_LEN>[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|______________________________________-[0m[0m [0m[0m[1m[38;5;12mmethod in this implementation[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m152[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m    const fn find_pos_bucket(&mut self, pos: usize) -> Option<&mut LenPos<N, SUM_LEN>> {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                [0m[0m[1m[33m^^^^^^^^^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_types/lua/box_fn.rs|:|131|:|131|:|20|:|21|:|unused variable: `r`|:|[0m[1m[33mwarning[0m[0m[1m: unused variable: `r`[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/box_fn.rs:131:20[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m131[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                Ok(r) => 0,[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                    [0m[0m[1m[33m^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_r`[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_variables)]` on by default[0m
+
+|:|none
+help|:|src/nvim_types/lua/box_fn.rs|:|131|:|131|:|20|:|21|:|if this is intentional, prefix it with an underscore|:|none|:|_r
+warning|:|src/nvim_types/lua/fn_ptr.rs|:|37|:|37|:|28|:|29|:|unused variable: `r`|:|[0m[1m[33mwarning[0m[0m[1m: unused variable: `r`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/fn_ptr.rs:37:28[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m37[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                        Ok(r) => 0,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                            [0m[0m[1m[33m^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_r`[0m
+
+|:|none
+help|:|src/nvim_types/lua/fn_ptr.rs|:|37|:|37|:|28|:|29|:|if this is intentional, prefix it with an underscore|:|none|:|_r
+warning|:|src/nvim_types/arena.rs|:|50|:|50|:|19|:|30|:|function `arena_alloc` is never used|:|[0m[1m[33mwarning[0m[0m[1m: function `arena_alloc` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/arena.rs:50:19[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m50[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub(crate) fn arena_alloc(arena: *mut Arena, size: usize, align: bool) -> *mut c_void;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                   [0m[0m[1m[33m^^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(dead_code)]` on by default[0m
+
+|:|none
+warning|:|src/nvim_types/func_types/create_user_command.rs|:|10|:|10|:|1|:|21|:|associated function `callback` is never used|:|[0m[1m[33mwarning[0m[0m[1m: associated function `callback` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/func_types/create_user_command.rs:15:8[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m10[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mimpl<'a> Command<'a> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m--------------------[0m[0m [0m[0m[1m[38;5;12massociated function in this implementation[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m15[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    fn callback() {}[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m        [0m[0m[1m[33m^^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_types/func_types/create_user_command.rs|:|15|:|15|:|8|:|16|:|associated function `callback` is never used|:|[0m[1m[33mwarning[0m[0m[1m: associated function `callback` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/func_types/create_user_command.rs:15:8[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m10[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mimpl<'a> Command<'a> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m--------------------[0m[0m [0m[0m[1m[38;5;12massociated function in this implementation[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m15[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    fn callback() {}[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m        [0m[0m[1m[33m^^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_types/lua/mod.rs|:|43|:|43|:|1|:|14|:|associated function `from_fn` is never used|:|[0m[1m[33mwarning[0m[0m[1m: associated function `from_fn` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/mod.rs:44:19[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mimpl Function {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m-------------[0m[0m [0m[0m[1m[38;5;12massociated function in this implementation[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub(crate) fn from_fn<F: 'static + Fn(A) -> R + Unpin, A: FromLua, R: IntoLua>(f: F) -> Self {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                   [0m[0m[1m[33m^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_types/lua/mod.rs|:|44|:|44|:|19|:|26|:|associated function `from_fn` is never used|:|[0m[1m[33mwarning[0m[0m[1m: associated function `from_fn` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/mod.rs:44:19[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mimpl Function {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m-------------[0m[0m [0m[0m[1m[38;5;12massociated function in this implementation[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub(crate) fn from_fn<F: 'static + Fn(A) -> R + Unpin, A: FromLua, R: IntoLua>(f: F) -> Self {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                   [0m[0m[1m[33m^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_types/lua/closure.rs|:|13|:|13|:|4|:|16|:|function `closure_drop` is never used|:|[0m[1m[33mwarning[0m[0m[1m: function `closure_drop` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/closure.rs:13:4[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m13[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn closure_drop<F: Fn(A) -> R + Unpin, A: FromLua, R>() -> ([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^^^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_types/lua/closure.rs|:|46|:|46|:|8|:|16|:|function `register` is never used|:|[0m[1m[33mwarning[0m[0m[1m: function `register` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/closure.rs:46:8[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m46[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub fn register<F: 'static + Fn(A) -> R + Unpin, A: FromLua, R: IntoLua>([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m        [0m[0m[1m[33m^^^^^^^^[0m
+
+|:|none
+warning|:|src/macros/hash_face.rs|:|142|:|143|:|1|:|39|:|method `find_pos_bucket` is never used|:|[0m[1m[33mwarning[0m[0m[1m: method `find_pos_bucket` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/macros/hash_face.rs:152:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m142[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m/[0m[0m [0m[0mimpl<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>[0m
+[0m[1m[38;5;12m143[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    LenPosBuckets<N, SUM_LEN, MAX_LEN>[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|______________________________________-[0m[0m [0m[0m[1m[38;5;12mmethod in this implementation[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m152[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m    const fn find_pos_bucket(&mut self, pos: usize) -> Option<&mut LenPos<N, SUM_LEN>> {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                [0m[0m[1m[33m^^^^^^^^^^^^^^^[0m
+
+|:|none
+warning|:|src/macros/hash_face.rs|:|152|:|152|:|14|:|29|:|method `find_pos_bucket` is never used|:|[0m[1m[33mwarning[0m[0m[1m: method `find_pos_bucket` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/macros/hash_face.rs:152:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m142[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m/[0m[0m [0m[0mimpl<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>[0m
+[0m[1m[38;5;12m143[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    LenPosBuckets<N, SUM_LEN, MAX_LEN>[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|______________________________________-[0m[0m [0m[0m[1m[38;5;12mmethod in this implementation[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m152[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m    const fn find_pos_bucket(&mut self, pos: usize) -> Option<&mut LenPos<N, SUM_LEN>> {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                [0m[0m[1m[33m^^^^^^^^^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_funcs/c_funcs/vimscript.rs|:|34|:|34|:|12|:|33|:|function `nvim_parse_expression` is never used|:|[0m[1m[33mwarning[0m[0m[1m: function `nvim_parse_expression` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_funcs/c_funcs/vimscript.rs:34:12[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m34[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub fn nvim_parse_expression<'a>([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m            [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_funcs/wrappers/vimscript.rs|:|71|:|71|:|4|:|20|:|function `parse_expression` is never used|:|[0m[1m[33mwarning[0m[0m[1m: function `parse_expression` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_funcs/wrappers/vimscript.rs:71:4[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m71[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn parse_expression<S: AsThinString, S1: AsThinString>([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^^^^^^^^^^^^^[0m
+
+|:|none
+warning|:|src/nvim_types/lua/core/mod.rs|:|21|:|21|:|5|:|72|:|unsafe function's docs are missing a `# Safety` section|:|[0m[1m[33mwarning[0m[0m[1m: unsafe function's docs are missing a `# Safety` section[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/core/mod.rs:21:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m21[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    unsafe fn get(l: *mut lua_State, to_pop: &mut i32) -> Result<Self>;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::missing_safety_doc)]` on by default[0m
+
+|:|none
+warning|:|src/nvim_types/lua/core/mod.rs|:|32|:|32|:|5|:|67|:|unsafe function's docs are missing a `# Safety` section|:|[0m[1m[33mwarning[0m[0m[1m: unsafe function's docs are missing a `# Safety` section[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/core/mod.rs:32:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m32[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    unsafe fn pop(l: *mut lua_State, index: c_int) -> Result<Self> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc[0m
+
+|:|none
+warning|:|src/nvim_types/lua/core/mod.rs|:|40|:|40|:|5|:|86|:|unsafe function's docs are missing a `# Safety` section|:|[0m[1m[33mwarning[0m[0m[1m: unsafe function's docs are missing a `# Safety` section[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/core/mod.rs:40:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m40[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    unsafe fn get(l: *mut lua_State, index: c_int, to_pop: &mut i32) -> Result<Self>;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc[0m
+
+|:|none
+warning|:|src/nvim_types/lua/core/mod.rs|:|21|:|21|:|5|:|72|:|unsafe function's docs are missing a `# Safety` section|:|[0m[1m[33mwarning[0m[0m[1m: unsafe function's docs are missing a `# Safety` section[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/core/mod.rs:21:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m21[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    unsafe fn get(l: *mut lua_State, to_pop: &mut i32) -> Result<Self>;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(clippy::missing_safety_doc)]` on by default[0m
+
+|:|none
+warning|:|src/nvim_types/lua/core/mod.rs|:|32|:|32|:|5|:|67|:|unsafe function's docs are missing a `# Safety` section|:|[0m[1m[33mwarning[0m[0m[1m: unsafe function's docs are missing a `# Safety` section[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/core/mod.rs:32:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m32[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    unsafe fn pop(l: *mut lua_State, index: c_int) -> Result<Self> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc[0m
+
+|:|none
+warning|:|src/nvim_types/lua/core/mod.rs|:|40|:|40|:|5|:|86|:|unsafe function's docs are missing a `# Safety` section|:|[0m[1m[33mwarning[0m[0m[1m: unsafe function's docs are missing a `# Safety` section[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/nvim_types/lua/core/mod.rs:40:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m40[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    unsafe fn get(l: *mut lua_State, index: c_int, to_pop: &mut i32) -> Result<Self>;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#missing_safety_doc[0m
+
+|:|none
