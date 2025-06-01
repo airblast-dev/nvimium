@@ -41,18 +41,18 @@ mod tests {
             AsThinString, Buffer,
             opts::{
                 create_user_command::{
-                    CreateUserCommandOpts, UserCommandAddr, UserCommandCompleteKind,
-                    UserCommandNarg,
+                    CreateUserCommandOpts, UserCommandCompleteKind, UserCommandNarg,
                 },
                 exec::ExecOpts,
             },
         },
     };
 
-    use super::buf_create_user_command;
+    use super::{buf_create_user_command, buf_del_user_command};
 
     #[nvim_test::nvim_test]
     fn buf_create_del_user_command() {
+        buf_del_user_command(Buffer::new(0), c"MyCmdNvimium").unwrap_err();
         buf_create_user_command(
             Buffer::new(0),
             c"MyCmdNvimium".as_thinstr(),
@@ -71,5 +71,7 @@ mod tests {
             messages.get(c"output").unwrap(),
             &Object::String(OwnedThinString::from(c"hello"))
         );
+
+        buf_del_user_command(Buffer::new(0), c"MyCmdNvimium").unwrap();
     }
 }
