@@ -38,7 +38,6 @@ unsafe extern "C" {
     );
     pub fn nvim_del_mark<'a>(name: ThinString<'a>, err: *mut Error) -> MaybeUninit<Boolean>;
     pub fn nvim_del_var<'a>(var_name: ThinString<'a>, err: *mut Error);
-    // TODO: Array<Array<[String; 2]>>
     pub fn nvim_echo<'a>(
         chunks: Borrowed<'a, Echo>,
         history: bool,

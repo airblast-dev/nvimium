@@ -35,9 +35,6 @@ pub fn chan_send<S: AsThinString>(chan: Channel, bytes: S) -> Result<(), Error> 
     }
 }
 
-/// Create a new buffer
-///
-/// Returns [`Option::None`] if creating the buffer fails.
 pub fn create_buf(listed: Boolean, scratch: Boolean) -> Result<Buffer, Error> {
     call_check();
     tri! {
