@@ -5,11 +5,11 @@ masked_builder!(
     #[repr(C)]
     pub struct EvalStatusLineOpts<'a> {
         winid: Window,
-        max_width: Integer,
-        fill_char: ThinString<'a>,
+        maxwidth: Integer,
+        fillchar: ThinString<'a>,
         highlights: Boolean,
-        winbar: Boolean,
-        tabline: Boolean,
-        statuscol_lnum: Integer,
+        use_winbar: Boolean,
+        use_tabline: Boolean,
+        use_statuscol_lnum: Integer,
     }
 );

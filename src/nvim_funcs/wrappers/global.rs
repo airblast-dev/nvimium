@@ -619,7 +619,7 @@ mod tests {
     use crate::nvim_funcs::vimscript::exec2;
     use crate::nvim_types::returns::get_keymap::Keymap;
     use crate::nvim_types::{
-        Array, AsThinString, Dict, Object, OwnedThinString, NvString, Window,
+        Array, AsThinString, Dict, NvString, Object, OwnedThinString, Window,
         func_types::{
             echo::Echo,
             feedkeys::{FeedKeysMode, FeedKeysModeKind},
@@ -809,10 +809,8 @@ mod tests {
 
     #[nvim_test::nvim_test]
     pub fn nvim_eval_statusline() {
-        // TODO: I think this needs to be tested through callbacks?
-        // neovim receives the options but for some reason ignores some of them in tests
-        let res = super::eval_statusline(c"Hello", EvalStatusLineOpts::default().fill_char(c"a"))
-            .unwrap();
+        let res =
+            super::eval_statusline(c"Hello", EvalStatusLineOpts::default().fillchar(c"a")).unwrap();
 
         assert_eq!(res.chars, "Hello");
         assert_eq!(res.width, 5);
