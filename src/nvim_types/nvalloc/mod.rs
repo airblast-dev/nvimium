@@ -2,11 +2,7 @@
 #[cfg(not(any(miri, test)))]
 mod nvdefs;
 
-use std::{
-    ffi::c_void,
-    ptr::NonNull,
-    sync::atomic::{AtomicBool, Ordering},
-};
+use std::{ffi::c_void, ptr::NonNull};
 
 use libc::{c_char, malloc, size_t};
 
