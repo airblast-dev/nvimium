@@ -18,7 +18,7 @@ pub struct UserCommandAddr(ObjectRef<'static>);
 
 macro_rules! uca {
     ($vis:vis $name:ident = $val:literal) => {
-        $vis const $name: UserCommandAddr = UserCommandAddr(ObjectRef::new_th(th!($val) ));
+        $vis const $name: UserCommandAddr = UserCommandAddr(ObjectRef::new_th(th!($val)));
     };
 }
 impl UserCommandAddr {
@@ -203,7 +203,7 @@ masked_builder! {
 
 impl<'a> CreateUserCommandOpts<'a> {
     pub fn desc<TH: Into<ThinString<'a>>>(&mut self, desc: TH) -> &mut Self {
-        const MASK: u64 = 1<< builder::MASK_OFFSETS[5];
+        const MASK: u64 = 1 << builder::MASK_OFFSETS[5];
         if self.mask & MASK == MASK {
             unsafe {
                 self.desc.assume_init_drop();
