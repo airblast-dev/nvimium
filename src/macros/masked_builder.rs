@@ -112,12 +112,12 @@ macro_rules! gen_setters {
     };
     (@IDX $idx:expr, $(#[$attributes:meta])* $field_name:ident: $arg:ty $(, $($tt:tt)* )?) => {
         pub fn $field_name<T: Into<$arg>>(&mut self, $field_name: T) -> &mut Self {
-            let mask: u64 = builder::MASK_OFFSETS[$idx] as u64;
-            if self.mask & mask == mask {
+            const MASK: u64 = 1 << builder::MASK_OFFSETS[$idx];
+            if self.mask & MASK == MASK {
                 unsafe { self.$field_name.assume_init_drop() };
             }
 
-            self.mask |= 1 << mask;
+            self.mask |= MASK;
             self.$field_name = ::core::mem::MaybeUninit::new($field_name.into());
             self
         }
