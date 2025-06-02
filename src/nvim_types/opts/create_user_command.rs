@@ -1,9 +1,15 @@
 use std::{error::Error, mem::ManuallyDrop};
 
 use crate::{
-    macros::masked_builder::masked_builder, nvim_types::{
-        args::user_command_complete::UserCommandCompleteArgs, lua::Function, object::{ObjectRef, ObjectTag}, object_subs::BoolOrInteger, AsThinString, Boolean, Integer, Object, ThinString
-    }, th
+    macros::masked_builder::masked_builder,
+    nvim_types::{
+        AsThinString, Boolean, Integer, Object, ThinString,
+        args::user_command_complete::UserCommandCompleteArgs,
+        lua::Function,
+        object::{ObjectRef, ObjectTag},
+        object_subs::BoolOrInteger,
+    },
+    th,
 };
 
 #[repr(transparent)]
@@ -35,16 +41,12 @@ impl UserCommandAddr {
 /// on what the values provide what kind of completion.
 #[repr(C)]
 #[derive(Clone, Debug)]
-pub struct UserCommandCompleteKind(
-    ThinString<'static>,
-    // padding to get it to the size of an Object
-    usize,
-);
+pub struct UserCommandCompleteKind(ThinString<'static>);
 
 macro_rules! ucck {
     ($(#[$attr:meta])* $vis:vis $name:ident = $val:literal) => {
         $(#[$attr])*
-        $vis const $name: UserCommandCompleteKind = UserCommandCompleteKind(th!($val), 0);
+        $vis const $name: UserCommandCompleteKind = UserCommandCompleteKind(th!($val));
     };
 }
 
