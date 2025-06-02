@@ -203,24 +203,26 @@ masked_builder! {
 
 impl<'a> CreateUserCommandOpts<'a> {
     pub fn desc<TH: Into<ThinString<'a>>>(&mut self, desc: TH) -> &mut Self {
-        if self.mask & (1 << 7) == 1 << 7 {
+        const MASK: u64 = 1<< builder::MASK_OFFSETS[5];
+        if self.mask & MASK == MASK {
             unsafe {
                 self.desc.assume_init_drop();
             }
         }
         self.desc.write(ObjectRef::from(desc.into()));
-        self.mask |= 1 << 7;
+        self.mask |= MASK;
         self
     }
     pub fn range<I: Into<UserCommandRange>>(&mut self, range: I) -> &mut Self {
         let range: UserCommandRange = range.into();
-        if self.mask & (1 << 12) == 1 << 12 {
+        const MASK: u64 = 1 << builder::MASK_OFFSETS[10];
+        if self.mask & MASK == MASK {
             unsafe {
                 self.desc.assume_init_drop();
             }
         }
         self.range.write(range.into());
-        self.mask |= 1 << 12;
+        self.mask |= MASK;
         self
     }
 }
