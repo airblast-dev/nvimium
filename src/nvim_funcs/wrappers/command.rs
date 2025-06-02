@@ -1,10 +1,16 @@
+use std::mem::ManuallyDrop;
+
 use thread_lock::call_check;
 
 use crate::{
-    nvim_funcs::c_funcs::command::{nvim_buf_create_user_command, nvim_buf_del_user_command},
+    nvim_funcs::c_funcs::command::{
+        nvim_buf_create_user_command, nvim_buf_del_user_command, nvim_buf_get_commands,
+    },
     nvim_types::{
-        AsThinString, Buffer, Channel, Error, ThinString, func_types::create_user_command::Command,
-        opts::create_user_command::CreateUserCommandOpts,
+        Arena, AsThinString, Buffer, Channel, Error, ThinString,
+        func_types::create_user_command::Command,
+        opts::{create_user_command::CreateUserCommandOpts, get_commands::GetCommandOpts},
+        returns::commands::Commands,
     },
     tri,
 };
@@ -30,6 +36,19 @@ pub fn buf_del_user_command<TH: AsThinString>(buf: Buffer, name: TH) -> Result<(
     }
 }
 
+pub fn buf_get_commands(buf: Buffer, opts: &mut GetCommandOpts) -> Result<Commands, Error> {
+    call_check();
+    let mut arena = Arena::EMPTY;
+    tri! {
+        let mut err;
+        unsafe { nvim_buf_get_commands(buf, opts, &mut arena, &mut err) },
+        Ok(d) => {
+            let mut d = unsafe{ ManuallyDrop::new( d.assume_init() ) };
+            Ok(Commands::from_c_func_ret(&mut d))
+        }
+    }
+}
+
 #[cfg(all(not(miri), feature = "testing"))]
 mod tests {
     use crate as nvimium;
@@ -44,14 +63,15 @@ mod tests {
                     CreateUserCommandOpts, UserCommandCompleteKind, UserCommandNarg,
                 },
                 exec::ExecOpts,
+                get_commands::GetCommandOpts,
             },
         },
     };
 
-    use super::{buf_create_user_command, buf_del_user_command};
+    use super::{buf_create_user_command, buf_del_user_command, buf_get_commands};
 
     #[nvim_test::nvim_test]
-    fn buf_create_del_user_command() {
+    fn buf_get_create_del_user_command() {
         buf_del_user_command(Buffer::new(0), c"MyCmdNvimium").unwrap_err();
         buf_create_user_command(
             Buffer::new(0),
@@ -72,6 +92,8 @@ mod tests {
             &Object::String(OwnedThinString::from(c"hello"))
         );
 
+        let commands = buf_get_commands(Buffer::new(0), &mut GetCommandOpts::default()).unwrap();
+        assert!(commands.0.iter().any(|cmd| cmd.name == c"MyCmdNvimium"));
         buf_del_user_command(Buffer::new(0), c"MyCmdNvimium").unwrap();
     }
 }
