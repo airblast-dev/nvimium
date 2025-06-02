@@ -1,11 +1,13 @@
 pub mod comp_unique_id;
 pub(crate) mod constified;
+pub mod decl_derive;
 pub(crate) mod hash_face;
 pub mod masked_builder;
 pub mod nvim_values;
 pub mod one_of_objects;
 pub mod thinstring;
 pub mod tri;
+pub mod zeroed_default;
 
 #[macro_export]
 macro_rules! builder {

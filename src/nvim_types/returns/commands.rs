@@ -7,13 +7,13 @@ use crate::nvim_types::{
 
 use super::utils::skip_drop_remove_keys;
 
-pub struct Commands(pub KVec<Command>);
+pub struct CommandsInfos(pub KVec<CommandInfos>);
 
-impl Commands {
+impl CommandsInfos {
     pub(crate) fn from_c_func_ret(d: &mut Dict) -> Self {
         let mut commands = KVec::with_capacity(d.len());
         commands.extend(d.iter_mut().map(|kv| match &mut kv.object {
-            Object::Dict(d) => Command::from_c_func_ret(d),
+            Object::Dict(d) => CommandInfos::from_c_func_ret(d),
             _ => unreachable!("found non dict command mapping"),
         }));
 
@@ -22,7 +22,7 @@ impl Commands {
 }
 
 // TODO: use User Command types instead of strings
-pub struct Command {
+pub struct CommandInfos {
     pub name: OwnedThinString,
     pub definition: OwnedThinString,
     pub script_id: Integer,
@@ -39,7 +39,7 @@ pub struct Command {
     pub addr: Option<OwnedThinString>,
 }
 
-impl Command {
+impl CommandInfos {
     pub(crate) fn from_c_func_ret(d: &mut Dict) -> Self {
         let [
             name,
@@ -148,7 +148,7 @@ impl Command {
         let range = range.deref().clone().into_string();
         let addr = addr.deref().clone().into_string();
 
-        Command {
+        CommandInfos {
             name,
             definition,
             script_id,

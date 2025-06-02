@@ -8,14 +8,14 @@ use crate::{
     },
     nvim_types::{
         Arena, AsThinString, Buffer, Channel, Error, ThinString,
-        func_types::create_user_command::Command,
+        func_types::create_user_command::UserCommand,
         opts::{create_user_command::CreateUserCommandOpts, get_commands::GetCommandOpts},
-        returns::commands::Commands,
+        returns::commands::CommandsInfos,
     },
     tri,
 };
 
-pub fn buf_create_user_command<'a, C: Into<Command<'a>>>(
+pub fn buf_create_user_command<'a, C: Into<UserCommand<'a>>>(
     buf: Buffer,
     name: ThinString<'a>,
     command: C,
@@ -36,7 +36,7 @@ pub fn buf_del_user_command<TH: AsThinString>(buf: Buffer, name: TH) -> Result<(
     }
 }
 
-pub fn buf_get_commands(buf: Buffer, opts: &mut GetCommandOpts) -> Result<Commands, Error> {
+pub fn buf_get_commands(buf: Buffer, opts: &mut GetCommandOpts) -> Result<CommandsInfos, Error> {
     call_check();
     let mut arena = Arena::EMPTY;
     tri! {
@@ -44,7 +44,7 @@ pub fn buf_get_commands(buf: Buffer, opts: &mut GetCommandOpts) -> Result<Comman
         unsafe { nvim_buf_get_commands(buf, opts, &mut arena, &mut err) },
         Ok(d) => {
             let mut d = unsafe{ ManuallyDrop::new( d.assume_init() ) };
-            Ok(Commands::from_c_func_ret(&mut d))
+            Ok(CommandsInfos::from_c_func_ret(&mut d))
         }
     }
 }

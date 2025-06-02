@@ -8,12 +8,6 @@ macro_rules! masked_builder {
         $struct_vis struct $struct_name {
             mask: u64
         }
-
-        impl Default for $struct_name {
-            fn default() -> Self {
-                unsafe { core::mem::zeroed() }
-            }
-        }
     };
     (
         $(#[$($struct_attrs:tt)+])*
@@ -55,11 +49,7 @@ macro_rules! masked_builder {
           ),+);
         }
 
-        impl $(<$($lf),*>)? Default for $struct_name $(<$($lf),*>)? {
-            fn default() -> Self {
-                unsafe { core::mem::zeroed() }
-            }
-        }
+
     };
 }
 

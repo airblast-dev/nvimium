@@ -1,13 +1,13 @@
 use std::error::Error;
 use std::mem::MaybeUninit;
 
-use crate::macros::masked_builder::masked_builder;
+use crate::macros::decl_derive::derive;
 use crate::nvim_types::args::open_term_cb::OpenTermOnInputArgs;
 use crate::nvim_types::lua::Function;
 use crate::nvim_types::{Boolean, lua_ref::LuaRef};
 
-// TODO: replace with manual builder
-masked_builder! {
+derive! {
+    derive(masked_builder, zeroed_default);
     #[repr(C)]
     pub struct OpenTermOpts {
         #[builder_fn_skip]
@@ -21,11 +21,12 @@ impl OpenTermOpts {
         &mut self,
         f: impl 'static + for<'a> Fn(OpenTermOnInputArgs<'a>) -> Result<(), E> + Unpin,
     ) -> &mut Self {
+        const MASK: u64 = 1 << builder::MASK_OFFSETS[0];
         let cb = Function::wrap(f);
-        if self.mask & 2 == 2 {
+        if self.mask & MASK == MASK {
             unsafe { self.on_input.assume_init_drop() };
         }
-        self.mask |= 2;
+        self.mask |= MASK;
         self.on_input = MaybeUninit::new(cb.into_luaref());
         self
     }

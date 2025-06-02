@@ -1,6 +1,7 @@
-use crate::macros::masked_builder::masked_builder;
+use crate::macros::decl_derive::derive;
 
-masked_builder!(
+derive!(
+    derive(masked_builder, zeroed_default);
     #[repr(C)]
     pub struct GetMarkOpts {}
 );

@@ -2,7 +2,7 @@ use std::mem::MaybeUninit;
 
 use crate::nvim_types::{
     Arena, Buffer, Channel, Dict, Error, ThinString,
-    func_types::create_user_command::Command,
+    func_types::create_user_command::UserCommand,
     opts::{create_user_command::CreateUserCommandOpts, get_commands::GetCommandOpts},
 };
 
@@ -11,7 +11,7 @@ unsafe extern "C" {
         chan: Channel,
         buf: Buffer,
         name: ThinString<'a>,
-        command: Command<'a>,
+        command: UserCommand<'a>,
         opts: *mut CreateUserCommandOpts<'a>,
         err: *mut Error,
     );

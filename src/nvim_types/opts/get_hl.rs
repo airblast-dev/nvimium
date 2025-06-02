@@ -1,6 +1,10 @@
-use crate::{macros::masked_builder::masked_builder, nvim_types::{string::ThinString, Boolean, Integer}};
+use crate::{
+    macros::decl_derive::derive,
+    nvim_types::{Boolean, Integer, string::ThinString},
+};
 
-masked_builder!(
+derive!(
+    derive(masked_builder, zeroed_default);
     #[repr(C)]
     #[derive(Clone)]
     pub struct GetHlOpts<'a> {

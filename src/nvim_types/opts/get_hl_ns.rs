@@ -1,6 +1,7 @@
-use crate::{macros::masked_builder::masked_builder, nvim_types::window::Window};
+use crate::{macros::decl_derive::derive, nvim_types::Window};
 
-masked_builder!(
+derive!(
+    derive(masked_builder, zeroed_default);
     #[repr(C)]
     #[derive(Clone)]
     pub struct GetHlNsOpts {

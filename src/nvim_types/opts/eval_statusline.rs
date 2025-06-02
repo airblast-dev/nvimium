@@ -1,6 +1,10 @@
-use crate::{macros::masked_builder::masked_builder, nvim_types::{string::ThinString, window::Window, Boolean, Integer}};
+use crate::{
+    macros::decl_derive::derive,
+    nvim_types::{Boolean, Integer, string::ThinString, window::Window},
+};
 
-masked_builder!(
+derive!(
+    derive(masked_builder, zeroed_default);
     #[derive(Clone)]
     #[repr(C)]
     pub struct EvalStatusLineOpts<'a> {

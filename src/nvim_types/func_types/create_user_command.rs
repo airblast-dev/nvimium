@@ -5,9 +5,9 @@ use crate::nvim_types::{
 };
 
 #[repr(transparent)]
-pub struct Command<'a>(ObjectRef<'a>);
+pub struct UserCommand<'a>(ObjectRef<'a>);
 
-impl<'a> Command<'a> {
+impl<'a> UserCommand<'a> {
     pub(crate) fn cmd(cmd: ThinString<'a>) -> Self {
         Self(ObjectRef::from(cmd))
     }
@@ -15,7 +15,7 @@ impl<'a> Command<'a> {
     fn callback() {}
 }
 
-impl<'a, TH: AsThinString> From<&'a TH> for Command<'a> {
+impl<'a, TH: AsThinString> From<&'a TH> for UserCommand<'a> {
     fn from(value: &'a TH) -> Self {
         Self::cmd(value.as_thinstr())
     }
@@ -23,7 +23,7 @@ impl<'a, TH: AsThinString> From<&'a TH> for Command<'a> {
 
 // Command only takes a thinstring or a LuaRef
 // the LuaRef is owned so we must unref it to avoid a leak
-impl<'a> Drop for Command<'a> {
+impl<'a> Drop for UserCommand<'a> {
     fn drop(&mut self) {
         if self.0.tag == ObjectTag::LuaRef {
             unsafe { ManuallyDrop::drop(&mut self.0.val.lua_ref) };

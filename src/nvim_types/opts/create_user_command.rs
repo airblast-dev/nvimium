@@ -1,13 +1,9 @@
 use std::{error::Error, mem::ManuallyDrop};
 
 use crate::{
-    macros::masked_builder::masked_builder,
+    macros::{decl_derive::derive, masked_builder::masked_builder},
     nvim_types::{
-        AsThinString, Boolean, Integer, Object, ThinString,
-        args::user_command_complete::UserCommandCompleteArgs,
-        lua::Function,
-        object::{ObjectRef, ObjectTag},
-        object_subs::BoolOrInteger,
+        args::user_command_complete_cb::UserCommandCompleteArgs, lua::Function, object::{ObjectRef, ObjectTag}, object_subs::BoolOrInteger, AsThinString, Boolean, Integer, Object, ThinString
     },
     th,
 };
@@ -175,7 +171,8 @@ impl From<UserCommandRange> for UserCommandRangeInner {
     }
 }
 
-masked_builder! {
+derive!(
+    derive(zeroed_default, masked_builder);
     #[repr(C)]
     pub struct CreateUserCommandOpts<'a> {
         addr: UserCommandAddr,
@@ -199,7 +196,7 @@ masked_builder! {
         range: UserCommandRangeInner,
         register: Boolean,
     }
-}
+);
 
 impl<'a> CreateUserCommandOpts<'a> {
     pub fn desc<TH: Into<ThinString<'a>>>(&mut self, desc: TH) -> &mut Self {

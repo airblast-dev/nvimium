@@ -1,11 +1,12 @@
 use std::error::Error;
 use std::mem::MaybeUninit;
 
-use crate::macros::masked_builder::masked_builder;
+use crate::macros::decl_derive::derive;
 use crate::nvim_types::lua::Function;
 use crate::nvim_types::{Boolean, lua_ref::LuaRef, string::ThinString};
 
-masked_builder! {
+derive! {
+    derive(masked_builder, zeroed_default);
     #[repr(C)]
     pub struct SetKeymapOpts<'a> {
         noremap: Boolean,
