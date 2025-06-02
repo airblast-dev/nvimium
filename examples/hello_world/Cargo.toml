@@ -12,7 +12,7 @@ nvimium = { path = "../../" }
 [features]
 # You will definitely want to add a testing feature gate to avoid terrible compile times
 # You should only enable this when testing, but it is set as the default here for better readability in editors.
-default = ["testing"]
+#default = ["testing"]
 testing = ["nvimium/testing"]
 
 # Recommended release profile for size and performance
