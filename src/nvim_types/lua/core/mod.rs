@@ -15,7 +15,7 @@ mod window;
 use std::{error::Error, fmt::Display};
 
 use libc::c_int;
-use mlua_sys::{lua_State, lua_pop, lua_pushnil};
+use mlua_sys::{lua_State, lua_pop};
 
 pub trait FromLuaMany: Sized {
     unsafe fn get(l: *mut lua_State, to_pop: &mut i32) -> Result<Self>;
@@ -54,7 +54,7 @@ impl Display for FromLuaErr {
         let s = match self {
             Self::NotFound => "field not found",
             Self::IncorrectType => "incorrect lua type found",
-            Self::NotEnoughStackSpace => "not enough stack space to read lua values"
+            Self::NotEnoughStackSpace => "not enough stack space to read lua values",
         };
         write!(f, "{}", s)
     }
