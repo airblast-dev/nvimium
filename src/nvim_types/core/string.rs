@@ -549,7 +549,7 @@ impl<'a> ThinString<'a> {
 
     /// Returns a slice of the buffers bytes without a null byte
     #[inline(always)]
-    pub fn as_slice(&self) -> &'a [u8] {
+    pub const fn as_slice(&self) -> &'a [u8] {
         let ptr = self.as_ptr();
         if ptr.is_null() {
             return &[];
@@ -593,6 +593,14 @@ impl<'a> ThinString<'a> {
             data: b.as_ptr() as *mut c_char,
             __p: PhantomData::<&'a u8>,
         }
+    }
+
+    pub const fn to_str(&self) -> Result<&str, std::str::Utf8Error> {
+        std::str::from_utf8(self.as_slice())
+    }
+
+    pub fn to_str_lossy(&self) -> std::borrow::Cow<'_, str> {
+        String::from_utf8_lossy(self.as_slice())
     }
 }
 
