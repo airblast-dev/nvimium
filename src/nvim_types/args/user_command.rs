@@ -19,20 +19,20 @@ use crate::{
 };
 
 pub struct UserCommandArgs<'a> {
-    name: ThinString<'a>,
-    args: ThinString<'a>,
-    fargs: KVec<ThinString<'a>>,
+    pub name: ThinString<'a>,
+    pub args: ThinString<'a>,
+    pub fargs: KVec<ThinString<'a>>,
     /// This is present after and including version 0.11.3 and is always some.
     /// Older versions will always have None.
-    nargs: Option<UserCommandNarg>,
-    bang: Boolean,
-    line1: LuaInteger,
-    line2: LuaInteger,
-    range: LuaInteger,
-    count: LuaInteger,
-    reg: Option<ThinString<'a>>,
-    mods: ThinString<'a>,
-    smods: UserCommandSmods<'a>,
+    pub nargs: Option<UserCommandNarg>,
+    pub bang: Boolean,
+    pub line1: LuaInteger,
+    pub line2: LuaInteger,
+    pub range: LuaInteger,
+    pub count: LuaInteger,
+    pub reg: Option<ThinString<'a>>,
+    pub mods: ThinString<'a>,
+    pub smods: UserCommandSmods<'a>,
 }
 
 impl FromLuaMany for UserCommandArgs<'static> {
@@ -139,25 +139,25 @@ impl FromLuaMany for UserCommandArgs<'static> {
 }
 
 pub struct UserCommandSmods<'a> {
-    browse: Boolean,
-    confirm: Boolean,
-    emsg_silent: Boolean,
-    hide: Boolean,
-    horizontal: Boolean,
-    keepalt: Boolean,
-    keepjumps: Boolean,
-    keepmarks: Boolean,
-    keeppatterns: Boolean,
-    lockmarks: Boolean,
-    noautocmd: Boolean,
-    noswapfile: Boolean,
-    sandbox: Boolean,
-    silent: Boolean,
-    split: ThinString<'a>,
-    tab: LuaInteger,
-    unsilent: Boolean,
-    verbose: Integer,
-    vertical: Boolean,
+    pub browse: Boolean,
+    pub confirm: Boolean,
+    pub emsg_silent: Boolean,
+    pub hide: Boolean,
+    pub horizontal: Boolean,
+    pub keepalt: Boolean,
+    pub keepjumps: Boolean,
+    pub keepmarks: Boolean,
+    pub keeppatterns: Boolean,
+    pub lockmarks: Boolean,
+    pub noautocmd: Boolean,
+    pub noswapfile: Boolean,
+    pub sandbox: Boolean,
+    pub silent: Boolean,
+    pub split: ThinString<'a>,
+    pub tab: LuaInteger,
+    pub unsilent: Boolean,
+    pub verbose: Integer,
+    pub vertical: Boolean,
 }
 
 impl<'a> FromLuaMany for UserCommandSmods<'a> {
