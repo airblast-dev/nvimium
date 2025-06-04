@@ -988,8 +988,8 @@ unsafe impl AsThinString for NvString {
     }
 }
 
-unsafe impl AsThinString for ThinString<'_> {
-    fn as_thinstr(&self) -> ThinString<'_> {
+unsafe impl<'a> AsThinString for ThinString<'a> {
+    fn as_thinstr(&self) -> ThinString<'a> {
         if self.data.is_null() { EMPTY } else { *self }
     }
 }
@@ -1288,7 +1288,7 @@ mod thinstr {
 
 #[cfg(test)]
 mod owned_thin_string {
-    use super::{OwnedThinString, NvString};
+    use super::{NvString, OwnedThinString};
 
     #[test]
     fn from_string() {

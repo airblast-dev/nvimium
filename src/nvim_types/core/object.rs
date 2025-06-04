@@ -338,6 +338,27 @@ pub struct ObjectRef<'a> {
     pub(crate) val: ObjectRefVal<'a>,
 }
 
+impl<'a> PartialEq for ObjectRef<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.tag == other.tag
+            && unsafe {
+                match self.tag {
+                    ObjectTag::Null => true,
+                    ObjectTag::Bool => self.val.bool == other.val.bool,
+                    ObjectTag::Integer => self.val.num == other.val.num,
+                    ObjectTag::Float => self.val.float == other.val.float,
+                    ObjectTag::String => self.val.string == other.val.string,
+                    ObjectTag::Array => self.val.array == other.val.array,
+                    ObjectTag::Dict => self.val.dict == other.val.dict,
+                    ObjectTag::LuaRef => self.val.lua_ref == other.val.lua_ref,
+                    ObjectTag::Buffer => self.val.buffer == other.val.buffer,
+                    ObjectTag::Window => self.val.window == other.val.window,
+                    ObjectTag::TabPage => self.val.tab_page == other.val.tab_page,
+                }
+            }
+    }
+}
+
 impl<'a> Clone for ObjectRef<'a> {
     fn clone(&self) -> Self {
         let mut cloned: MaybeUninit<ObjectRef<'a>> = MaybeUninit::uninit();

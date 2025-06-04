@@ -5,6 +5,7 @@ use thread_lock::call_check;
 use crate::{
     nvim_funcs::c_funcs::command::{
         nvim_buf_create_user_command, nvim_buf_del_user_command, nvim_buf_get_commands,
+        nvim_create_user_command,
     },
     nvim_types::{
         Arena, AsThinString, Buffer, Channel, Error, ThinString,
@@ -15,7 +16,7 @@ use crate::{
     tri,
 };
 
-pub fn buf_create_user_command<'a, C: Into<UserCommand<'a>>>(
+pub fn buf_create_user_command<'a, C: UserCommand<'a>>(
     buf: Buffer,
     name: ThinString<'a>,
     command: C,
@@ -49,6 +50,17 @@ pub fn buf_get_commands(buf: Buffer, opts: &mut GetCommandOpts) -> Result<Comman
     }
 }
 
+pub fn create_user_command<'a, TH: AsThinString>(
+    name: TH,
+    command: UserCommand<'a>,
+    opts: &mut CreateUserCommandOpts,
+) -> Result<(), Error> {
+    call_check();
+    tri! {
+        let mut err;
+        unsafe { nvim_create_user_command(Channel::LUA_INTERNAL_CALL, name.as_thinstr() , command, opts, &mut err); }
+    }
+}
 #[cfg(all(not(miri), feature = "testing"))]
 mod tests {
     use crate as nvimium;
@@ -58,6 +70,7 @@ mod tests {
         nvim_test,
         nvim_types::{
             AsThinString, Buffer,
+            func_types::create_user_command::UserCommand,
             opts::{
                 create_user_command::{
                     CreateUserCommandOpts, UserCommandCompleteKind, UserCommandNarg,
@@ -76,7 +89,7 @@ mod tests {
         buf_create_user_command(
             Buffer::new(0),
             c"MyCmdNvimium".as_thinstr(),
-            &c":echomsg \"hello\"",
+            UserCommand::command(c":echomsg \"hello\""),
             CreateUserCommandOpts::default()
                 .complete(UserCommandCompleteKind::MESSAGES)
                 .force(true)

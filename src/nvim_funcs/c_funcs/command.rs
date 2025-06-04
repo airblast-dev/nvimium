@@ -23,4 +23,14 @@ unsafe extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Dict>;
+
+    // TODO: nvim_cmd
+
+    pub fn nvim_create_user_command<'a>(
+        chan: Channel,
+        name: ThinString<'a>,
+        command: UserCommand<'a>,
+        opts: *mut CreateUserCommandOpts,
+        err: *mut Error,
+    );
 }
