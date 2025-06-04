@@ -25,7 +25,7 @@ pub fn buf_create_user_command<'a>(
     call_check();
     tri! {
         let mut err;
-        unsafe {nvim_buf_create_user_command(Channel::LUA_INTERNAL_CALL, buf, name, command.into(), opts, &mut err);}
+        unsafe {nvim_buf_create_user_command(Channel::LUA_INTERNAL_CALL, buf, name, command, opts, &mut err);}
     }
 }
 
@@ -69,7 +69,7 @@ mod tests {
     use crate::nvim_funcs::global::echo;
     use crate::nvim_types::func_types::echo::Echo;
     use crate::nvim_types::opts::echo::EchoOpts;
-    use crate::nvim_types::{Error, NvString, Object, OwnedThinString};
+    use crate::nvim_types::{Error, NvString, OwnedThinString};
     use crate::{
         nvim_funcs::vimscript::exec2,
         nvim_test,
@@ -105,10 +105,7 @@ mod tests {
         exec2(c":MyCmdNvimium", &ExecOpts::default()).unwrap();
 
         let messages = exec2(c":messages", ExecOpts::default().output(true)).unwrap();
-        assert_eq!(
-            messages.get(c"output").unwrap(),
-            &Object::String(OwnedThinString::from(c"hello"))
-        );
+        assert_eq!(messages.output.unwrap(), OwnedThinString::from(c"hello"));
 
         let commands = buf_get_commands(Buffer::new(0), &mut GetCommandOpts::default()).unwrap();
         assert!(commands.0.iter().any(|cmd| cmd.name == c"MyCmdNvimium"));
@@ -121,7 +118,13 @@ mod tests {
             c"MyCmd",
             UserCommand::callback::<Error, _>(|arg| {
                 let mut s = NvString::with_capacity(arg.args.len() + arg.name.len());
-                write!(&mut s, "Called {:?} with argument [{:?}]", arg.name, arg.args).unwrap();
+                write!(
+                    &mut s,
+                    "Called {} with argument [{}]",
+                    arg.name.to_str().unwrap(),
+                    arg.args.to_str().unwrap()
+                )
+                .unwrap();
                 echo(&Echo::message(s), true, &EchoOpts::default())?;
 
                 Ok(())
@@ -132,9 +135,7 @@ mod tests {
         )
         .unwrap();
 
-        panic!(
-            "{:?}",
-            exec2(c"MyCmd Hello", ExecOpts::default().output(true)).unwrap()
-        );
+        let ret = exec2(c"MyCmd Hello", ExecOpts::default().output(true)).unwrap();
+        panic!("RET={:?}", ret);
     }
 }
