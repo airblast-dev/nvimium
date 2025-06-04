@@ -43,8 +43,7 @@ mod tests {
         // function.
         super::hello_world().unwrap();
         let mut result = exec2(c":messages", ExecOpts::default().output(true)).unwrap();
-        let KeyValuePair { object, .. } = result.remove("output").unwrap();
-        let output = object.into_string().unwrap();
+        let output = result.output.unwrap();
 
         assert_eq!(
             output,
