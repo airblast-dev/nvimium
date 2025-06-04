@@ -4,6 +4,7 @@ use crate::nvim_types::{Dict, Object, OwnedThinString};
 
 use super::utils::skip_drop_remove_keys;
 
+#[derive(Clone, Debug)]
 pub struct Exec2 {
     pub output: Option<OwnedThinString>,
 }
