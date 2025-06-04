@@ -286,6 +286,10 @@ impl NvString {
         let new_len = self.len() + slice.len();
         unsafe { self.set_len(new_len) };
     }
+
+    pub fn write_fmt(&mut self, args: std::fmt::Arguments<'_>) -> std::io::Result<()> {
+        <Self as std::io::Write>::write_fmt(self, args)
+    }
 }
 
 impl Clone for NvString {
@@ -353,6 +357,10 @@ impl std::io::Write for NvString {
         }
 
         Ok(additional)
+    }
+
+    fn write_fmt(&mut self, args: std::fmt::Arguments<'_>) -> std::io::Result<()> {
+        write!(self, "{}", args)
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
@@ -1143,8 +1151,6 @@ mod string_alloc {
 
 #[cfg(all(test, miri))]
 mod string_fmt {
-    use std::io::Write;
-
     use crate::nvim_types::{NvString, ThinString};
 
     #[test]
