@@ -46,6 +46,7 @@ pub(crate) type Result<T> = core::result::Result<T, FromLuaErr>;
 pub enum FromLuaErr {
     NotFound,
     IncorrectType,
+    NotEnoughStackSpace,
 }
 
 impl Display for FromLuaErr {
@@ -53,6 +54,7 @@ impl Display for FromLuaErr {
         let s = match self {
             Self::NotFound => "field not found",
             Self::IncorrectType => "incorrect lua type found",
+            Self::NotEnoughStackSpace => "not enough stack space to read lua values"
         };
         write!(f, "{}", s)
     }

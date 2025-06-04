@@ -1,12 +1,19 @@
-use std::error::Error;
+use std::{error::Error, ffi::CStr, mem::MaybeUninit};
 
-use mlua_sys::{lua_State, lua_checkstack, lua_error};
+use libc::c_int;
+use mlua_sys::{
+    lua_State, lua_checkstack, lua_error, lua_getfield, lua_pop, lua_toboolean, lua_tointeger, lua_tolstring, LUA_TBOOLEAN, LUA_TNUMBER, LUA_TSTRING
+};
 
 use crate::{
     nvim_funcs::global::echo,
-    nvim_types::{AsThinString, NvString, ThinString, func_types::echo::Echo, opts::echo::EchoOpts},
+    nvim_types::{
+        AsThinString, Boolean, NvString, ThinString, func_types::echo::Echo, opts::echo::EchoOpts,
+    },
     plugin::IntoLua,
 };
+
+use super::{core::FromLuaErr, LuaInteger};
 
 // whenever an error is returned from a callback this should be used
 //
@@ -28,7 +35,10 @@ pub(super) unsafe fn handle_callback_err_ret(l: *mut lua_State, err: &dyn Error)
             // TODO: while i doubt its possible, find a safer solution
             // since we should never reach this branch give a more helpful error message instead
             // of attempting to chug along
-            debug_assert!(false, "Nvimium Internal Error: Unable to write error message to neovim (this likely a bug in nvimium)");
+            debug_assert!(
+                false,
+                "Nvimium Internal Error: Unable to write error message to neovim (this likely a bug in nvimium)"
+            );
             unsafe {
                 // lua_error performs a long jump over rust stack frames so
                 // this is inherently unsound
@@ -44,5 +54,82 @@ pub(super) unsafe fn handle_callback_err_ret(l: *mut lua_State, err: &dyn Error)
                 lua_error(l);
             }
         }
+    }
+}
+
+#[cold]
+#[inline(never)]
+fn incorrect_type() {}
+
+/// Returns error if TYPE is incorrect and pops the incorrect value.
+///
+/// If correct pushes the TYPE at the top of the stack
+pub(crate) unsafe fn get_table_val(
+    l: *mut lua_State,
+    i: c_int,
+    field: &CStr,
+    type_t: c_int,
+) -> Result<(), FromLuaErr> {
+    unsafe {
+        if lua_getfield(l, i, field.as_ptr()) != type_t {
+            incorrect_type();
+            lua_pop(l, 1);
+            return Err(FromLuaErr::IncorrectType);
+        }
+
+        Ok(())
+    }
+}
+
+/// The return value is guaranteed that it lives as long as the table at `i` is on the stack
+pub(crate) unsafe fn get_table_str_val(
+    l: *mut lua_State,
+    i: c_int,
+    field: &CStr,
+) -> Result<ThinString<'static>, FromLuaErr> {
+    unsafe {
+        #[allow(clippy::question_mark)]
+        if let Err(err) = get_table_val(l, i, field, LUA_TSTRING) {
+            return Err(err);
+        };
+
+        let mut len: MaybeUninit<usize> = MaybeUninit::uninit();
+        let s = lua_tolstring(l, -1, (&raw mut len) as _);
+
+        // popping this does not invalidate `s` as its still referenced by the table
+        lua_pop(l, 1);
+        Ok(ThinString::new(len.assume_init(), s))
+    }
+}
+
+pub(crate) unsafe fn get_table_bool_val(
+    l: *mut lua_State,
+    i: c_int,
+    field: &CStr,
+) -> Result<Boolean, FromLuaErr> {
+    unsafe {
+        #[allow(clippy::question_mark)]
+        if let Err(err) = get_table_val(l, i, field, LUA_TBOOLEAN) {
+            return Err(err);
+        }
+        let ret = lua_toboolean(l, -1) != 0;
+        lua_pop(l, 1);
+        Ok(ret)
+    }
+}
+
+pub(crate) unsafe fn get_table_int_val(
+    l: *mut lua_State,
+    i: c_int,
+    field: &CStr,
+) -> Result<LuaInteger, FromLuaErr> {
+    unsafe {
+        #[allow(clippy::question_mark)]
+        if let Err(err) = get_table_val(l, i, field, LUA_TNUMBER) {
+            return Err(err);
+        }
+        let ret = lua_tointeger(l, -1);
+        lua_pop(l, 1);
+        Ok(ret)
     }
 }

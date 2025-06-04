@@ -18,7 +18,7 @@ mod box_fn;
 mod closure;
 pub mod core;
 mod fn_ptr;
-mod utils;
+pub(crate) mod utils;
 #[doc(hidden)]
 pub use box_fn::set_callback_name;
 
