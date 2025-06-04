@@ -1,9 +1,13 @@
 use std::{error::Error, mem::ManuallyDrop};
 
 use crate::{
-    macros::{decl_derive::derive, masked_builder::masked_builder},
+    macros::decl_derive::derive,
     nvim_types::{
-        args::user_command_complete_cb::UserCommandCompleteArgs, lua::Function, object::{ObjectRef, ObjectTag}, object_subs::BoolOrInteger, AsThinString, Boolean, Integer, Object, ThinString
+        AsThinString, Boolean, Integer, Object, ThinString,
+        args::user_command_complete_cb::UserCommandCompleteArgs,
+        lua::Function,
+        object::{ObjectRef, ObjectTag},
+        object_subs::BoolOrInteger,
     },
     th,
 };
