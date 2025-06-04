@@ -135,7 +135,7 @@ mod tests {
         )
         .unwrap();
 
-        let ret = exec2(c"MyCmd Hello", ExecOpts::default().output(true)).unwrap();
-        panic!("RET={:?}", ret);
+        let ret = exec2(c"MyCmd Hello", ExecOpts::default().output(true)).unwrap().output.unwrap();
+        assert_eq!("Called MyCmd with argument [Hello]", ret);
     }
 }
