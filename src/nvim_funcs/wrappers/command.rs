@@ -16,10 +16,10 @@ use crate::{
     tri,
 };
 
-pub fn buf_create_user_command<'a, C: UserCommand<'a>>(
+pub fn buf_create_user_command<'a>(
     buf: Buffer,
     name: ThinString<'a>,
-    command: C,
+    command: UserCommand<'a>,
     opts: &mut CreateUserCommandOpts<'a>,
 ) -> Result<(), Error> {
     call_check();
@@ -61,10 +61,15 @@ pub fn create_user_command<'a, TH: AsThinString>(
         unsafe { nvim_create_user_command(Channel::LUA_INTERNAL_CALL, name.as_thinstr() , command, opts, &mut err); }
     }
 }
+
 #[cfg(all(not(miri), feature = "testing"))]
 mod tests {
     use crate as nvimium;
-    use crate::nvim_types::{Object, OwnedThinString};
+    use crate::nvim_funcs::command::create_user_command;
+    use crate::nvim_funcs::global::echo;
+    use crate::nvim_types::func_types::echo::Echo;
+    use crate::nvim_types::opts::echo::EchoOpts;
+    use crate::nvim_types::{Error, NvString, Object, OwnedThinString};
     use crate::{
         nvim_funcs::vimscript::exec2,
         nvim_test,
@@ -89,7 +94,7 @@ mod tests {
         buf_create_user_command(
             Buffer::new(0),
             c"MyCmdNvimium".as_thinstr(),
-            UserCommand::command(c":echomsg \"hello\""),
+            UserCommand::command(&c":echomsg \"hello\""),
             CreateUserCommandOpts::default()
                 .complete(UserCommandCompleteKind::MESSAGES)
                 .force(true)
@@ -108,5 +113,28 @@ mod tests {
         let commands = buf_get_commands(Buffer::new(0), &mut GetCommandOpts::default()).unwrap();
         assert!(commands.0.iter().any(|cmd| cmd.name == c"MyCmdNvimium"));
         buf_del_user_command(Buffer::new(0), c"MyCmdNvimium").unwrap();
+    }
+
+    #[nvim_test::nvim_test]
+    fn create_del_user_command() {
+        create_user_command(
+            c"MyCmd",
+            UserCommand::callback::<Error, _>(|arg| {
+                let mut s = NvString::with_capacity(arg.args.len() + arg.name.len());
+                write!(&mut s, "Called {:?} with argument [{:?}]", arg.name, arg.args).unwrap();
+                echo(&Echo::message(s), true, &EchoOpts::default())?;
+
+                Ok(())
+            }),
+            CreateUserCommandOpts::default()
+                .force(true)
+                .nargs(UserCommandNarg::ONE),
+        )
+        .unwrap();
+
+        panic!(
+            "{:?}",
+            exec2(c"MyCmd Hello", ExecOpts::default().output(true)).unwrap()
+        );
     }
 }
