@@ -1,7 +1,7 @@
 use crate::{
     nvim_funcs::c_funcs::global::{self, nvim_chan_send},
     nvim_types::{
-        Arena, ThinString,
+        Arena,
         returns::{get_hl::HighlightGroups, get_keymap::Keymaps},
     },
 };
@@ -806,10 +806,7 @@ mod tests {
         super::echo(&Echo::message(c"Hello!"), true, &EchoOpts::default()).unwrap();
         let mut opts = ExecOpts::default();
         let output = exec2(c":messages", opts.output(true)).unwrap();
-        assert_eq!(
-            output.get(c"output".as_thinstr()).unwrap(),
-            &Object::String(OwnedThinString::from("Hello!"))
-        );
+        assert_eq!(output.output.unwrap(), OwnedThinString::from("Hello!"));
     }
 
     #[nvim_test::nvim_test]

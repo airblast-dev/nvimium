@@ -1,3 +1,4 @@
+use crate::nvim_types::returns::exec2::Exec2;
 use crate::nvim_types::OwnedThinString;
 use crate::nvim_types::{
     Array, AsThinString, Boolean, Channel, Dict, Error, Object, opts::exec::ExecOpts,
@@ -57,12 +58,17 @@ pub fn eval<S: AsThinString>(eval: S) -> Result<Object, Error> {
 }
 
 // TODO: replace dictionary with dedicated struct?
-pub fn exec2<S: AsThinString>(exec: S, opts: &ExecOpts) -> Result<Dict, Error> {
+pub fn exec2<S: AsThinString>(exec: S, opts: &ExecOpts) -> Result<Exec2, Error> {
     tri! {
         let mut err;
         unsafe{ vimscript::nvim_exec2(Channel::LUA_INTERNAL_CALL, exec.as_thinstr(), opts, &mut err) },
         // uses PUT (allocating conversion) for the key string
-        Ok(d) => Ok(unsafe{ d.assume_init() })
+        Ok(d) => {
+            unsafe {
+                let mut d = d.assume_init();
+                Ok(Exec2::from_c_func_ret(&mut d))
+            }
+        }
     }
 }
 
@@ -91,7 +97,7 @@ mod tests {
     use crate::nvim_funcs::wrappers::global::{feedkeys, list_bufs, set_current_buf};
 
     use crate::nvim_types::{
-        Array, Buffer, Dict, Object, OwnedThinString, NvString,
+        Array, Buffer, Dict, NvString, Object, OwnedThinString,
         func_types::feedkeys::{FeedKeysMode, FeedKeysModeKind},
         kvec::KVec,
     };
