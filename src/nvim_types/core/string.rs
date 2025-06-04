@@ -359,19 +359,7 @@ impl std::io::Write for NvString {
         Ok(additional)
     }
 
-    fn write_fmt(&mut self, args: std::fmt::Arguments<'_>) -> std::io::Result<()> {
-        write!(self, "{}", args)
-    }
-
     fn flush(&mut self) -> std::io::Result<()> {
-        Ok(())
-    }
-}
-
-impl std::fmt::Write for NvString {
-    fn write_str(&mut self, s: &str) -> std::fmt::Result {
-        self.reserve(s.len());
-        self.push(s);
         Ok(())
     }
 }
