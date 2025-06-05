@@ -19,7 +19,7 @@ fn closure_drop<F: Fn(A) -> R + Unpin, A: FromLua, R>() -> (
         let ud = unsafe { lua_touserdata(l, lua_upvalueindex(1)) } as *mut F;
         unsafe { init_lua_ptr(l) };
         unsafe {
-            thread_lock::scoped(
+            thread_lock::scoped_callback(
                 |_| {
                     let mut to_pop = 0;
                     let ret = (ud.as_ref().unwrap())(A::get(l, &mut to_pop).unwrap());

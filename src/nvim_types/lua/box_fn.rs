@@ -107,7 +107,7 @@ pub fn register<E: Error, F: 'static + Fn(A) -> Result<R, E>, A: FromLuaMany, R>
                 (ud as *mut Box<dyn Fn(*mut lua_State) -> c_int>)
                     .as_ref()
                     .expect("registered closure's userdata pointer is null");
-            thread_lock::scoped(cb, l)
+            thread_lock::scoped_callback(cb, l)
         }
     }
     unsafe {

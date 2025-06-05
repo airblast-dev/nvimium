@@ -17,6 +17,7 @@
 use std::{
     cell::Cell,
     marker::PhantomData,
+    mem::ManuallyDrop,
     panic::{AssertUnwindSafe, catch_unwind, resume_unwind},
     ptr::NonNull,
     sync::atomic::{AtomicPtr, Ordering},
@@ -126,6 +127,30 @@ pub unsafe fn scoped<F: Fn(A) -> R, A, R>(f: F, arg: A) -> R {
     let th_lock = unsafe { unlock() };
     let ret = catch_unwind(AssertUnwindSafe(|| f(arg)));
     lock(th_lock);
+    match ret {
+        Ok(r) => r,
+        Err(err) => {
+            resume_unwind(err);
+        }
+    }
+}
+
+/// Calls the provided function same way as [`scoped`] but restores access if it already has
+/// access.
+///
+/// Only relevant when a callback indirectly calls another callback such as a user command.
+///
+/// # Safety
+///
+/// Same as [`scoped`] but does not correct an incorrect state if it access was not revoked on
+/// return.
+pub unsafe fn scoped_callback<F: Fn(A) -> R, A, R>(f: F, arg: A) -> R {
+    let can_call = can_call();
+    let th_lock = ManuallyDrop::new(unsafe { unlock() });
+    let ret = catch_unwind(AssertUnwindSafe(|| f(arg)));
+    if !can_call {
+        ManuallyDrop::into_inner(th_lock);
+    }
     match ret {
         Ok(r) => r,
         Err(err) => {

@@ -21,7 +21,7 @@ fn fn_callback<A: FromLuaMany, R: IntoLua, E: Error>() -> extern "C-unwind" fn(*
         assert!(!fn_ptr.is_null());
         // TODO: handle return value
         unsafe {
-            thread_lock::scoped(
+            thread_lock::scoped_callback(
                 |l| {
                     let mut to_pop = 0;
                     let arg = match A::get(l, &mut to_pop) {
