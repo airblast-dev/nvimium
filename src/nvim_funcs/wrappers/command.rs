@@ -5,7 +5,7 @@ use thread_lock::call_check;
 use crate::{
     nvim_funcs::c_funcs::command::{
         nvim_buf_create_user_command, nvim_buf_del_user_command, nvim_buf_get_commands,
-        nvim_create_user_command, nvim_del_user_command,
+        nvim_create_user_command, nvim_del_user_command, nvim_get_commands,
     },
     nvim_types::{
         Arena, AsThinString, Buffer, Channel, Error, ThinString,
@@ -70,6 +70,18 @@ pub fn del_user_command<TH: AsThinString>(name: TH) -> Result<(), Error> {
     }
 }
 
+pub fn get_commands(opts: &mut GetCommandOpts) -> Result<CommandsInfos, Error> {
+    let mut arena = Arena::EMPTY;
+    tri! {
+        let mut err;
+        unsafe { nvim_get_commands(opts, &mut arena, &mut err)},
+        Ok(d) => unsafe {
+            let mut d = ManuallyDrop::new(d.assume_init());
+            Ok(CommandsInfos::from_c_func_ret(&mut d))
+        }
+    }
+}
+
 #[cfg(all(not(miri), feature = "testing"))]
 mod tests {
     use crate as nvimium;
@@ -95,7 +107,7 @@ mod tests {
 
     use super::{
         buf_create_user_command, buf_del_user_command, buf_get_commands, create_user_command,
-        del_user_command,
+        del_user_command, get_commands,
     };
 
     #[nvim_test::nvim_test]
@@ -151,6 +163,8 @@ mod tests {
             .output
             .unwrap();
         assert_eq!("Called MyCmd with argument [Hello]", ret);
+        let infos = get_commands(&mut GetCommandOpts::default()).unwrap();
+        assert!(infos.0.iter().any(|info| info.name == "MyCmd"));
 
         del_user_command(c"MyCmd").unwrap();
     }
