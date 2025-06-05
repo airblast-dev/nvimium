@@ -22,14 +22,11 @@ pub(super) const fn extend_arr<T: Copy>(
     ext_len: usize,
     ext_arr: &[T],
 ) {
-    let mut i = 0;
-    let mut start = *len;
-    let end = *len + ext_len;
-    while start < end {
-        arr[start] = ext_arr[i];
-
-        start += 1;
-        i += 1;
+    debug_assert!(arr.len() - *len >= ext_len);
+    unsafe {
+        arr.as_mut_ptr()
+            .add(*len)
+            .copy_from_nonoverlapping(ext_arr.as_ptr(), ext_len);
     }
 
     *len += ext_len;

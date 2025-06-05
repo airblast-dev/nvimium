@@ -230,7 +230,11 @@ const fn build_buckets<const N: usize, const UNIQUE_CHAR_COUNT: usize, const MAX
     len_pos_buckets
 }
 
-const fn sorted_fields_shifts<const N: usize, const UNIQUE_CHAR_COUNT: usize, const MAX_LEN: usize>(
+const fn sorted_fields_shifts<
+    const N: usize,
+    const UNIQUE_CHAR_COUNT: usize,
+    const MAX_LEN: usize,
+>(
     mut len_pos_buckets: LenPosBuckets<N, UNIQUE_CHAR_COUNT, MAX_LEN>,
 ) -> [&'static str; N] {
     let mut new_order = [""; N];
@@ -246,9 +250,8 @@ const fn sorted_fields_shifts<const N: usize, const UNIQUE_CHAR_COUNT: usize, co
 
         let mut keys = pos_buck.keys();
 
-        sort_ints(&mut keys, pos_buck.len);
-
         if pos_buck.len > 1 {
+            sort_ints(&mut keys, pos_buck.len);
             let mut ci = 0;
             while ci < pos_buck.len {
                 let buck = pos_buck.kvs[pos_buck.find_kv_idx(keys[ci] as usize).unwrap()];
@@ -262,8 +265,8 @@ const fn sorted_fields_shifts<const N: usize, const UNIQUE_CHAR_COUNT: usize, co
 
                 ci += 1;
             }
-        } else if let Some(b_idx) = pos_buck.find_kv_idx(keys[0] as usize) {
-            let b = &pos_buck.kvs[b_idx];
+        } else if pos_buck.len == 1 {
+            let b = &pos_buck.kvs[0];
             extend_arr(&mut new_order_len, &mut new_order, 1, &[b.val[0]]);
         }
 
