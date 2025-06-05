@@ -18,6 +18,9 @@ pub struct Error {
     msg: *const c_char,
 }
 
+unsafe impl Send for Error {}
+unsafe impl Sync for Error {}
+
 impl Debug for Error {
     #[inline(never)]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {

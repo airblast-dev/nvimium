@@ -77,7 +77,7 @@ impl Function {
         A: 'static + FromLuaMany,
         R: 'static + IntoLua,
         E: 'static + Error,
-        F: 'static + Fn(A) -> Result<R, E>,
+        F: 'static + Fn(A) -> Result<R, E> + Unpin,
     >(
         f: F,
     ) -> Self {

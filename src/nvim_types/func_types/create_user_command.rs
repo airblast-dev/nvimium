@@ -19,7 +19,7 @@ impl<'a> UserCommand<'a> {
 impl UserCommand<'static> {
     pub fn callback<
         E: 'static + Error,
-        F: 'static + for<'f> Fn(UserCommandArgs<'f>) -> Result<(), E>,
+        F: 'static + for<'f> Fn(UserCommandArgs<'f>) -> Result<(), E> + Unpin,
     >(
         cmd: F,
     ) -> Self {

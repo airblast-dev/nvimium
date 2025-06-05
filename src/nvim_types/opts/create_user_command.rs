@@ -115,7 +115,7 @@ impl From<UserCommandCompleteKind> for UserCommandComplete {
 impl<
     R: 'static + AsThinString,
     E: 'static + Error,
-    F: 'static + for<'a> Fn(UserCommandCompleteArgs<'a>) -> Result<R, E>,
+    F: 'static + for<'a> Fn(UserCommandCompleteArgs<'a>) -> Result<R, E> + Unpin,
 > From<F> for UserCommandComplete
 {
     fn from(value: F) -> Self {
