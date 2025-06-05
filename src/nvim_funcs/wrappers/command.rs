@@ -73,7 +73,6 @@ pub fn del_user_command<TH: AsThinString>(name: TH) -> Result<(), Error> {
 #[cfg(all(not(miri), feature = "testing"))]
 mod tests {
     use crate as nvimium;
-    use crate::nvim_funcs::command::create_user_command;
     use crate::nvim_funcs::global::echo;
     use crate::nvim_types::func_types::echo::Echo;
     use crate::nvim_types::opts::echo::EchoOpts;
@@ -94,7 +93,10 @@ mod tests {
         },
     };
 
-    use super::{buf_create_user_command, buf_del_user_command, buf_get_commands};
+    use super::{
+        buf_create_user_command, buf_del_user_command, buf_get_commands, create_user_command,
+        del_user_command,
+    };
 
     #[nvim_test::nvim_test]
     fn buf_get_create_del_user_command() {
