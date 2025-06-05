@@ -59,6 +59,7 @@ pub fn eval<S: AsThinString>(eval: S) -> Result<Object, Error> {
 
 // TODO: replace dictionary with dedicated struct?
 pub fn exec2<S: AsThinString>(exec: S, opts: &ExecOpts) -> Result<Exec2, Error> {
+    call_check();
     tri! {
         let mut err;
         unsafe{ vimscript::nvim_exec2(Channel::LUA_INTERNAL_CALL, exec.as_thinstr(), opts, &mut err) },
