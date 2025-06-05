@@ -1,8 +1,7 @@
-use std::mem::ManuallyDrop;
-
 use thread_lock::call_check;
 
 use crate::{
+    macros::tri::{tri_ez, tri_ret},
     nvim_funcs::c_funcs::command::{
         nvim_buf_create_user_command, nvim_buf_del_user_command, nvim_buf_get_commands,
         nvim_create_user_command, nvim_del_user_command, nvim_get_commands,
@@ -13,7 +12,6 @@ use crate::{
         opts::{create_user_command::CreateUserCommandOpts, get_commands::GetCommandOpts},
         returns::commands::CommandsInfos,
     },
-    tri,
 };
 
 pub fn buf_create_user_command<'a>(
@@ -23,30 +21,27 @@ pub fn buf_create_user_command<'a>(
     opts: &mut CreateUserCommandOpts<'a>,
 ) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe {nvim_buf_create_user_command(Channel::LUA_INTERNAL_CALL, buf, name, command, opts, &mut err);}
+    tri_ez! {
+        err;
+        unsafe {nvim_buf_create_user_command(Channel::LUA_INTERNAL_CALL, buf, name, command, opts, &mut err)};
     }
 }
 
 pub fn buf_del_user_command<TH: AsThinString>(buf: Buffer, name: TH) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe {nvim_buf_del_user_command(buf, name.as_thinstr(), &mut err);}
+    tri_ez! {
+        err;
+        unsafe {nvim_buf_del_user_command(buf, name.as_thinstr(), &mut err)};
     }
 }
 
 pub fn buf_get_commands(buf: Buffer, opts: &mut GetCommandOpts) -> Result<CommandsInfos, Error> {
     call_check();
     let mut arena = Arena::EMPTY;
-    tri! {
-        let mut err;
-        unsafe { nvim_buf_get_commands(buf, opts, &mut arena, &mut err) },
-        Ok(d) => {
-            let mut d = unsafe{ ManuallyDrop::new( d.assume_init() ) };
-            Ok(CommandsInfos::from_c_func_ret(&mut d))
-        }
+    tri_ret! {
+        err;
+        unsafe { nvim_buf_get_commands(buf, opts, &mut arena, &mut err) };
+        CommandsInfos::from_c_func_ret;
     }
 }
 
@@ -56,29 +51,26 @@ pub fn create_user_command<'a, TH: AsThinString>(
     opts: &mut CreateUserCommandOpts,
 ) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { nvim_create_user_command(Channel::LUA_INTERNAL_CALL, name.as_thinstr() , command, opts, &mut err); }
+    tri_ez! {
+        err;
+        unsafe { nvim_create_user_command(Channel::LUA_INTERNAL_CALL, name.as_thinstr() , command, opts, &mut err) };
     }
 }
 
 pub fn del_user_command<TH: AsThinString>(name: TH) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { nvim_del_user_command(name.as_thinstr(), &mut err) }
+    tri_ez! {
+        err;
+        unsafe { nvim_del_user_command(name.as_thinstr(), &mut err) };
     }
 }
 
 pub fn get_commands(opts: &mut GetCommandOpts) -> Result<CommandsInfos, Error> {
     let mut arena = Arena::EMPTY;
-    tri! {
-        let mut err;
-        unsafe { nvim_get_commands(opts, &mut arena, &mut err)},
-        Ok(d) => unsafe {
-            let mut d = ManuallyDrop::new(d.assume_init());
-            Ok(CommandsInfos::from_c_func_ret(&mut d))
-        }
+    tri_ret! {
+        err;
+        unsafe { nvim_get_commands(opts, &mut arena, &mut err)};
+        CommandsInfos::from_c_func_ret;
     }
 }
 

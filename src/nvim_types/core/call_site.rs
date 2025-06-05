@@ -1,6 +1,8 @@
+use super::Integer;
+
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Channel(i64);
+pub struct Channel(Integer);
 
 impl Channel {
     // Simplified version of src/nvim/api/private/defs.h 0.10.0 l:42

@@ -1,4 +1,4 @@
-use std::mem::ManuallyDrop;
+use std::{mem::ManuallyDrop, ops::Deref};
 
 use crate::nvim_types::{Array, Dict, Object};
 
@@ -18,15 +18,7 @@ impl Context {
         let [regs, jumps, bufs, gvars, funcs] =
             skip_drop_remove_keys(ctx, &["regs", "jumps", "bufs", "gvars", "funcs"], None)
                 .unwrap()
-                .map(|arr| {
-                    if matches!(*arr, Object::Array(_)) {
-                        Object::into_array(ManuallyDrop::into_inner(arr)).unwrap()
-                    } else {
-                        Array::default()
-                    }
-                });
-
-        unsafe { ctx.0.set_len(0) };
+                .map(|arr| arr.deref().clone().into_array().unwrap());
 
         Self {
             regs,

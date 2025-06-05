@@ -1,13 +1,12 @@
 use std::mem::MaybeUninit;
 
 use crate::nvim_types::{
-    Arena, Array, Boolean, Channel, Dict, borrowed::Borrowed, error::Error, object::Object,
-    opts::exec::ExecOpts, string::ThinString,
+    borrowed::Borrowed, error::Error, object::{Object, ObjectRef}, opts::exec::ExecOpts, string::ThinString, Arena, Array, Boolean, Channel, Dict
 };
 
 unsafe extern "C" {
     pub fn nvim_call_dict_function<'a>(
-        dict: Object,
+        dict: ObjectRef<'a>,
         func: ThinString<'a>,
         args: Borrowed<'a, Array>,
         arena: *mut Arena,

@@ -1,11 +1,15 @@
 use crate::{
+    macros::tri::{tri_ez, tri_nc, tri_ret},
     nvim_funcs::c_funcs::global::{self, nvim_chan_send},
     nvim_types::{
         Arena,
         returns::{get_hl::HighlightGroups, get_keymap::Keymaps},
     },
 };
-use std::{mem::ManuallyDrop, ops::DerefMut};
+use std::{
+    mem::ManuallyDrop,
+    ops::{Deref, DerefMut},
+};
 
 use crate::nvim_types::{
     Array, AsThinString, Boolean, Buffer, Channel, Dict, Error, Integer, NameSpace, Object,
@@ -29,65 +33,64 @@ use thread_lock::call_check;
 
 pub fn chan_send<S: AsThinString>(chan: Channel, bytes: S) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { nvim_chan_send(chan, bytes.as_thinstr(), &mut err) },
+    tri_ez! {
+        err;
+        unsafe { nvim_chan_send(chan, bytes.as_thinstr(), &mut err) };
     }
 }
 
 pub fn create_buf(listed: Boolean, scratch: Boolean) -> Result<Buffer, Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_create_buf(listed, scratch, &mut err) },
-        Ok(buf) => Ok(unsafe{buf.assume_init()})
+    tri_nc! {
+        err;
+        unsafe { global::nvim_create_buf(listed, scratch, &mut err) };
     }
 }
 
 pub fn del_current_line() -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe {global::nvim_del_current_line(core::ptr::null_mut(), &mut err) },
+    let mut arena = Arena::EMPTY;
+    tri_ez! {
+        err;
+        unsafe {global::nvim_del_current_line(&raw mut arena, &mut err) };
     }
 }
 
 pub fn del_keymap<S: AsThinString>(map_mode: KeyMapMode, lhs: S) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_del_keymap(Channel::LUA_INTERNAL_CALL, map_mode, lhs.as_thinstr(), &mut err) }
+    tri_ez! {
+        err;
+        unsafe { global::nvim_del_keymap(Channel::LUA_INTERNAL_CALL, map_mode, lhs.as_thinstr(), &mut err) };
     }
 }
 
 pub fn del_mark<S: AsThinString>(name: S) -> Result<Boolean, Error> {
     call_check();
-    tri! {
-        let mut err;
+    tri_nc! {
+        err;
         unsafe {
             global::nvim_del_mark(name.as_thinstr(), &mut err)
-        },
-        Ok(b) => Ok(unsafe{b.assume_init()})
+        };
     }
 }
 
 pub fn del_var<S: AsThinString>(var: S) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
+    tri_ez! {
+        err;
         unsafe {
-            global::nvim_del_var(var.as_thinstr(), &mut err);
-        }
+            global::nvim_del_var(var.as_thinstr(), &mut err)
+        };
     }
 }
 
 pub fn echo<'a>(chunks: &'a Echo, history: Boolean, opts: &'a EchoOpts) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
+    tri_ez! {
+        err;
         unsafe {
-            global::nvim_echo(chunks.into(), history, opts, &mut err);
-        }
+            global::nvim_echo(chunks.into(), history, opts, &mut err)
+        };
     }
 }
 
@@ -114,13 +117,11 @@ pub fn eval_statusline<S: AsThinString>(
     opts: &EvalStatusLineOpts,
 ) -> Result<EvalStatusLine, Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_eval_statusline(s.as_thinstr(), opts, core::ptr::null_mut(), &mut err) },
-        Ok(ret) => {
-            let ret = unsafe { ManuallyDrop::new( ret.assume_init() ) };
-            Ok(EvalStatusLine::from_c_func_ret(ret))
-        }
+    let mut arena = Arena::EMPTY;
+    tri_ret! {
+        err;
+        unsafe { global::nvim_eval_statusline(s.as_thinstr(), opts, &raw mut arena, &mut err) };
+        EvalStatusLine::from_c_func_ret;
     }
 }
 
@@ -143,12 +144,9 @@ pub fn eval_statusline<S: AsThinString>(
 /// This function is mainly useful when writing tests.
 pub fn exec_lua<S: AsThinString>(code: S, args: &Array) -> Result<Object, Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_exec_lua(code.as_thinstr(), args.into(), core::ptr::null_mut(), &mut err) },
-        Ok(ret) => {
-            Ok(unsafe{ret.assume_init()})
-        }
+    tri_nc! {
+        err;
+        unsafe { global::nvim_exec_lua(code.as_thinstr(), args.into(), core::ptr::null_mut(), &mut err) };
     }
 }
 
@@ -161,10 +159,10 @@ pub fn feedkeys<S: AsThinString>(keys: S, mode: &FeedKeysMode, escape_ks: Boolea
 
 pub fn get_chan_info(channel_id: Channel, chan: Integer) -> Result<ChannelInfo, Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_get_chan_info(channel_id, chan, core::ptr::null_mut(), &mut err) },
-        Ok(ret) => Ok(unsafe { ChannelInfo::from_c_func_ret(&ret.assume_init()) })
+    tri_ret! {
+        err;
+        unsafe { global::nvim_get_chan_info(channel_id, chan, core::ptr::null_mut(), &mut err) };
+        ChannelInfo::from_c_func_ret;
     }
 }
 
@@ -197,15 +195,11 @@ pub fn get_color_map() -> ColorMap {
 
 pub fn get_context(opts: &ContextOpts) -> Result<Context, Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_get_context(opts, core::ptr::null_mut(), &mut err) },
-        Ok(d) => Ok(unsafe {
-            let mut d = ManuallyDrop::new(d.assume_init());
-            let ctx = Context::from_c_func_ret(&mut d);
-            ManuallyDrop::into_inner(d);
-            ctx
-        })
+    let mut arena = Arena::EMPTY;
+    tri_ret! {
+        err;
+        unsafe { global::nvim_get_context(opts, &mut arena, &mut err) };
+        Context::from_c_func_ret;
     }
 }
 
@@ -216,12 +210,9 @@ pub fn get_current_buf() -> Buffer {
 
 pub fn get_current_line() -> Result<OwnedThinString, Error> {
     call_check();
-    unsafe {
-        tri! {
-            let mut err;
-            global::nvim_get_current_line(core::ptr::null_mut(), &mut err),
-            Ok(res) => Ok(res.assume_init())
-        }
+    tri_nc! {
+        err;
+        unsafe { global::nvim_get_current_line(core::ptr::null_mut(), &mut err) };
     }
 }
 
@@ -238,16 +229,10 @@ pub fn get_current_win() -> Window {
 pub fn get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<HighlightGroups, Error> {
     call_check();
     let mut arena = Arena::EMPTY;
-    tri! {
-        let mut err;
-        unsafe { global::nvim_get_hl(ns, opts, &mut arena, &mut err) },
-        Ok(dict) => {
-            let dict = ManuallyDrop::new(unsafe { dict.assume_init_ref() });
-            let res = HighlightGroups::from_c_func_ret(&dict);
-
-
-            Ok(res)
-        }
+    tri_ret! {
+        err;
+        unsafe { global::nvim_get_hl(ns, opts, &mut arena, &mut err) };
+        HighlightGroups::from_c_func_ret;
     }
 }
 
@@ -258,10 +243,9 @@ pub fn get_hl_id_by_name<S: AsThinString>(name: S) -> Integer {
 
 pub fn get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpace, Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_get_hl_ns(opts, &mut err) },
-        Ok(ns) => Ok( unsafe { ns.assume_init() })
+    tri_nc! {
+        err;
+        unsafe { global::nvim_get_hl_ns(opts, &mut err) };
     }
 }
 
@@ -288,77 +272,58 @@ pub fn get_mark<S: AsThinString>(name: S) -> Result<Array, Error> {
 
 pub fn get_mode() -> Mode {
     call_check();
-    let mut dict = unsafe { global::nvim_get_mode(core::ptr::null_mut()) };
+    let mut arena = Arena::EMPTY;
+    let mut dict = unsafe { global::nvim_get_mode(&raw mut arena) };
     Mode::from_c_func_ret(&mut dict)
 }
 
 pub fn get_proc(pid: Integer) -> Result<Option<Dict>, Error> {
     call_check();
-    // TODO: might be multiple memory leaks here
-    tri! {
-        let mut err;
-        unsafe { global::nvim_get_proc(pid, core::ptr::null_mut(), &mut err) },
-        Ok(obj) => {
-            let obj = unsafe { ManuallyDrop::new(obj.assume_init()) };
-            let cpy = ManuallyDrop::into_inner(obj.clone());
-            match cpy {
-                Object::Null => Ok(None),
-                Object::Dict(d) => Ok(Some(d)),
-                _ => unreachable!("unknown object kind returned from nvim_get_proc")
-            }
-        }
+    let mut arena = Arena::EMPTY;
+    tri_ret! {
+        err;
+        unsafe { global::nvim_get_proc(pid, &raw mut arena, &mut err) };
+        (|d: &mut Object| d.clone().into_dict());
     }
 }
 
 pub fn get_proc_children(pid: Integer) -> Result<Array, Error> {
     call_check();
-    // TODO: might be multiple memory leaks here
-    tri! {
-        let mut err;
-        unsafe { global::nvim_get_proc_children(pid, core::ptr::null_mut(), &mut err) },
-        Ok(obj) => {
-            let obj = unsafe { ManuallyDrop::new(obj.assume_init()) };
-            Ok(ManuallyDrop::into_inner(obj.clone()))
-        }
+    let mut arena = Arena::EMPTY;
+    tri_ret! {
+        err;
+        unsafe { global::nvim_get_proc_children(pid, &raw mut arena, &mut err) };
+        Array::clone;
     }
 }
 
 pub fn get_runtime_file<S: AsThinString>(name: S, all: Boolean) -> Result<Array, Error> {
     call_check();
-    // TODO: might be multiple memory leaks here
-    tri! {
-        let mut err;
-        unsafe { global::nvim_get_runtime_file(name.as_thinstr(), all, core::ptr::null_mut(), &mut err) },
-        Ok(arr) => {
-            let arr = unsafe { ManuallyDrop::new(arr.assume_init()) };
-            Ok(ManuallyDrop::into_inner(arr.clone()))
-        }
+    let mut arena = Arena::EMPTY;
+    tri_ret! {
+        err;
+        unsafe { global::nvim_get_runtime_file(name.as_thinstr(), all, &raw mut arena, &mut err) };
+        Array::clone;
     }
 }
 
 pub fn get_var<S: AsThinString>(name: S) -> Result<Object, Error> {
     call_check();
-    // TODO: might be multiple memory leaks here
-    tri! {
-        let mut err;
-        unsafe { global::nvim_get_var(name.as_thinstr(), core::ptr::null_mut(), &mut err) },
-        Ok(obj) => {
-            let obj = unsafe { ManuallyDrop::new(obj.assume_init()) };
-            Ok(ManuallyDrop::into_inner(obj.clone()))
-        }
+    let mut arena = Arena::EMPTY;
+    tri_ret! {
+        err;
+        unsafe { global::nvim_get_var(name.as_thinstr(), &raw mut arena, &mut err) };
+        Object::clone;
     }
 }
 
 pub fn get_vvar<S: AsThinString>(name: S) -> Result<Object, Error> {
     call_check();
-    // TODO: might be multiple memory leaks here
-    tri! {
-        let mut err;
-        unsafe { global::nvim_get_vvar(name.as_thinstr(), core::ptr::null_mut(), &mut err) },
-        Ok(obj) => {
-            let obj = unsafe { ManuallyDrop::new(obj.assume_init()) };
-            Ok(ManuallyDrop::into_inner(obj.clone()))
-        }
+    let mut arena = Arena::EMPTY;
+    tri_ret! {
+        err;
+        unsafe { global::nvim_get_vvar(name.as_thinstr(), &raw mut arena, &mut err) };
+        Object::clone;
     }
 }
 
@@ -376,8 +341,8 @@ pub fn input_mouse<S: AsThinString, S1: AsThinString, S2: AsThinString>(
     col: Integer,
 ) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
+    tri_ez! {
+        err;
         unsafe {
             global::nvim_input_mouse(
                 button.as_thinstr(),
@@ -388,7 +353,7 @@ pub fn input_mouse<S: AsThinString, S1: AsThinString, S2: AsThinString>(
                 col,
                 &mut err,
             )
-        }
+        };
     }
 }
 
@@ -404,14 +369,11 @@ pub fn list_chans() -> Array {
 
 pub fn list_runtime_paths() -> Result<Array, Error> {
     call_check();
-    // TODO: might be multiple memory leaks here
-    tri! {
-        let mut err;
-        unsafe { global::nvim_list_runtime_paths(core::ptr::null_mut(), &mut err) },
-        Ok(arr) => {
-            let arr = unsafe { ManuallyDrop::new(arr.assume_init()) };
-            Ok(ManuallyDrop::into_inner(arr.clone()))
-        }
+    let mut arena = Arena::EMPTY;
+    tri_ret! {
+        err;
+        unsafe { global::nvim_list_runtime_paths(&raw mut arena, &mut err) };
+        Array::clone;
     }
 }
 
@@ -422,11 +384,8 @@ pub fn list_tabpages() -> Array {
 
 pub fn list_uis() -> Array {
     call_check();
-    // TODO: might be multiple memory leaks here
-    unsafe {
-        let uis = global::nvim_list_uis(core::ptr::null_mut());
-        ManuallyDrop::into_inner(uis.clone())
-    }
+    let mut arena = Arena::EMPTY;
+    unsafe { global::nvim_list_uis(&raw mut arena).deref().clone() }
 }
 
 pub fn list_wins() -> Array {
@@ -434,7 +393,8 @@ pub fn list_wins() -> Array {
     unsafe { global::nvim_list_wins(core::ptr::null_mut()) }
 }
 
-pub fn load_context(ctx: &Dict) -> Result<Object, Error> {
+// TODO: might not be safe to call, look into details
+fn load_context(ctx: &Dict) -> Result<Object, Error> {
     call_check();
     tri! {
         let mut err;
@@ -443,19 +403,18 @@ pub fn load_context(ctx: &Dict) -> Result<Object, Error> {
     }
 }
 
-pub fn open_term(buf: Buffer, opts: &mut OpenTermOpts) -> Result<Integer, Error> {
+pub fn open_term(buf: Buffer, opts: &mut OpenTermOpts) -> Result<Channel, Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_open_term(buf, opts, &mut err) },
-        Ok(i) => Ok(unsafe{i.assume_init()})
+    tri_nc! {
+        err;
+        unsafe { global::nvim_open_term(buf, opts, &mut err) };
     }
 }
 
 pub fn paste<S: AsThinString>(src: S, crlf: Boolean, phase: PastePhase) -> Result<Boolean, Error> {
     call_check();
-    tri! {
-        let mut err;
+    tri_nc! {
+        err;
         unsafe {
             global::nvim_paste(
                 Channel::LUA_INTERNAL_CALL,
@@ -465,8 +424,7 @@ pub fn paste<S: AsThinString>(src: S, crlf: Boolean, phase: PastePhase) -> Resul
                 core::ptr::null_mut(),
                 &mut err
             )
-        },
-        Ok(b) => Ok(unsafe{b.assume_init()})
+        };
     }
 }
 
@@ -502,81 +460,82 @@ pub fn select_popupmenu_item(
     opts: &SelectPopupMenuOpts,
 ) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_select_popupmenu_item(item, insert, finish, opts, &mut err) }
+    tri_ez! {
+        err;
+        unsafe { global::nvim_select_popupmenu_item(item, insert, finish, opts, &mut err) };
     }
 }
 
 pub fn set_current_buf(buf: Buffer) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_set_current_buf(buf, &mut err); }
+    tri_ez! {
+        err;
+        unsafe { global::nvim_set_current_buf(buf, &mut err) };
     }
 }
 
 pub fn set_current_dir<S: AsThinString>(dir: S) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_set_current_dir(dir.as_thinstr(), &mut err) }
+    tri_ez! {
+        err;
+        unsafe { global::nvim_set_current_dir(dir.as_thinstr(), &mut err) };
     }
 }
 
 pub fn set_current_line<S: AsThinString>(line: S) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_set_current_line(line.as_thinstr(), core::ptr::null_mut(), &mut err) }
+    tri_ez! {
+        err;
+        unsafe { global::nvim_set_current_line(line.as_thinstr(), core::ptr::null_mut(), &mut err) };
     }
 }
 
 pub fn set_current_tabpage(page: TabPage) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_set_current_tabpage(page, &mut err); }
+    tri_ez! {
+        err;
+        unsafe { global::nvim_set_current_tabpage(page, &mut err) };
     }
 }
 
 pub fn set_current_win(win: Window) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_set_current_win(win, &mut err); }
+    tri_ez! {
+        err;
+        unsafe { global::nvim_set_current_win(win, &mut err) };
     }
 }
 
-pub fn set_hl<S: AsThinString>(ns: NameSpace, name: S, opts: &SetHlOpts) -> Result<(), Error> {
+pub fn set_hl<S: AsThinString>(ns: NameSpace, name: S, opts: &mut SetHlOpts) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
+    tri_ez! {
+        err;
         unsafe {
             global::nvim_set_hl(
                 Channel::LUA_INTERNAL_CALL,
-                ns, name.as_thinstr(),
+                ns, 
+                name.as_thinstr(),
                 // may technically be mutated in neovim due to the url field
-                (opts as *const SetHlOpts) as *mut SetHlOpts,
+                opts as *mut SetHlOpts,
                 &mut err
-            );
-        }
+            )
+        };
     }
 }
 
 pub fn set_hl_ns(ns: NameSpace) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_set_hl_ns(ns, &mut err) }
+    tri_ez! {
+        err;
+        unsafe { global::nvim_set_hl_ns(ns, &mut err) };
     }
 }
 
 pub fn set_hl_ns_fast(ns: NameSpace) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_set_hl_ns_fast(ns, &mut err) }
+    tri_ez! {
+        err;
+        unsafe { global::nvim_set_hl_ns_fast(ns, &mut err) };
     }
 }
 
@@ -587,34 +546,33 @@ pub fn set_keymap<S: AsThinString, S1: AsThinString>(
     opts: &mut SetKeymapOpts,
 ) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_set_keymap(Channel::LUA_INTERNAL_CALL, mode, lhs.as_thinstr(), rhs.as_thinstr(), opts, &mut err); }
+    tri_ez! {
+        err;
+        unsafe { global::nvim_set_keymap(Channel::LUA_INTERNAL_CALL, mode, lhs.as_thinstr(), rhs.as_thinstr(), opts, &mut err) };
     }
 }
 
 pub fn set_var<S: AsThinString>(s: S, obj: &Object) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_set_var(s.as_thinstr(), obj.into(), &mut err); }
+    tri_ez! {
+        err;
+        unsafe { global::nvim_set_var(s.as_thinstr(), obj.into(), &mut err) };
     }
 }
 
 pub fn set_vvar<S: AsThinString>(s: S, obj: &Object) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_set_vvar(s.as_thinstr(), obj.into(), &mut err); }
+    tri_ez! {
+        err;
+        unsafe { global::nvim_set_vvar(s.as_thinstr(), obj.into(), &mut err) };
     }
 }
 
 pub fn strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_strwidth(s.as_thinstr(), &mut err) },
-        Ok(len) => Ok(unsafe{len.assume_init()})
+    tri_nc! {
+        err;
+        unsafe { global::nvim_strwidth(s.as_thinstr(), &mut err) };
     }
 }
 

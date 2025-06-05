@@ -27,3 +27,65 @@ macro_rules! tri_full {
         return $okexpr
     };
 }
+
+macro_rules! tri_ret {
+    (
+        $err:ident;
+        $call:expr;
+        $conv:expr;
+    ) => {{
+        let mut $err = crate::nvim_types::Error::none();
+        let mut result = $call;
+        if $err.has_errored() {
+            Err($err)
+        } else {
+            Ok($conv( unsafe { result.assume_init_mut() } ))
+        }
+    }};
+}
+pub(crate) use tri_ret;
+
+macro_rules! tri_nc {
+    (
+        $err:ident;
+        $call:expr;
+    ) => {{
+        let mut $err = crate::nvim_types::Error::none();
+        let result = $call;
+        if $err.has_errored() {
+            Err($err)
+        } else {
+            Ok(unsafe { result.assume_init() })
+        }
+    }};
+}
+pub(crate) use tri_nc;
+
+macro_rules! tri_ez {
+    (
+        $err:ident;
+        $call:expr;
+    ) => {{
+        let mut $err = crate::nvim_types::Error::none();
+        let _: () = $call;
+        if $err.has_errored() {
+            Err($err)
+        } else {
+            Ok(())
+        }
+    }};
+}
+pub(crate) use tri_ez;
+
+macro_rules! tri_match {
+    ($err:ident; $expr:expr; $conv:item; $err_handle:expr) => {{
+        let mut $err = crate::nvim_type::Error::none();
+        let result = $expr;
+        if $err.has_errored() {
+            Err($err_handle)
+        } else {
+            Ok($conv( unsafe { result.assume_init() } ))
+        }
+    }};
+}
+pub(crate) use tri_match;

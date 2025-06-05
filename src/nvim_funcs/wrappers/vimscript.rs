@@ -1,5 +1,7 @@
+use crate::macros::tri::{tri_ez, tri_ret};
+use crate::nvim_types::Arena;
+use crate::nvim_types::object::ObjectRef;
 use crate::nvim_types::returns::exec2::Exec2;
-use crate::nvim_types::OwnedThinString;
 use crate::nvim_types::{
     Array, AsThinString, Boolean, Channel, Dict, Error, Object, opts::exec::ExecOpts,
 };
@@ -16,61 +18,73 @@ pub fn call_dict_function<S1: AsThinString, S2: AsThinString>(
     args: &Array,
 ) -> Result<Object, Error> {
     call_check();
-    tri! {
-        let mut err;
+    let mut arena = Arena::EMPTY;
+    tri_ret! {
+        err;
         unsafe {
             vimscript::nvim_call_dict_function(
-                Object::String(OwnedThinString::from(dict.as_thinstr())),
+                ObjectRef::new_th(dict.as_thinstr()),
                 func.as_thinstr(),
                 args.into(),
-                core::ptr::null_mut(),
+                &raw mut arena,
                 &mut err
             )
-        },
-        Ok(obj) => Ok(unsafe { obj.assume_init() })
+        };
+        Object::clone;
     }
 }
 
 pub fn call_function<S: AsThinString>(func: S, args: &Array) -> Result<Object, Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { vimscript::nvim_call_function(func.as_thinstr(), args.into(), core::ptr::null_mut(), &mut err) },
-        Ok(obj) => Ok(unsafe{ obj.assume_init() })
+    let mut arena = Arena::EMPTY;
+    tri_ret! {
+        err;
+        unsafe { vimscript::nvim_call_function(func.as_thinstr(), args.into(), &raw mut arena, &mut err) };
+        Object::clone;
     }
 }
 
 pub fn command<S: AsThinString>(command: S) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { vimscript::nvim_command(command.as_thinstr(), &mut err) }
+    tri_ez! {
+        err;
+        unsafe { vimscript::nvim_command(command.as_thinstr(), &mut err) };
     }
 }
 
 pub fn eval<S: AsThinString>(eval: S) -> Result<Object, Error> {
     call_check();
-    tri! {
-        let mut err;
-        unsafe { vimscript::nvim_eval(eval.as_thinstr(), core::ptr::null_mut(), &mut err) },
-        Ok(obj) => Ok(unsafe { obj.assume_init() })
+
+    let mut arena = Arena::EMPTY;
+    tri_ret! {
+        err;
+        unsafe { vimscript::nvim_eval(eval.as_thinstr(), &raw mut arena, &mut err) };
+        Object::clone;
     }
 }
 
 // TODO: replace dictionary with dedicated struct?
 pub fn exec2<S: AsThinString>(exec: S, opts: &ExecOpts) -> Result<Exec2, Error> {
+    // this functions is a bit of an odd one out
+    //
+    // everything is allocated and the function doesn't accept an arena
+    // just handle this one manually
     call_check();
-    tri! {
-        let mut err;
-        unsafe{ vimscript::nvim_exec2(Channel::LUA_INTERNAL_CALL, exec.as_thinstr(), opts, &mut err) },
-        // uses PUT (allocating conversion) for the key string
-        Ok(d) => {
-            unsafe {
-                let mut d = d.assume_init();
-                Ok(Exec2::from_c_func_ret(&mut d))
-            }
-        }
+    let mut err = Error::none();
+    let ret = unsafe {
+        vimscript::nvim_exec2(
+            Channel::LUA_INTERNAL_CALL,
+            exec.as_thinstr(),
+            opts,
+            &mut err,
+        )
+    };
+    if err.has_errored() {
+        return Err(err);
     }
+
+    let mut ret = unsafe { ret.assume_init() };
+    Ok(Exec2::from_c_func_ret(&mut ret))
 }
 
 // TODO: create proper structs and what not.

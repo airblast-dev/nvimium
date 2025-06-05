@@ -1,4 +1,4 @@
-use std::mem::ManuallyDrop;
+use std::ops::Deref;
 
 use crate::nvim_types::{Boolean, Dict, Object, string::OwnedThinString};
 
@@ -14,13 +14,13 @@ impl Mode {
     pub fn from_c_func_ret(d: &mut Dict) -> Self {
         let [mode, blocking] = skip_drop_remove_keys(d, &["mode", "blocking"], None).unwrap();
         Self {
-            mode: if matches!(*mode, Object::String(_)) {
-                ManuallyDrop::into_inner(mode).into_string().unwrap()
+            mode: if let Object::String(s) = mode.deref() {
+                s.clone()
             } else {
                 panic!()
             },
-            blocking: if matches!(*blocking, Object::Bool(_)) {
-                ManuallyDrop::into_inner(blocking).into_bool().unwrap()
+            blocking: if let Object::Bool(b) = blocking.deref() {
+                *b
             } else {
                 panic!()
             },

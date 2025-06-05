@@ -373,7 +373,7 @@ impl<'a> Clone for ObjectRef<'a> {
     }
 }
 
-impl ObjectRef<'static> {
+impl <'a>ObjectRef<'a> {
     pub(crate) const fn new_bool(n: Boolean) -> Self {
         Self {
             tag: ObjectTag::Bool,
@@ -386,7 +386,7 @@ impl ObjectRef<'static> {
             val: ObjectRefVal { num: n },
         }
     }
-    pub(crate) const fn new_th(v: ThinString<'static>) -> Self {
+    pub(crate) const fn new_th(v: ThinString<'a>) -> Self {
         Self {
             tag: ObjectTag::String,
             val: ObjectRefVal { string: v },

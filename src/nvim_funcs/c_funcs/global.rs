@@ -145,7 +145,7 @@ unsafe extern "C" {
         buffer: Buffer,
         opts: *mut OpenTermOpts,
         err: *mut Error,
-    ) -> MaybeUninit<Integer>;
+    ) -> MaybeUninit<Channel>;
     pub fn nvim_paste<'a>(
         channel: Channel,
         src: ThinString<'a>,

@@ -1,6 +1,8 @@
-use std::mem::ManuallyDrop;
+use std::ops::{Deref, DerefMut};
 
-use crate::nvim_types::{Array, Dict, Integer, KVec, string::OwnedThinString};
+use crate::nvim_types::{Array, Dict, Integer, KVec, Object, string::OwnedThinString};
+
+use super::utils::skip_drop_remove_keys;
 
 #[derive(Debug)]
 pub struct EvalStatusLine {
@@ -16,43 +18,55 @@ pub struct HighlightItem {
 }
 
 impl EvalStatusLine {
-    pub fn from_c_func_ret(mut d: ManuallyDrop<Dict>) -> Self {
-        let s = d
-            .remove_skip_key_drop("str")
-            .unwrap()
-            .into_string()
-            .unwrap();
-        let width = d.remove_skip_key_drop("width").unwrap().into_int().unwrap();
-        let Some(highlights) = d
-            .remove_skip_key_drop("highlights")
-            .map(|ob| ob.into_array().unwrap().into_kvec())
-        else {
-            return Self {
-                chars: s,
-                width,
-                highlights: None,
-            };
+    pub fn from_c_func_ret(d: &mut Dict) -> Self {
+        let [s, width, mut highlights] = skip_drop_remove_keys(
+            d,
+            &["str", "width", "highlights"],
+            Some(|mk| mk.eq("highlights").then(|| Object::Null)),
+        )
+        .unwrap();
+        let s = if let Object::String(s) = s.deref() {
+            s.clone()
+        } else {
+            panic!();
+        };
+        let width = if let Object::Integer(width) = width.deref() {
+            *width
+        } else {
+            panic!();
+        };
+        let highlights = match highlights.deref_mut() {
+            Object::Array(h) => h,
+            Object::Null => {
+                return Self {
+                    chars: s,
+                    width,
+                    highlights: None,
+                };
+            }
+            _ => unreachable!(),
         };
 
         let highlight_items = highlights
-            .into_iter()
-            .map(|ob| {
-                let mut d = ob.into_dict().unwrap();
-                let start = d.remove_skip_key_drop("start").unwrap().into_int().unwrap();
-                let groups = d
-                    .remove_skip_key_drop("groups")
-                    .unwrap()
-                    .into_array()
-                    .unwrap();
-
-                // deprecated value
-                d.remove_skip_key_drop("group");
+            .iter_mut()
+            .map(|mut ob| {
+                let Object::Dict(d) = ob.deref_mut() else {
+                    unreachable!()
+                };
+                let [start, groups] = skip_drop_remove_keys(d, &["start", "groups"], None).unwrap();
+                let Object::Integer(start) = start.deref() else {
+                    unreachable!();
+                };
+                let start = *start;
+                let Object::Array(groups) = groups.deref() else {
+                    unreachable!()
+                };
 
                 HighlightItem {
                     start,
                     // how long a group value may live is undefined, so we clone the value to an
                     // OwnedThinString to ensure the value can live as long as needed
-                    groups,
+                    groups: groups.clone(),
                 }
             })
             .collect();
