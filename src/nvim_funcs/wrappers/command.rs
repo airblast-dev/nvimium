@@ -5,7 +5,7 @@ use thread_lock::call_check;
 use crate::{
     nvim_funcs::c_funcs::command::{
         nvim_buf_create_user_command, nvim_buf_del_user_command, nvim_buf_get_commands,
-        nvim_create_user_command,
+        nvim_create_user_command, nvim_del_user_command,
     },
     nvim_types::{
         Arena, AsThinString, Buffer, Channel, Error, ThinString,
@@ -62,6 +62,14 @@ pub fn create_user_command<'a, TH: AsThinString>(
     }
 }
 
+pub fn del_user_command<TH: AsThinString>(name: TH) -> Result<(), Error> {
+    call_check();
+    tri! {
+        let mut err;
+        unsafe { nvim_del_user_command(name.as_thinstr(), &mut err) }
+    }
+}
+
 #[cfg(all(not(miri), feature = "testing"))]
 mod tests {
     use crate as nvimium;
@@ -114,6 +122,7 @@ mod tests {
 
     #[nvim_test::nvim_test]
     fn create_del_user_command() {
+        del_user_command(c"MyCmd").unwrap_err();
         create_user_command(
             c"MyCmd",
             UserCommand::callback::<Error, _>(|arg| {
@@ -135,7 +144,12 @@ mod tests {
         )
         .unwrap();
 
-        let ret = exec2(c"MyCmd Hello", ExecOpts::default().output(true)).unwrap().output.unwrap();
+        let ret = exec2(c"MyCmd Hello", ExecOpts::default().output(true))
+            .unwrap()
+            .output
+            .unwrap();
         assert_eq!("Called MyCmd with argument [Hello]", ret);
+
+        del_user_command(c"MyCmd").unwrap();
     }
 }

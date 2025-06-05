@@ -33,4 +33,8 @@ unsafe extern "C" {
         opts: *mut CreateUserCommandOpts,
         err: *mut Error,
     );
+    pub fn nvim_del_user_command<'a>(
+        name: ThinString<'a>,
+        err: *mut Error,
+    );
 }
