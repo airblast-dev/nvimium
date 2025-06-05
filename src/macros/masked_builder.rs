@@ -34,9 +34,9 @@ macro_rules! masked_builder {
               ),+
           );
           pub(super) const FIELD_MAX_LEN: usize = crate::macros::constified::strings_len_max(&FIELDS);
-          pub(super) const FIELDS_SUM_LEN: usize = crate::macros::constified::strings_len_sum(&FIELDS);
+          pub(super) const UNIQUE_CHAR_COUNT: usize = crate::macros::constified::count_unique_chars(&FIELDS);
           pub(super) const MASK_OFFSETS: [u64; FIELD_COUNT] =  crate::macros::hash_face::fields_to_bit_shifts::<
-              { FIELD_COUNT }, { FIELDS_SUM_LEN }, { FIELD_MAX_LEN }
+              { FIELD_COUNT }, { UNIQUE_CHAR_COUNT }, { FIELD_MAX_LEN }
             >(&FIELDS);
 
         }
@@ -188,7 +188,7 @@ mod tests {
             }
         );
 
-        assert_eq!(builder::FIELDS_SUM_LEN, 4);
+        assert_eq!(builder::UNIQUE_CHAR_COUNT, 3);
         assert_eq!(builder::FIELD_COUNT, 2);
         assert_eq!(builder::FIELD_MAX_LEN, 3);
         assert_eq!(builder::FIELDS, ["bca", "b"]);

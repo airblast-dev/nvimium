@@ -64,16 +64,16 @@ impl<const N: usize> KeyValue<N> {
 }
 
 #[derive(Clone, Copy, Debug)]
-struct Bucket<const N: usize, const SUM_LEN: usize> {
+struct Bucket<const N: usize, const UNIQUE_CHAR_COUNT: usize> {
     len: usize,
-    kvs: [KeyValue<N>; SUM_LEN],
+    kvs: [KeyValue<N>; UNIQUE_CHAR_COUNT],
 }
 
-impl<const N: usize, const SUM_LEN: usize> Bucket<N, SUM_LEN> {
+impl<const N: usize, const UNIQUE_CHAR_COUNT: usize> Bucket<N, UNIQUE_CHAR_COUNT> {
     const fn empty() -> Self {
         Self {
             len: 0,
-            kvs: [KeyValue::empty(); SUM_LEN],
+            kvs: [KeyValue::empty(); UNIQUE_CHAR_COUNT],
         }
     }
     const fn append(&mut self, key: usize, s: &'static str) {
@@ -105,8 +105,8 @@ impl<const N: usize, const SUM_LEN: usize> Bucket<N, SUM_LEN> {
         &mut self.kvs[self.len]
     }
 
-    const fn keys(&self) -> [u8; SUM_LEN] {
-        let mut keys = [0; SUM_LEN];
+    const fn keys(&self) -> [u8; UNIQUE_CHAR_COUNT] {
+        let mut keys = [0; UNIQUE_CHAR_COUNT];
         let mut i = 0;
         while i < self.len {
             keys[i] = self.kvs[i].key;
@@ -139,27 +139,14 @@ struct LenPosBuckets<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>
     len_pos: [LenPos<N, SUM_LEN>; MAX_LEN],
 }
 
-impl<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>
-    LenPosBuckets<N, SUM_LEN, MAX_LEN>
+impl<const N: usize, const UNIQUE_CHAR_COUNT: usize, const MAX_LEN: usize>
+    LenPosBuckets<N, UNIQUE_CHAR_COUNT, MAX_LEN>
 {
     const fn empty() -> Self {
         Self {
             len: 0,
             len_pos: [LenPos::empty(); MAX_LEN],
         }
-    }
-
-    const fn find_pos_bucket(&mut self, pos: usize) -> Option<&mut LenPos<N, SUM_LEN>> {
-        let mut i = 0;
-        while i < MAX_LEN {
-            if self.len_pos[i].pos == pos {
-                return Some(&mut self.len_pos[i]);
-            }
-
-            i += 1;
-        }
-
-        None
     }
 }
 
@@ -169,9 +156,9 @@ impl<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>
 ///
 /// Various methods are implemented to make this easier to read.
 /// https://github.com/neovim/neovim/blob/6c4ddf607f0b0b4b72c4a949d796853aa77db08f/src/gen/hashy.lua#L15C1-L15C35
-const fn build_buckets<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>(
+const fn build_buckets<const N: usize, const UNIQUE_CHAR_COUNT: usize, const MAX_LEN: usize>(
     strings: &[&'static str; N],
-) -> LenPosBuckets<N, SUM_LEN, MAX_LEN> {
+) -> LenPosBuckets<N, UNIQUE_CHAR_COUNT, MAX_LEN> {
     let mut len_buckets: Bucket<N, N> = Bucket::empty();
     let mut i = 0;
 
@@ -181,7 +168,7 @@ const fn build_buckets<const N: usize, const SUM_LEN: usize, const MAX_LEN: usiz
         i += 1;
     }
 
-    let mut len_pos_buckets = LenPosBuckets::<N, SUM_LEN, MAX_LEN>::empty();
+    let mut len_pos_buckets = LenPosBuckets::<N, UNIQUE_CHAR_COUNT, MAX_LEN>::empty();
 
     let mut len = 1;
     while len <= MAX_LEN {
@@ -213,7 +200,7 @@ const fn build_buckets<const N: usize, const SUM_LEN: usize, const MAX_LEN: usiz
                 let mut max_size = 1;
                 let mut pos_strs_i = 0;
                 // for _, pos_strs in pairs(try_bucket) do
-                while pos_strs_i < SUM_LEN {
+                while pos_strs_i < UNIQUE_CHAR_COUNT {
                     let l = try_bucket.kvs[pos_strs_i].len;
                     if max_size < l {
                         max_size = l;
@@ -243,8 +230,8 @@ const fn build_buckets<const N: usize, const SUM_LEN: usize, const MAX_LEN: usiz
     len_pos_buckets
 }
 
-const fn sorted_fields_shifts<const N: usize, const SUM_LEN: usize, const MAX_LEN: usize>(
-    mut len_pos_buckets: LenPosBuckets<N, SUM_LEN, MAX_LEN>,
+const fn sorted_fields_shifts<const N: usize, const UNIQUE_CHAR_COUNT: usize, const MAX_LEN: usize>(
+    mut len_pos_buckets: LenPosBuckets<N, UNIQUE_CHAR_COUNT, MAX_LEN>,
 ) -> [&'static str; N] {
     let mut new_order = [""; N];
     let mut new_order_len = 0;

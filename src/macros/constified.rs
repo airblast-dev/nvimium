@@ -35,20 +35,6 @@ pub(super) const fn extend_arr<T: Copy>(
     *len += ext_len;
 }
 
-pub(crate) const fn strings_len_sum(strings: &[&'static str]) -> usize {
-    let mut i = 0;
-    let mut sum = 0;
-    while i < strings.len() {
-        let s = strings[i];
-
-        sum += s.len();
-
-        i += 1;
-    }
-
-    sum
-}
-
 pub(crate) const fn strings_len_max(strings: &[&'static str]) -> usize {
     let mut i = 0;
     let mut max = 0;
@@ -81,25 +67,36 @@ pub(crate) const fn str_eq(s1: &'static str, s2: &'static str) -> bool {
         }
 }
 
+pub(crate) const fn count_unique_chars(strings: &[&str]) -> usize {
+    let mut counter = 0_u128;
+    let mut i = 0;
+    let ss_len = strings.len();
+    while i < ss_len {
+        let mut ci = 0;
+        let string = strings[i];
+        let s_len = string.len();
+        while ci < s_len {
+            let byte = string.as_bytes()[ci];
+            counter |= 1 << byte as u128;
+
+            ci += 1;
+        }
+
+        i += 1;
+    }
+
+    counter.count_ones() as usize
+}
+
 #[cfg(test)]
 mod tests {
     use crate::macros::constified::str_eq;
-
 
     #[test]
     fn strings_len_max() {
         assert_eq!(super::strings_len_max(["1", "22", "333"].as_slice()), 3);
         assert_eq!(super::strings_len_max(["111", "22", "3"].as_slice()), 3);
         assert_eq!(super::strings_len_max(["1", "222", "33"].as_slice()), 3);
-    }
-
-    #[test]
-    fn strings_len_sum() {
-        assert_eq!(
-            super::strings_len_sum(&["asdasdasd", "vxcv", "123dfsd"]),
-            20
-        );
-        assert_eq!(super::strings_len_sum(&["as", "vxcv", "123dfsd"]), 13);
     }
 
     #[test]
