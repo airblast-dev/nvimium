@@ -62,7 +62,7 @@ macro_rules! plugin {
         };
 
         #[unsafe(no_mangle)]
-        extern "C" fn $open(lstate: *mut $crate::plugin::lua_State) -> usize {
+        extern "C" fn $open(lstate: *mut $crate::plugin::lua_State) -> ::std::ffi::c_int {
             unsafe { $crate::nvim_types::lua::set_callback_name($crate::gen_unique_ish_id!()) };
             let func: fn() -> _ = $ident;
             use ::core::result::Result;
