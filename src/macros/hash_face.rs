@@ -256,11 +256,7 @@ const fn sorted_fields_shifts<const N: usize, const SUM_LEN: usize, const MAX_LE
             pos: _pos,
             bucket: pos_buck,
         } = &mut vals;
-        // SAFETY: keys returns a nonnull and correctly aligned pointer and at least pos_buck.len items are
-        // guaranteed to exist
-        //
-        // We are required to do this as we have no other way to get a sub slice of an array in
-        // const context without unsafe
+
         let mut keys = pos_buck.keys();
 
         sort_ints(&mut keys, pos_buck.len);
