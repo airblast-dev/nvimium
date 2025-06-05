@@ -26,16 +26,17 @@ macro_rules! masked_builder {
         }
 
         mod builder {
-          pub(super) const FIELD_COUNT: usize = crate::macros::masked_builder::count_tts!($($field_name),*);
-          pub(super) const FIELDS: [&'static str; FIELD_COUNT] = crate::macros::masked_builder::gen_field_names!(
+          use crate::macros::{ masked_builder::{gen_field_names, count_tts}, constified::{strings_len_max, count_unique_chars}, hash_face };
+          pub(super) const FIELD_COUNT: usize = count_tts!($($field_name),*);
+          pub(super) const FIELDS: [&'static str; FIELD_COUNT] = gen_field_names!(
               $(
                   $(#[$($attributes)+])*
                   $field_name
               ),+
           );
-          pub(super) const FIELD_MAX_LEN: usize = crate::macros::constified::strings_len_max(&FIELDS);
-          pub(super) const UNIQUE_CHAR_COUNT: usize = crate::macros::constified::count_unique_chars(&FIELDS);
-          pub(super) const MASK_OFFSETS: [u64; FIELD_COUNT] =  crate::macros::hash_face::fields_to_bit_shifts::<
+          pub(super) const FIELD_MAX_LEN: usize = strings_len_max(&FIELDS);
+          pub(super) const UNIQUE_CHAR_COUNT: usize = count_unique_chars(&FIELDS);
+          pub(super) const MASK_OFFSETS: [u64; FIELD_COUNT] =  hash_face::fields_to_bit_shifts::<
               { FIELD_COUNT }, { UNIQUE_CHAR_COUNT }, { FIELD_MAX_LEN }
             >(&FIELDS);
 
@@ -108,7 +109,7 @@ macro_rules! gen_setters {
             }
 
             self.mask |= MASK;
-            self.$field_name = ::core::mem::MaybeUninit::new($field_name.into());
+            self.$field_name.write($field_name.into());
             self
         }
 
