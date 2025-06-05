@@ -1,6 +1,4 @@
-use crate::builder;
-
-use crate::nvim_types::Boolean;
+use crate::{macros::builder, nvim_types::Boolean};
 
 builder! {
     #[repr(C)]

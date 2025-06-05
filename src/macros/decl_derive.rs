@@ -10,6 +10,10 @@ macro_rules! decide_derive {
         crate::macros::masked_builder::masked_builder!($($tt)+);
         crate::macros::decl_derive::decide_derive!(@to_derive[$( $($next_derive),* )?] $($tt)+);
     };
+    (@to_derive[builder $(, $($next_derive:ident),*)? ] $($tt:tt)+) => {
+        crate::macros::builder!($($tt)+);
+        crate::macros::decl_derive::decide_derive!(@to_derive[$( $($next_derive),* )?] $($tt)+);
+    };
     (@to_derive[zeroed_default $(, $($next_derive:ident),*)? ] $($tt:tt)+) => {
         crate::macros::zeroed_default::zeroed_default!($($tt)+);
         crate::macros::decl_derive::decide_derive!(@to_derive[$( $($next_derive),* )?]

@@ -1,9 +1,10 @@
 use crate::{
-    macros::masked_builder::masked_builder,
+    macros::decl_derive::derive,
     nvim_types::{Boolean, HlGroupId, Integer, OwnedThinString, object_subs::StringOrInt},
 };
 
-masked_builder! {
+derive! {
+    derive(zeroed_default, masked_builder);
     #[repr(C)]
     pub struct SetHlOpts {
         bold: Boolean,

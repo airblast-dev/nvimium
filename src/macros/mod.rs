@@ -9,7 +9,6 @@ pub mod thinstring;
 pub mod tri;
 pub mod zeroed_default;
 
-#[macro_export]
 macro_rules! builder {
     (
         $(#[$meta:meta])*
@@ -35,6 +34,7 @@ macro_rules! builder {
         }
     };
 }
+pub(crate) use builder;
 
 #[doc(hidden)]
 #[macro_export]

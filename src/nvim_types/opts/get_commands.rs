@@ -1,10 +1,9 @@
-use crate::nvim_types::Boolean;
+use crate::{macros::decl_derive::derive, nvim_types::Boolean};
 
-// we only provide this to avoid a breaking change when this opt gets added
-//
-// currently setting builtin to true will just result in an error anyways
-#[repr(C)]
-#[derive(Default)]
-pub struct GetCommandOpts {
-    builtin: Boolean,
-}
+derive!(
+    derive(zeroed_default, builder);
+    #[repr(C)]
+    pub struct GetCommandOpts {
+        builtin: Boolean,
+    }
+);
