@@ -18,7 +18,6 @@ macro_rules! masked_builder {
             )+
         }
     ) => {
-
         $(#[$($struct_attrs)+])*
         $struct_vis struct $struct_name $(<$($lf),*>)? {
             mask: u64,
@@ -41,16 +40,13 @@ macro_rules! masked_builder {
             >(&FIELDS);
 
         }
+
         impl $(<$($lf),*>)? $struct_name $(<$($lf),*>)? {
-
-
           crate::macros::masked_builder::gen_setters!($(
             $(#[$($attributes)+])*
             $field_name: $field_type
           ),+);
         }
-
-
     };
 }
 
