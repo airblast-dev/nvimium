@@ -1,4 +1,7 @@
-use std::ptr::{NonNull, null_mut};
+use std::{
+    cell::RefCell,
+    ptr::{NonNull, null_mut},
+};
 
 use libc::{c_char, size_t};
 use thread_lock::call_check;
@@ -8,10 +11,13 @@ use thread_lock::call_check;
 #[derive(Clone, Debug)]
 pub struct Arena {
     cur_blk: Option<NonNull<c_char>>,
-    pos: size_t,
-    size: size_t,
+    pub pos: size_t,
+    pub size: size_t,
 }
 
+thread_local! {
+    pub(crate) static CALLBACK_ARENA: RefCell<Arena> = const { RefCell::new(Arena::EMPTY) };
+}
 const _: () = assert!(size_of::<Arena>() == size_of::<*mut c_char>() + size_of::<size_t>() * 2);
 
 impl Arena {

@@ -2,18 +2,20 @@ use std::{error::Error, ffi::CStr, mem::MaybeUninit};
 
 use libc::c_int;
 use mlua_sys::{
-    lua_State, lua_checkstack, lua_error, lua_getfield, lua_pop, lua_toboolean, lua_tointeger, lua_tolstring, LUA_TBOOLEAN, LUA_TNUMBER, LUA_TSTRING
+    LUA_TBOOLEAN, LUA_TNUMBER, LUA_TSTRING, lua_State, lua_checkstack, lua_error, lua_getfield,
+    lua_pop, lua_toboolean, lua_tointeger, lua_tolstring,
 };
 
 use crate::{
     nvim_funcs::global::echo,
     nvim_types::{
-        AsThinString, Boolean, NvString, ThinString, func_types::echo::Echo, opts::echo::EchoOpts,
+        Arena, AsThinString, Boolean, CALLBACK_ARENA, NvString, ThinString, func_types::echo::Echo,
+        opts::echo::EchoOpts,
     },
     plugin::IntoLua,
 };
 
-use super::{core::FromLuaErr, LuaInteger};
+use super::{LuaInteger, core::FromLuaErr};
 
 // whenever an error is returned from a callback this should be used
 //
@@ -21,7 +23,6 @@ use super::{core::FromLuaErr, LuaInteger};
 #[cold]
 #[inline(never)]
 pub(super) unsafe fn handle_callback_err_ret(l: *mut lua_State, err: &dyn Error) {
-    use std::fmt::Write;
     let mut s = NvString::default();
     write!(s, "Error: {}", &err).unwrap();
     if let Err(echo_err) = echo(&Echo::message(s), true, EchoOpts::default().err(true)) {
@@ -132,4 +133,16 @@ pub(crate) unsafe fn get_table_int_val(
         lua_pop(l, 1);
         Ok(ret)
     }
+}
+
+pub(crate) unsafe fn cb_ret_handle_arena(was_active: bool) {
+    CALLBACK_ARENA.with_borrow_mut(|arena| {
+        if was_active {
+            // the arena may be used again, just reset its position
+            arena.pos = 0;
+        } else {
+            // this is the highest level call so reset the arena
+            *arena = Arena::EMPTY;
+        }
+    })
 }

@@ -6,7 +6,10 @@ use mlua_sys::{
 };
 use thread_lock::init_lua_ptr;
 
-use crate::nvim_types::lua::{core::FromLuaMany, utils::handle_callback_err_ret};
+use crate::nvim_types::lua::{
+    core::FromLuaMany,
+    utils::{cb_ret_handle_arena, handle_callback_err_ret},
+};
 
 use super::IntoLua;
 
@@ -42,6 +45,7 @@ fn fn_callback<A: FromLuaMany, R: IntoLua, E: Error>() -> extern "C-unwind" fn(*
                     }
                 },
                 l,
+                cb_ret_handle_arena,
             )
         }
     }

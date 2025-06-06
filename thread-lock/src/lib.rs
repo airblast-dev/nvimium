@@ -144,10 +144,11 @@ pub unsafe fn scoped<F: Fn(A) -> R, A, R>(f: F, arg: A) -> R {
 ///
 /// Same as [`scoped`] but does not correct an incorrect state if it access was not revoked on
 /// return.
-pub unsafe fn scoped_callback<F: Fn(A) -> R, A, R>(f: F, arg: A) -> R {
+pub unsafe fn scoped_callback<F: Fn(A) -> R, A, R>(f: F, arg: A, cleanup: unsafe fn(bool)) -> R {
     let can_call = can_call();
     let th_lock = ManuallyDrop::new(unsafe { unlock() });
     let ret = catch_unwind(AssertUnwindSafe(|| f(arg)));
+    unsafe { cleanup(can_call) };
     if !can_call {
         ManuallyDrop::into_inner(th_lock);
     }

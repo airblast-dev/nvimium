@@ -15,7 +15,6 @@
 // while some parts could still be used from mlua it is not really worth bringing in another dependency
 // as all use cases have a fix set of arguments which we can handle internally
 mod box_fn;
-mod closure;
 pub mod core;
 mod fn_ptr;
 pub(crate) mod utils;
@@ -41,11 +40,6 @@ pub(crate) type LuaInteger = i64;
 pub struct Function(LuaRef);
 
 impl Function {
-    pub(crate) fn from_fn<F: 'static + Fn(A) -> R + Unpin, A: FromLua, R: IntoLua>(f: F) -> Self {
-        let mut l = get_lua_ptr();
-        Self(unsafe { LuaRef::new(closure::register(l.as_ptr(), f)) })
-    }
-
     pub(crate) fn from_fn_ptr<E: Error, A: FromLuaMany, R: IntoLua>(
         f: fn(A) -> Result<R, E>,
     ) -> Self {
