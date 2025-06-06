@@ -139,7 +139,7 @@ pub(crate) unsafe fn cb_ret_handle_arena(was_active: bool) {
     CALLBACK_ARENA.with_borrow_mut(|arena| {
         if was_active {
             // the arena may be used again, just reset its position
-            arena.pos = 0;
+            arena.reset_pos();
         } else {
             // this is the highest level call so reset the arena
             *arena = Arena::EMPTY;

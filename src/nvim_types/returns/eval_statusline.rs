@@ -47,29 +47,27 @@ impl EvalStatusLine {
             _ => unreachable!(),
         };
 
-        let highlight_items = highlights
-            .iter_mut()
-            .map(|mut ob| {
-                let Object::Dict(d) = ob.deref_mut() else {
-                    unreachable!()
-                };
-                let [start, groups] = skip_drop_remove_keys(d, &["start", "groups"], None).unwrap();
-                let Object::Integer(start) = start.deref() else {
-                    unreachable!();
-                };
-                let start = *start;
-                let Object::Array(groups) = groups.deref() else {
-                    unreachable!()
-                };
+        let mut highlight_items = KVec::with_capacity(highlights.len());
+        highlight_items.extend(highlights.iter_mut().map(|mut ob| {
+            let Object::Dict(d) = ob.deref_mut() else {
+                unreachable!()
+            };
+            let [start, groups] = skip_drop_remove_keys(d, &["start", "groups"], None).unwrap();
+            let Object::Integer(start) = start.deref() else {
+                unreachable!();
+            };
+            let start = *start;
+            let Object::Array(groups) = groups.deref() else {
+                unreachable!()
+            };
 
-                HighlightItem {
-                    start,
-                    // how long a group value may live is undefined, so we clone the value to an
-                    // OwnedThinString to ensure the value can live as long as needed
-                    groups: groups.clone(),
-                }
-            })
-            .collect();
+            HighlightItem {
+                start,
+                // how long a group value may live is undefined, so we clone the value to an
+                // OwnedThinString to ensure the value can live as long as needed
+                groups: groups.clone(),
+            }
+        }));
 
         Self {
             chars: s,

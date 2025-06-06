@@ -2,17 +2,17 @@ use core::{
     marker::PhantomData,
     sync::atomic::{AtomicPtr, Ordering},
 };
+use std::{
+    mem::{MaybeUninit, transmute},
+    ptr::NonNull,
+};
 
 #[cfg(not(miri))]
-use libc::{c_void, bsearch, c_char, c_int, qsort, strcmp};
+use libc::{bsearch, c_char, c_int, c_void, qsort, strcmp};
 
 use crate::nvim_types::{nvalloc::xmalloc, string::AsThinString};
 
-use crate::nvim_types::{
-    dictionary::{Dict, KeyValuePair},
-    kvec::KVec,
-    string::ThinString,
-};
+use crate::nvim_types::{dictionary::Dict, kvec::KVec, string::ThinString};
 
 /// The color values returned by neovim are static, this means we can only allocate once and just
 /// reuse it when reading from it.
@@ -42,54 +42,74 @@ impl ColorMap {
     ///
     /// This function is guaranteed to drain all values stored in the [`Dictionary`].
     pub fn from_c_func_ret(d: &mut Dict) -> Self {
-        let mut kv = KVec::with_capacity(d.len());
-        for i in (0..d.len()).rev() {
-            // TODO: replace with pop
-            let KeyValuePair {
-                key: color_name,
-                object: color_value,
-            } = d.0.swap_remove(i);
-            let name = color_name.leak();
-            let Some(value) = color_value.clone().into_int() else {
-                // should be impossible to reach but better than a panic
-                continue;
-            };
-            let rgb = [(value >> 16) as u8, (value >> 8) as u8, value as u8];
-            kv.push((name, rgb));
-        }
+        #[allow(unused_mut)]
+        let mut kv_ptr: NonNull<KVec<(ThinString<'static>, [u8; 3])>> = unsafe {
+            xmalloc(
+                size_of::<KVec<(ThinString<'static>, [u8; 3])>>()
+                    + (size_of::<(ThinString<'static>, [u8; 3])>() * d.len()),
+                1,
+            )
+            .cast()
+        };
 
-        if COLOR_MAP.load(Ordering::SeqCst).is_null() {
-            #[cfg(miri)]
-            kv.as_mut_slice()
-                .sort_unstable_by(|c1, c2| c1.partial_cmp(c2).expect("non ascii color name"));
-            let kv_ptr = unsafe { xmalloc(size_of::<KVec<(ThinString<'static>, [u8; 3])>>(), 1) }
-                .as_ptr() as *mut KVec<(ThinString<'static>, [u8; 3])>;
-            // shrinks binary size by 6kb depending on the project
-            #[cfg(not(miri))]
-            {
+        let vals_ptr = unsafe {
+            NonNull::slice_from_raw_parts(
+                kv_ptr.add(1).cast::<(ThinString<'static>, [u8; 3])>(),
+                d.len(),
+            )
+        };
+
+        unsafe {
+            kv_ptr.write(KVec {
+                len: d.len(),
+                capacity: d.len(),
+                ptr: vals_ptr.as_ptr() as *mut (ThinString<'static>, [u8; 3]),
+            })
+        };
+
+        let vals_slice: &mut [MaybeUninit<(ThinString<'static>, [u8; 3])>] = unsafe {
+            NonNull::slice_from_raw_parts(
+                kv_ptr
+                    .add(1)
+                    .cast::<MaybeUninit<(ThinString<'static>, [u8; 3])>>(),
+                d.len(),
+            )
+            .as_mut()
+        };
+
+        d.iter().enumerate().for_each(|(i, key_val)| {
+            let key: ThinString<'static> = unsafe { transmute(key_val.key.as_thinstr()) };
+            let val = key_val.object.as_int().unwrap();
+            unsafe { vals_slice.get_unchecked_mut(i) }
+                .write((key, [(val >> 16) as u8, (val >> 8) as u8, val as u8]));
+        });
+
+        #[cfg(miri)]
+        unsafe { kv_ptr.as_mut() }
+            .sort_unstable_by(|c1, c2| c1.partial_cmp(c2).expect("non ascii color name"));
+        #[cfg(not(miri))]
+        unsafe {
+            unsafe extern "C" fn qs_th(p1: *const c_void, p2: *const c_void) -> c_int {
                 unsafe {
-                    qsort(
-                        kv.as_mut_ptr() as *mut c_void,
-                        kv.len(),
-                        size_of::<(ThinString, [u8; 3])>(),
-                        Some(qs_th),
-                    );
-                };
-                unsafe extern "C" fn qs_th(p1: *const c_void, p2: *const c_void) -> c_int {
-                    unsafe {
-                        let a = (p1 as *const (ThinString, [u8; 3]))
-                            .as_ref()
-                            .unwrap_unchecked();
-                        let b = (p2 as *const (ThinString, [u8; 3]))
-                            .as_ref()
-                            .unwrap_unchecked();
-                        strcmp(a.0.as_ptr() as *const c_char, b.0.as_ptr() as *const c_char)
-                    }
+                    let a = (p1 as *const (ThinString, [u8; 3]))
+                        .as_ref()
+                        .unwrap_unchecked();
+                    let b = (p2 as *const (ThinString, [u8; 3]))
+                        .as_ref()
+                        .unwrap_unchecked();
+                    strcmp(a.0.as_ptr() as *const c_char, b.0.as_ptr() as *const c_char)
                 }
             }
-            unsafe { kv_ptr.write(kv) };
-            COLOR_MAP.store(kv_ptr, Ordering::SeqCst);
+            qsort(
+                vals_ptr.as_ptr() as *mut c_void,
+                d.len(),
+                size_of::<(ThinString<'static>, [u8; 3])>(),
+                Some(qs_th),
+            );
         }
+
+        COLOR_MAP.store(kv_ptr.as_ptr(), Ordering::SeqCst);
+
         Self::initialized()
     }
 
@@ -177,7 +197,7 @@ impl ColorMap {
 #[cfg(test)]
 mod tests {
     use crate::nvim_types::{
-        Dict, Object, {OwnedThinString, NvString},
+        Dict, Object, {NvString, OwnedThinString},
     };
 
     use super::ColorMap;
@@ -193,12 +213,17 @@ mod tests {
         }
 
         let c_map = ColorMap::from_c_func_ret(&mut dict);
-        drop(dict);
-        assert_eq!(Some([255, 0, 0]), c_map.get_with_name(NvString::from("red")));
+        assert_eq!(
+            Some([255, 0, 0]),
+            c_map.get_with_name(NvString::from("red"))
+        );
         assert_eq!(
             Some([0, 255, 0]),
             c_map.get_with_name(NvString::from("green"))
         );
-        assert_eq!(Some([0, 0, 255]), c_map.get_with_name(NvString::from("blue")));
+        assert_eq!(
+            Some([0, 0, 255]),
+            c_map.get_with_name(NvString::from("blue"))
+        );
     }
 }

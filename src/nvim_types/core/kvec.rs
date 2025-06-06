@@ -18,9 +18,9 @@ unsafe impl<T> Send for KVec<T> where T: Send {}
 
 #[repr(C)]
 pub struct KVec<T> {
-    pub(super) len: usize,
-    pub(super) capacity: usize,
-    pub(super) ptr: *mut T,
+    pub(crate) len: usize,
+    pub(crate) capacity: usize,
+    pub(crate) ptr: *mut T,
 }
 
 impl<T> Default for KVec<T> {

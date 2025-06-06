@@ -1,6 +1,6 @@
-use std::{mem::ManuallyDrop, ops::Deref};
+use std::ops::Deref;
 
-use crate::nvim_types::{Array, Dict, Object};
+use crate::nvim_types::{Array, Dict};
 
 use super::utils::skip_drop_remove_keys;
 

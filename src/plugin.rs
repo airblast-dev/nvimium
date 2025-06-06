@@ -71,6 +71,7 @@ macro_rules! plugin {
                 $crate::thread_lock::scoped(
                     |_| {
                         let ret = $ident();
+
                         match ret {
                             Ok(k) => $crate::nvim_types::lua::IntoLua::push(&k, lstate),
                             Err(err) => {
@@ -90,6 +91,9 @@ macro_rules! plugin {
                                 );
                             }
                         };
+                        nvimium::nvim_types::arena::CALLBACK_ARENA.with_borrow_mut(|arena| {
+                            *arena = nvimium::nvim_types::arena::Arena::EMPTY
+                        });
                     },
                     (),
                 );

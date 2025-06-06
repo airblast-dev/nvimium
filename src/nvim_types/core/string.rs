@@ -49,7 +49,7 @@ use crate::nvim_types::nvalloc::{xfree, xmalloc, xmemcpyz, xmemdupz, xrealloc};
 use libc::size_t;
 use panics::not_null_terminated;
 
-static EMPTY: ThinString<'static> = ThinString::from_null_terminated(c"".to_bytes_with_nul());
+static EMPTY: ThinString<'static> = ThinString::from_null_terminated(b"\0");
 
 // Any platform that uses more than a byte as `c_char` limits the API in a few places.
 // TODO: Rather than to limit the API for niche systems find an alternative if possible.

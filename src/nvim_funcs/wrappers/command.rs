@@ -7,7 +7,7 @@ use crate::{
         nvim_create_user_command, nvim_del_user_command, nvim_get_commands,
     },
     nvim_types::{
-        Arena, AsThinString, Buffer, Channel, Error, ThinString,
+        AsThinString, Buffer, CALLBACK_ARENA, Channel, Error, ThinString,
         func_types::create_user_command::UserCommand,
         opts::{create_user_command::CreateUserCommandOpts, get_commands::GetCommandOpts},
         returns::commands::CommandsInfos,
@@ -37,12 +37,16 @@ pub fn buf_del_user_command<TH: AsThinString>(buf: Buffer, name: TH) -> Result<(
 
 pub fn buf_get_commands(buf: Buffer, opts: &mut GetCommandOpts) -> Result<CommandsInfos, Error> {
     call_check();
-    let mut arena = Arena::EMPTY;
-    tri_ret! {
-        err;
-        unsafe { nvim_buf_get_commands(buf, opts, &mut arena, &mut err) };
-        CommandsInfos::from_c_func_ret;
-    }
+    CALLBACK_ARENA.with_borrow_mut(|arena| {
+        let ret = tri_ret! {
+            err;
+            unsafe { nvim_buf_get_commands(buf, opts, arena, &mut err) };
+            CommandsInfos::from_c_func_ret;
+        };
+
+        arena.reset_pos();
+        ret
+    })
 }
 
 pub fn create_user_command<'a, TH: AsThinString>(
@@ -67,12 +71,16 @@ pub fn del_user_command<TH: AsThinString>(name: TH) -> Result<(), Error> {
 
 pub fn get_commands(opts: &mut GetCommandOpts) -> Result<CommandsInfos, Error> {
     call_check();
-    let mut arena = Arena::EMPTY;
-    tri_ret! {
-        err;
-        unsafe { nvim_get_commands(opts, &mut arena, &mut err)};
-        CommandsInfos::from_c_func_ret;
-    }
+    CALLBACK_ARENA.with_borrow_mut(|arena| {
+        let ret = tri_ret! {
+            err;
+            unsafe { nvim_get_commands(opts, arena, &mut err)};
+            CommandsInfos::from_c_func_ret;
+        };
+
+        arena.reset_pos();
+        ret
+    })
 }
 
 #[cfg(all(not(miri), feature = "testing"))]
