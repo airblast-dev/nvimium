@@ -1,3 +1,4 @@
 **/target
 /wip
 /examples/*/target/
+.bacon-locations
