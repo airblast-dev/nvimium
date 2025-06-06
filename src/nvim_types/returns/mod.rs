@@ -7,4 +7,5 @@ pub mod exec2;
 pub mod get_hl;
 pub mod get_keymap;
 pub mod get_mode;
+pub mod options_info;
 pub mod utils;
