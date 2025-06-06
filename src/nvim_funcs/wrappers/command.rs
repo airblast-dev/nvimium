@@ -66,6 +66,7 @@ pub fn del_user_command<TH: AsThinString>(name: TH) -> Result<(), Error> {
 }
 
 pub fn get_commands(opts: &mut GetCommandOpts) -> Result<CommandsInfos, Error> {
+    call_check();
     let mut arena = Arena::EMPTY;
     tri_ret! {
         err;
