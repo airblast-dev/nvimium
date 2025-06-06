@@ -435,11 +435,11 @@ pub fn put<S: AsThinString>(
     follow: Boolean,
 ) -> Result<(), Error> {
     call_check();
-    tri! {
-        let mut err;
+    tri_ez! {
+        err;
         unsafe {
-            global::nvim_put(arr.into(), r#type.as_thinstr(), after, follow, core::ptr::null_mut(), &mut err);
-        }
+            global::nvim_put(arr.into(), r#type.as_thinstr(), after, follow, core::ptr::null_mut(), &mut err)
+        };
     }
 }
 
