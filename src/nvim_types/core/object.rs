@@ -138,6 +138,86 @@ impl Object {
             _ => None,
         }
     }
+
+    pub fn as_bool(&self) -> Option<Boolean> {
+        if let Object::Bool(b) = self {
+            Some(*b)
+        } else {
+            None
+        }
+    }
+
+    pub fn as_int(&self) -> Option<Integer> {
+        if let Object::Integer(i) = self {
+            Some(*i)
+        } else {
+            None
+        }
+    }
+
+    pub fn as_float(&self) -> Option<Float> {
+        if let Object::Float(f) = self {
+            Some(*f)
+        } else {
+            None
+        }
+    }
+
+    pub fn as_string(&self) -> Option<&OwnedThinString> {
+        if let Object::String(s) = self {
+            Some(s)
+        } else {
+            None
+        }
+    }
+
+    pub fn as_array(&self) -> Option<&Array> {
+        if let Object::Array(arr) = self {
+            Some(arr)
+        } else {
+            None
+        }
+    }
+
+    pub fn as_dict(&self) -> Option<&Dict> {
+        if let Object::Dict(d) = self {
+            Some(d)
+        } else {
+            None
+        }
+    }
+
+    pub fn as_luaref(&self) -> Option<&LuaRef> {
+        if let Object::LuaRef(l) = self {
+            Some(l)
+        } else {
+            None
+        }
+    }
+
+    pub fn as_buffer(&self) -> Option<Buffer> {
+        if let Object::Buffer(b) = self {
+            Some(*b)
+        } else {
+            None
+        }
+    }
+
+    pub fn as_window(&self) -> Option<Window> {
+        if let Object::Window(w) = self {
+            Some(*w)
+        } else {
+            None
+        }
+    }
+
+    pub fn as_tabpage(&self) -> Option<TabPage> {
+        if let Object::TabPage(t) = self {
+            Some(*t)
+        } else {
+            None
+        }
+    }
 }
 
 impl From<Boolean> for Object {
@@ -373,7 +453,7 @@ impl<'a> Clone for ObjectRef<'a> {
     }
 }
 
-impl <'a>ObjectRef<'a> {
+impl<'a> ObjectRef<'a> {
     pub(crate) const fn new_bool(n: Boolean) -> Self {
         Self {
             tag: ObjectTag::Bool,
