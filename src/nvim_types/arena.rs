@@ -1,4 +1,4 @@
-use std::{ffi::c_void, ptr::NonNull};
+use std::ptr::{NonNull, null_mut};
 
 use libc::{c_char, size_t};
 use thread_lock::call_check;
@@ -35,20 +35,20 @@ impl Drop for Arena {
 }
 
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ArenaMem(*mut Self);
 
 impl Drop for ArenaMem {
     fn drop(&mut self) {
-        unsafe { arena_mem_free(self.clone()) };
+        if !self.0.is_null() {
+            let mem = self.0;
+            self.0 = null_mut();
+            unsafe { arena_mem_free(Self(mem)) };
+        }
     }
 }
 
-// TODO: use arena to optimize performance
-// This is somewhat low priority but will be useful for large allocations
-// NOTE: actually seems some api's kind of require this in order to provide a sane deallocation
 unsafe extern "C" {
     pub(crate) fn arena_mem_free(arena_mem: ArenaMem);
     pub(crate) fn arena_finish(arena: *mut Arena) -> ArenaMem;
-    pub(crate) fn arena_alloc(arena: *mut Arena, size: usize, align: bool) -> *mut c_void;
 }
