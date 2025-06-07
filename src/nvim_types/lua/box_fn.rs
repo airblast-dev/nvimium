@@ -26,16 +26,28 @@ static TYPE_NAME: AtomicPtr<c_char> = AtomicPtr::new(FALLBACK_TYPE_NAME.as_ptr()
 
 // TODO: return results in the functions below.
 
+/// Sets the callback function string identifier.
+/// This is used to ensure that a user data is the one associated with this callback.
+///
 /// # SAFETY
 ///
-/// Must point to a null terminated string.
+/// - `cstr` must point to a null terminated string.
+/// - Can only be called once, right after the plugins entrypoint.
 pub unsafe fn set_callback_name(cstr: *mut c_char) {
     TYPE_NAME.store(cstr, Ordering::Relaxed);
 }
+
+/// Get a pointer to the callback identifier.
 fn type_name() -> *const c_char {
     TYPE_NAME.load(Ordering::Relaxed)
 }
 
+/// The metatable key for a [`Box<dyn Fn(*mut lua_State) -> c_int>`]
+///
+/// We do this instead of manually assigning __gc calls for each closure and just set an already
+/// existing metatable.
+///
+/// Safer, faster, uses less stack space.
 fn metatable_key(l: *mut lua_State) -> i32 {
     *KEY.get_or_init(|| unsafe {
         if lua_checkstack(l, 2) == 0 {
@@ -86,6 +98,7 @@ fn metatable_key(l: *mut lua_State) -> i32 {
     })
 }
 
+/// The key to the callback metatable.
 static KEY: OnceLock<i32> = OnceLock::new();
 
 pub fn register<E: Error, F: 'static + Fn(A) -> Result<R, E>, A: FromLuaMany, R>(
