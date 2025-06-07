@@ -23,6 +23,7 @@ thread_local! {
 const _: () = assert!(size_of::<Arena>() == size_of::<*mut c_char>() + size_of::<size_t>() * 2);
 
 impl Arena {
+    const MAX_HEAD_SIZE: size_t = arena_align_offset(size_of::<ArenaMem>() as u64);
     pub const EMPTY: Arena = Arena {
         cur_blk: None,
         pos: 0,
@@ -37,8 +38,31 @@ impl Arena {
     ///
     /// While this function is safe, incorrect usage of the Arena after calling this function can
     /// cause UB.
-    pub fn reset_pos(&mut self) {
-        self.pos = arena_align_offset(size_of::<ArenaMem>() as u64);
+    // this technically a hack as we are supposed to pass it to arena_mem_free and recreate an
+    // arena but this has less friction as we aren't touching any neovim statics.
+    // might also optimize things a bit as the compiler might be able to know what state our arena
+    // is in
+    pub(crate) fn reset_pos(&mut self) {
+        self.pos = Self::MAX_HEAD_SIZE;
+    }
+
+    /// Get a view of the initialized portion of the arena as a slice of bytes
+    ///
+    /// Returns [`None`] if no block has been acquired or the position of our block is less than a
+    /// [`size_t`].
+    pub fn as_bytes(&self) -> Option<&[u8]> {
+        self.cur_blk
+            .and_then(|ptr| unsafe {
+                if self.pos >= Self::MAX_HEAD_SIZE {
+                    let start = ptr.add(Self::MAX_HEAD_SIZE);
+                    Some(std::slice::from_raw_parts(
+                        start.as_ptr() as *const u8,
+                        self.pos - Self::MAX_HEAD_SIZE,
+                    ))
+                } else {
+                    None
+                }
+            })
     }
 }
 
@@ -62,7 +86,7 @@ pub struct ConsumedBlk {
 }
 
 /// The minimum space needed to store the prev block ptr.
-fn arena_align_offset(off: u64) -> size_t {
+const fn arena_align_offset(off: u64) -> size_t {
     // no idea why we do this but just we are just replicating whats done in the same function in
     // neovim
     const ARENA_ALIGN: usize = {
