@@ -175,7 +175,6 @@ pub fn get_chan_info(channel_id: Channel, chan: Integer) -> Result<ChannelInfo, 
     call_check();
 
     CALLBACK_ARENA.with_borrow_mut(|arena| {
-        // TODO: rewrite from_c_func_ret
         let ret = tri_ret! {
             err;
             unsafe { global::nvim_get_chan_info(channel_id, chan, arena, &mut err) };
