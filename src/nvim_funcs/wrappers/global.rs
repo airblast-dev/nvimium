@@ -260,13 +260,17 @@ pub fn get_current_win() -> Window {
 
 pub fn get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<HighlightGroups, Error> {
     call_check();
-    // TODO: reimplement nvim_get_hl to use arena in c ret
-    let mut arena = Arena::EMPTY;
-    tri_ret! {
-        err;
-        unsafe { global::nvim_get_hl(ns, opts, &mut arena, &mut err) };
-        HighlightGroups::from_c_func_ret;
-    }
+
+    CALLBACK_ARENA.with_borrow_mut(|arena| {
+        let ret = tri_ret! {
+            err;
+            unsafe { global::nvim_get_hl(ns, opts, arena, &mut err) };
+            HighlightGroups::from_c_func_ret;
+        };
+
+        arena.reset_pos();
+        ret
+    })
 }
 
 pub fn get_hl_id_by_name<S: AsThinString>(name: S) -> Integer {
