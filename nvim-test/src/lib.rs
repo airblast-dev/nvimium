@@ -66,7 +66,9 @@ pub fn test_body(dylib_path: &Path, func_name: &str) -> Result<(), String> {
         panic!("{}", panic_out);
     }
 
-    assert!(status.success());
+    if !status.success() {
+        panic!("{:?}", status);
+    }
 
     Ok(())
 }
