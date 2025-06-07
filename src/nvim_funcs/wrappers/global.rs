@@ -8,7 +8,7 @@ use crate::{
 };
 use std::{
     mem::ManuallyDrop,
-    ops::{Deref, DerefMut}, ptr::null_mut,
+    ops::{Deref, DerefMut},
 };
 
 use crate::nvim_types::{
