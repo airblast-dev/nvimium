@@ -2,8 +2,8 @@ extern crate alloc;
 
 pub(crate) mod nvalloc;
 
-pub mod args;
 pub mod arena;
+pub mod args;
 pub mod core;
 pub mod func_types;
 pub mod lua;
