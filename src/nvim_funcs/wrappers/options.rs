@@ -42,7 +42,7 @@ pub fn get_options_info2<TH: AsThinString>(name: TH) -> Result<OptionInfo, Error
     })
 }
 
-pub fn get_option_value<TH: AsThinString>(name: TH, opt: &mut OptionOpt) -> Result<Object, Error> {
+pub fn get_option_value<'a, TH: AsThinString>(name: TH, opt: &mut OptionOpt<'a>) -> Result<Object, Error> {
     call_check();
 
     tri_nc! {
