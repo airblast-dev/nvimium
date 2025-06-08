@@ -28,13 +28,16 @@ pub fn get_all_options() -> Result<OptionsInfo, Error> {
     })
 }
 
-pub fn get_options_info2<TH: AsThinString>(name: TH) -> Result<OptionInfo, Error> {
+pub fn get_options_info2<'a, TH: AsThinString>(
+    name: TH,
+    opts: &mut OptionOpt<'a>,
+) -> Result<OptionInfo, Error> {
     call_check();
 
     CALLBACK_ARENA.with_borrow_mut(|arena| {
         let ret = tri_ret! {
             err;
-            unsafe { nvim_get_option_info2(name.as_thinstr(), arena, &raw mut err) };
+            unsafe { nvim_get_option_info2(name.as_thinstr(), opts, arena, &raw mut err) };
             OptionInfo::from_c_func_ret;
         };
 
@@ -73,19 +76,37 @@ pub fn set_option_value<'a, TH: AsThinString>(
 mod tests {
     use crate as nvimium;
     use crate::{
-        nvim_funcs::options::{get_all_options, set_option_value},
+        nvim_funcs::options::{
+            get_all_options, get_option_value, get_options_info2, set_option_value,
+        },
         nvim_types::{
             Dict, Object,
             opts::option::{OptionOpt, OptionScope},
         },
     };
 
-    use super::get_option_value;
-
     #[nvim_test::nvim_test]
     fn set_get_all_options() {
         let options = get_all_options().unwrap();
         assert!(!options.options.into_iter().any(|opt| opt.name == c"rule"));
+    }
+
+    #[nvim_test::nvim_test]
+    fn set_get_options_info2() {
+        let opt_inf =
+            get_options_info2(c"autoread", OptionOpt::default().scope(OptionScope::Global))
+                .unwrap();
+        assert!(!opt_inf.was_set);
+        set_option_value(
+            c"autoread",
+            Object::Bool(false),
+            OptionOpt::default().scope(OptionScope::Global),
+        ).unwrap();
+
+        let opt_inf =
+            get_options_info2(c"autoread", OptionOpt::default().scope(OptionScope::Global))
+                .unwrap();
+        assert!(opt_inf.was_set);
     }
 
     #[nvim_test::nvim_test]
