@@ -68,3 +68,67 @@ pub fn set_option_value<'a, TH: AsThinString>(
         unsafe { nvim_set_option_value(Channel::LUA_INTERNAL_CALL, name.as_thinstr(), (&value).into(), opts, &raw mut err) };
     }
 }
+
+#[cfg(all(not(miri), feature = "testing"))]
+mod tests {
+    use crate as nvimium;
+    use crate::{
+        nvim_funcs::options::{get_all_options, set_option_value},
+        nvim_types::{
+            Dict, Object,
+            opts::option::{OptionOpt, OptionScope},
+        },
+    };
+
+    use super::get_option_value;
+
+    #[nvim_test::nvim_test]
+    fn set_get_all_options() {
+        let options = get_all_options().unwrap();
+        assert!(!options.options.into_iter().any(|opt| opt.name == c"rule"));
+    }
+
+    #[nvim_test::nvim_test]
+    fn set_get_option_value() {
+        let val =
+            get_option_value(c"ruler", OptionOpt::default().scope(OptionScope::Global)).unwrap();
+        assert_eq!(val, Object::Bool(true));
+
+        set_option_value(
+            c"ruler",
+            Object::Bool(false),
+            OptionOpt::default().scope(OptionScope::Global),
+        )
+        .unwrap();
+
+        let val =
+            get_option_value(c"ruler", OptionOpt::default().scope(OptionScope::Global)).unwrap();
+        assert_eq!(val, Object::Bool(false));
+
+        set_option_value(
+            c"ruf",
+            Object::String(c"%15(%c%V\\ %p%%%)".into()),
+            OptionOpt::default().scope(OptionScope::Global),
+        )
+        .unwrap();
+
+        let val =
+            get_option_value(c"ruf", OptionOpt::default().scope(OptionScope::Global)).unwrap();
+
+        assert_eq!(val, Object::String(c"%15(%c%V\\ %p%%%)".into()));
+
+        set_option_value(
+            c"ruf",
+            Object::Dict(Dict::default()),
+            OptionOpt::default().scope(OptionScope::Global),
+        )
+        .unwrap_err();
+
+        set_option_value(
+            c"NvimiumFakeOption",
+            Object::Dict(Dict::default()),
+            OptionOpt::default().scope(OptionScope::Global),
+        )
+        .unwrap_err();
+    }
+}
