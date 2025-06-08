@@ -30,7 +30,7 @@ impl OptionsInfo {
 pub struct OptionInfo {
     pub name: OwnedThinString,
     pub shortname: OwnedThinString,
-    pub scope: OptionScope,
+    pub scope: OptionInfoScope,
     pub global_local: Boolean,
     pub commalist: Boolean,
     pub flaglist: Boolean,
@@ -85,9 +85,9 @@ impl OptionInfo {
         let scope = {
             let scope = scope.as_string().unwrap();
             match scope.as_thinstr().as_slice() {
-                b"buf" => OptionScope::Buffer,
-                b"win" => OptionScope::Win,
-                b"global" => OptionScope::Global,
+                b"buf" => OptionInfoScope::Buffer,
+                b"win" => OptionInfoScope::Win,
+                b"global" => OptionInfoScope::Global,
                 _ => unreachable!(),
             }
         };
@@ -131,7 +131,7 @@ impl OptionInfo {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum OptionScope {
+pub enum OptionInfoScope {
     Buffer,
     Win,
     Global,
