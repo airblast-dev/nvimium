@@ -756,7 +756,10 @@ pub struct OwnedThinString(ThinString<'static>);
 
 impl Clone for OwnedThinString {
     fn clone(&self) -> Self {
-        Self::from(self.0)
+        // in rare cases neovim likes to return null strings even though itself doesn't allow it
+        //
+        // call as_thinstr to guarantee that it isnt null
+        Self::from(self.0.as_thinstr())
     }
 
     fn clone_from(&mut self, source: &Self) {
