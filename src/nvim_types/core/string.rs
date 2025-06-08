@@ -756,10 +756,7 @@ pub struct OwnedThinString(ThinString<'static>);
 
 impl Clone for OwnedThinString {
     fn clone(&self) -> Self {
-        // in rare cases neovim likes to return null strings even though itself doesn't allow it
-        //
-        // call as_thinstr to guarantee that it isnt null
-        Self::from(self.0.as_thinstr())
+        Self::from(self.0)
     }
 
     fn clone_from(&mut self, source: &Self) {
@@ -828,7 +825,10 @@ impl OwnedThinString {
 
 impl<'a> From<ThinString<'a>> for OwnedThinString {
     fn from(th: ThinString<'a>) -> Self {
-        let source = th.as_ptr();
+        // in rare cases neovim likes to return null strings even though itself doesn't allow it
+        //
+        // call as_thinstr to guarantee that it isnt null and we get an empty string instead
+        let source = th.as_thinstr().as_ptr();
         let dst = unsafe { xmemdupz(source as *const c_void, th.len(), size_of::<c_char>()) };
 
         Self(unsafe { ThinString::new(th.len(), dst.as_ptr() as *mut c_char) })
