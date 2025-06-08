@@ -52,7 +52,7 @@ pub fn buf_get_commands(buf: Buffer, opts: &mut GetCommandOpts) -> Result<Comman
 pub fn create_user_command<'a, TH: AsThinString>(
     name: TH,
     command: UserCommand<'a>,
-    opts: &mut CreateUserCommandOpts,
+    opts: &mut CreateUserCommandOpts<'a>,
 ) -> Result<(), Error> {
     call_check();
     tri_ez! {

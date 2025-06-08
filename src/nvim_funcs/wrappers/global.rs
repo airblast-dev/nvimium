@@ -116,9 +116,9 @@ pub fn err_writeln<S: AsThinString>(s: S) {
     };
 }
 
-pub fn eval_statusline<S: AsThinString>(
+pub fn eval_statusline<'a, S: AsThinString>(
     s: S,
-    opts: &EvalStatusLineOpts,
+    opts: &EvalStatusLineOpts<'a>,
 ) -> Result<EvalStatusLine, Error> {
     call_check();
     CALLBACK_ARENA.with_borrow_mut(|arena| {
@@ -258,7 +258,7 @@ pub fn get_current_win() -> Window {
     unsafe { global::nvim_get_current_win() }
 }
 
-pub fn get_hl(ns: NameSpace, opts: &GetHlOpts) -> Result<HighlightGroups, Error> {
+pub fn get_hl<'a>(ns: NameSpace, opts: &GetHlOpts<'a>) -> Result<HighlightGroups, Error> {
     call_check();
 
     CALLBACK_ARENA.with_borrow_mut(|arena| {
@@ -612,11 +612,11 @@ pub fn set_hl_ns_fast(ns: NameSpace) -> Result<(), Error> {
     }
 }
 
-pub fn set_keymap<S: AsThinString, S1: AsThinString>(
+pub fn set_keymap<'a, S: AsThinString, S1: AsThinString>(
     mode: KeyMapMode,
     lhs: S,
     rhs: S1,
-    opts: &mut SetKeymapOpts,
+    opts: &mut SetKeymapOpts<'a>,
 ) -> Result<(), Error> {
     call_check();
     tri_ez! {
