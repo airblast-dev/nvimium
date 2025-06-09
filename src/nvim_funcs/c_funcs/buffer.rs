@@ -51,4 +51,9 @@ unsafe extern "C" {
         err: *mut Error,
     ) -> MaybeUninit<Array>;
     pub fn nvim_buf_get_name(buf: Buffer, err: *mut Error) -> MaybeUninit<OwnedThinString>;
+    pub fn nvim_buf_get_offset(
+        buf: Buffer,
+        index: Integer,
+        err: *mut Error,
+    ) -> MaybeUninit<Integer>;
 }

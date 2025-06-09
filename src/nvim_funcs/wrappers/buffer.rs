@@ -4,7 +4,7 @@ use crate::{
     macros::tri::{tri_ez, tri_nc, tri_ret},
     nvim_funcs::c_funcs::buffer::{
         nvim_buf_attach, nvim_buf_call, nvim_buf_del_mark, nvim_buf_del_var, nvim_buf_delete,
-        nvim_buf_get_changedtick, nvim_buf_get_keymap, nvim_buf_get_lines, nvim_buf_get_mark, nvim_buf_get_name,
+        nvim_buf_get_changedtick, nvim_buf_get_keymap, nvim_buf_get_lines, nvim_buf_get_mark, nvim_buf_get_name, nvim_buf_get_offset,
     },
     nvim_types::{
         func_types::keymap_mode::KeyMapMode, lua::{Function, NvFn}, opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts}, returns::get_keymap::Keymaps, Array, AsThinString, Boolean, Buffer, Channel, Error, Integer, Object, OwnedThinString, ThinString, CALLBACK_ARENA
@@ -149,5 +149,14 @@ pub fn buf_get_name(buf: Buffer) -> Result<OwnedThinString, Error> {
         err;
         unsafe { nvim_buf_get_name(buf, &raw mut err) };
         (|s: &OwnedThinString| s.clone());
+    }
+}
+
+pub fn buf_get_offset(buf: Buffer, index: Integer) -> Result<Integer, Error> {
+    call_check();
+
+    tri_nc! {
+        err;
+        unsafe { nvim_buf_get_offset(buf, index, &raw mut err) };
     }
 }
