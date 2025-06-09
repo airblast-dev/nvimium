@@ -2,7 +2,7 @@ use std::error::Error;
 use std::mem::MaybeUninit;
 
 use crate::macros::decl_derive::derive;
-use crate::nvim_types::lua::Function;
+use crate::nvim_types::lua::{Function, NvFn};
 use crate::nvim_types::{Boolean, lua_ref::LuaRef, string::ThinString};
 
 derive! {
@@ -24,9 +24,9 @@ derive! {
 }
 
 impl<'a> SetKeymapOpts<'a> {
-    pub fn callback<E: 'static + Error>(
+    pub fn callback<E: 'static + Error, F: 'static + NvFn + Fn(()) -> Result<(), E>>(
         &mut self,
-        f: impl 'static + Unpin + Fn(()) -> Result<(), E>,
+        f: F,
     ) -> &mut Self {
         let lref = Function::wrap(f).into_luaref();
         const CB_MASK: u64 = 1 << 8;

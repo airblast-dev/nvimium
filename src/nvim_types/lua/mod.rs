@@ -23,7 +23,11 @@ pub use box_fn::set_callback_name;
 
 use core::FromLuaMany;
 pub use core::{FromLua, IntoLua};
-use std::error::Error;
+use std::{
+    error::Error,
+    marker::PhantomData,
+    panic::{RefUnwindSafe, UnwindSafe},
+};
 
 #[doc(hidden)]
 pub use mlua_sys::lua_State;
@@ -95,3 +99,6 @@ impl Function {
         Self::from_fn_ptr(f)
     }
 }
+
+pub trait NvFn: 'static + Unpin + UnwindSafe + RefUnwindSafe + Send + Sync {}
+impl<T: 'static + Unpin + UnwindSafe + RefUnwindSafe + Send + Sync> NvFn for T {}

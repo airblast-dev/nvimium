@@ -3,7 +3,7 @@ use std::mem::MaybeUninit;
 
 use crate::macros::decl_derive::derive;
 use crate::nvim_types::args::open_term_cb::OpenTermOnInputArgs;
-use crate::nvim_types::lua::Function;
+use crate::nvim_types::lua::{Function, NvFn};
 use crate::nvim_types::{Boolean, lua_ref::LuaRef};
 
 derive! {
@@ -19,7 +19,7 @@ derive! {
 impl OpenTermOpts {
     pub fn on_input<E: 'static + Error>(
         &mut self,
-        f: impl 'static + for<'a> Fn(OpenTermOnInputArgs<'a>) -> Result<(), E> + Unpin,
+        f: impl 'static + NvFn + for<'a> Fn(OpenTermOnInputArgs<'a>) -> Result<(), E>,
     ) -> &mut Self {
         const MASK: u64 = 1 << builder::MASK_OFFSETS[0];
         let cb = Function::wrap(f);
