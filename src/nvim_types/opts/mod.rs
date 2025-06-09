@@ -1,4 +1,5 @@
 pub mod buf_attach;
+pub mod buf_delete;
 pub mod context;
 pub mod create_user_command;
 pub mod echo;

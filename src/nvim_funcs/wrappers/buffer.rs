@@ -3,12 +3,10 @@ use thread_lock::call_check;
 use crate::{
     macros::tri::{tri_ez, tri_nc},
     nvim_funcs::c_funcs::buffer::{
-        nvim_buf_attach, nvim_buf_call, nvim_buf_del_mark, nvim_buf_del_var,
+        nvim_buf_attach, nvim_buf_call, nvim_buf_del_mark, nvim_buf_del_var, nvim_buf_delete,
     },
     nvim_types::{
-        AsThinString, Boolean, Buffer, Channel, Error, Object,
-        lua::{Function, NvFn},
-        opts::buf_attach::BufAttachOpts,
+        lua::{Function, NvFn}, opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts}, AsThinString, Boolean, Buffer, Channel, Error, Object
     },
     plugin::IntoLua,
 };
@@ -57,5 +55,14 @@ pub fn buf_del_var<TH: AsThinString>(buf: Buffer, name: TH) -> Result<(), Error>
     tri_ez! {
         err;
         unsafe { nvim_buf_del_var(buf, name.as_thinstr(), &raw mut err) };
+    }
+}
+
+pub fn buf_delete(buf: Buffer, opts: &mut BufDeleteOpts) -> Result<(), Error> {
+    call_check();
+
+    tri_ez!{
+        err;
+        unsafe { nvim_buf_delete(buf, opts, &raw mut err) };
     }
 }
