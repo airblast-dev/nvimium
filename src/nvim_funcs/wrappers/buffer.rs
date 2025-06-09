@@ -4,7 +4,7 @@ use crate::{
     macros::tri::{tri_ez, tri_nc, tri_ret},
     nvim_funcs::c_funcs::buffer::{
         nvim_buf_attach, nvim_buf_call, nvim_buf_del_mark, nvim_buf_del_var, nvim_buf_delete,
-        nvim_buf_get_changedtick, nvim_buf_get_keymap, nvim_buf_get_lines,
+        nvim_buf_get_changedtick, nvim_buf_get_keymap, nvim_buf_get_lines, nvim_buf_get_mark,
     },
     nvim_types::{
         Array, AsThinString, Boolean, Buffer, CALLBACK_ARENA, Channel, Error, Integer, Object,
@@ -125,6 +125,24 @@ pub fn buf_get_lines<R, F: for<'a> FnMut(&'a mut dyn Iterator<Item = ThinString<
 
         arena.reset_pos();
 
+        ret
+    })
+}
+
+pub fn buf_get_mark<TH: AsThinString>(buf: Buffer, name: TH) -> Result<(Integer, Integer), Error> {
+    call_check();
+
+    CALLBACK_ARENA.with_borrow_mut(|arena| {
+        let ret = tri_ret! {
+            err;
+            unsafe { nvim_buf_get_mark(buf, name.as_thinstr(), arena, &raw mut err) };
+            (|arr: &Array| {
+                let pos = arr.as_slice();
+                (pos[0].as_int().unwrap(), pos[1].as_int().unwrap())
+            });
+        };
+
+        arena.reset_pos();
         ret
     })
 }

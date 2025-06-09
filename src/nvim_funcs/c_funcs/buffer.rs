@@ -43,4 +43,10 @@ unsafe extern "C" {
         l: *mut lua_State,
         err: *mut Error,
     ) -> MaybeUninit<Array>;
+    pub fn nvim_buf_get_mark<'a>(
+        buf: Buffer,
+        name: ThinString<'a>,
+        arena: *mut Arena,
+        err: *mut Error,
+    ) -> MaybeUninit<Array>;
 }
