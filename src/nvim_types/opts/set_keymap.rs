@@ -24,7 +24,7 @@ derive! {
 }
 
 impl<'a> SetKeymapOpts<'a> {
-    pub fn callback<E: 'static + Error, F: 'static + NvFn + Fn(()) -> Result<(), E>>(
+    pub fn callback<E: 'static + Error, F: NvFn + Fn(()) -> Result<(), E>>(
         &mut self,
         f: F,
     ) -> &mut Self {

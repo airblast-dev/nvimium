@@ -3,7 +3,7 @@ use std::{error::Error, mem::ManuallyDrop};
 use crate::nvim_types::{
     AsThinString,
     args::user_command::UserCommandArgs,
-    lua::Function,
+    lua::{Function, NvFn},
     object::{ObjectRef, ObjectTag},
 };
 
@@ -19,7 +19,7 @@ impl<'a> UserCommand<'a> {
 impl UserCommand<'static> {
     pub fn callback<
         E: 'static + Error,
-        F: 'static + for<'f> Fn(UserCommandArgs<'f>) -> Result<(), E> + Unpin,
+        F: NvFn + for<'f> Fn(UserCommandArgs<'f>) -> Result<(), E>,
     >(
         cmd: F,
     ) -> Self {
