@@ -2,9 +2,9 @@ use thread_lock::call_check;
 
 use crate::{
     macros::tri::tri_nc,
-    nvim_funcs::c_funcs::buffer::{nvim_buf_attach, nvim_buf_call},
+    nvim_funcs::c_funcs::buffer::{nvim_buf_attach, nvim_buf_call, nvim_buf_del_mark},
     nvim_types::{
-        Boolean, Buffer, Channel, Error, Object,
+        AsThinString, Boolean, Buffer, Channel, Error, Object,
         lua::{Function, NvFn},
         opts::buf_attach::BufAttachOpts,
     },
@@ -37,5 +37,14 @@ pub fn buf_call<
     tri_nc! {
         err;
         unsafe { nvim_buf_call(buf, Function::wrap(f).into_luaref(), &raw mut err) };
+    }
+}
+
+pub fn buf_del_mark<TH: AsThinString>(buf: Buffer, name: TH) -> Result<Boolean, Error> {
+    call_check();
+
+    tri_nc! {
+        err;
+        unsafe { nvim_buf_del_mark(buf, name.as_thinstr(), &raw mut err) };
     }
 }
