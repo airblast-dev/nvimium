@@ -18,6 +18,8 @@ mod box_fn;
 pub mod core;
 mod fn_ptr;
 pub(crate) mod utils;
+
+// used from a plugin! macro in user crate
 #[doc(hidden)]
 pub use box_fn::set_callback_name;
 
@@ -25,7 +27,6 @@ use core::FromLuaMany;
 pub use core::{FromLua, IntoLua};
 use std::{
     error::Error,
-    marker::PhantomData,
     panic::{RefUnwindSafe, UnwindSafe},
 };
 
