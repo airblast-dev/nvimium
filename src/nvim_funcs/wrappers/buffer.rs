@@ -2,8 +2,13 @@ use thread_lock::call_check;
 
 use crate::{
     macros::tri::tri_nc,
-    nvim_funcs::c_funcs::buffer::nvim_buf_attach,
-    nvim_types::{Boolean, Buffer, Channel, Error, opts::buf_attach::BufAttachOpts},
+    nvim_funcs::c_funcs::buffer::{nvim_buf_attach, nvim_buf_call},
+    nvim_types::{
+        Boolean, Buffer, Channel, Error, Object,
+        lua::{Function, NvFn},
+        opts::buf_attach::BufAttachOpts,
+    },
+    plugin::IntoLua,
 };
 
 pub fn buf_attach(
@@ -16,5 +21,21 @@ pub fn buf_attach(
     tri_nc! {
         err;
         unsafe { nvim_buf_attach(Channel::LUA_INTERNAL_CALL, buf, send_buffer, opts, &raw mut err) };
+    }
+}
+
+pub fn buf_call<
+    Err: 'static + std::error::Error,
+    Ret: 'static + IntoLua,
+    F: NvFn + Fn(()) -> Result<Ret, Err>,
+>(
+    buf: Buffer,
+    f: F,
+) -> Result<Object, Error> {
+    call_check();
+
+    tri_nc! {
+        err;
+        unsafe { nvim_buf_call(buf, Function::wrap(f).into_luaref(), &raw mut err) };
     }
 }

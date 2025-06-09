@@ -1,6 +1,10 @@
 use std::mem::MaybeUninit;
 
-use crate::nvim_types::{lua::Function, opts::buf_attach::BufAttachOpts, Boolean, Buffer, Channel, Error};
+use crate::nvim_types::{
+    Boolean, Buffer, Channel, Error, LuaRef, Object,
+    lua::{Function, NvFn},
+    opts::buf_attach::BufAttachOpts,
+};
 
 unsafe extern "C" {
     pub fn nvim_buf_attach(
@@ -11,5 +15,5 @@ unsafe extern "C" {
         err: *mut Error,
     ) -> MaybeUninit<Boolean>;
 
-    //pub fn nvim_buf_call(buf: Buffer, f: Function)
+    pub fn nvim_buf_call(buf: Buffer, f: LuaRef, err: *mut Error) -> MaybeUninit<Object>;
 }
