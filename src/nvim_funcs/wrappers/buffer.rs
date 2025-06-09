@@ -1,15 +1,18 @@
 use thread_lock::call_check;
 
 use crate::{
-    macros::tri::{tri_ez, tri_nc},
+    macros::tri::{tri_ez, tri_nc, tri_ret},
     nvim_funcs::c_funcs::buffer::{
         nvim_buf_attach, nvim_buf_call, nvim_buf_del_mark, nvim_buf_del_var, nvim_buf_delete,
-        nvim_buf_get_changedtick,
+        nvim_buf_get_changedtick, nvim_buf_get_keymap, nvim_buf_get_lines,
     },
     nvim_types::{
-        AsThinString, Boolean, Buffer, Channel, Error, Integer, Object,
+        Array, AsThinString, Boolean, Buffer, CALLBACK_ARENA, Channel, Error, Integer, Object,
+        ThinString,
+        func_types::keymap_mode::KeyMapMode,
         lua::{Function, NvFn},
         opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts},
+        returns::get_keymap::Keymaps,
     },
     plugin::IntoLua,
 };
@@ -77,4 +80,51 @@ pub fn buf_get_changedtick(buf: Buffer) -> Result<Integer, Error> {
         err;
         unsafe { nvim_buf_get_changedtick(buf, &raw mut err) };
     }
+}
+
+pub fn buf_get_keymap(buf: Buffer, mode: KeyMapMode) -> Result<Keymaps, Error> {
+    call_check();
+
+    CALLBACK_ARENA.with_borrow_mut(|arena| {
+        let ret = tri_ret! {
+            err;
+            unsafe { nvim_buf_get_keymap(buf, mode, arena, &raw mut err) };
+            Keymaps::from_c_func_ret;
+        };
+
+        arena.reset_pos();
+
+        ret
+    })
+}
+
+/// Get's lines of a buffer and feeds it so the provided function
+///
+/// The `consumer` is given an iterator of [`ThinString`]'s where their lifetime cannot leave
+/// `consumer`. This is done to avoid possibly huge allocations by using existing space in the
+/// arena that is already acquired.
+// TODO: return dyn until an exact iterator type is decided
+pub fn buf_get_lines<R, F: for<'a> FnMut(&'a mut dyn Iterator<Item = ThinString<'a>>) -> R>(
+    mut consumer: F,
+    buf: Buffer,
+    start: Integer,
+    end: Integer,
+    strict_indexing: Boolean,
+) -> Result<R, Error> {
+    call_check();
+
+    CALLBACK_ARENA.with_borrow_mut(|arena| {
+        let ret = tri_ret! {
+            err;
+            unsafe { nvim_buf_get_lines(Channel::LUA_INTERNAL_CALL, buf, start, end, strict_indexing, arena, core::ptr::null_mut(), &raw mut err) };
+            (|arr: &Array| {
+                let mut iter = arr.iter().map(|obj| obj.as_string().unwrap().as_thinstr());
+                (consumer)(&mut iter)
+            });
+        };
+
+        arena.reset_pos();
+
+        ret
+    })
 }
