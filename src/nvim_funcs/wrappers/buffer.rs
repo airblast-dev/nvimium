@@ -4,15 +4,10 @@ use crate::{
     macros::tri::{tri_ez, tri_nc, tri_ret},
     nvim_funcs::c_funcs::buffer::{
         nvim_buf_attach, nvim_buf_call, nvim_buf_del_mark, nvim_buf_del_var, nvim_buf_delete,
-        nvim_buf_get_changedtick, nvim_buf_get_keymap, nvim_buf_get_lines, nvim_buf_get_mark,
+        nvim_buf_get_changedtick, nvim_buf_get_keymap, nvim_buf_get_lines, nvim_buf_get_mark, nvim_buf_get_name,
     },
     nvim_types::{
-        Array, AsThinString, Boolean, Buffer, CALLBACK_ARENA, Channel, Error, Integer, Object,
-        ThinString,
-        func_types::keymap_mode::KeyMapMode,
-        lua::{Function, NvFn},
-        opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts},
-        returns::get_keymap::Keymaps,
+        func_types::keymap_mode::KeyMapMode, lua::{Function, NvFn}, opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts}, returns::get_keymap::Keymaps, Array, AsThinString, Boolean, Buffer, Channel, Error, Integer, Object, OwnedThinString, ThinString, CALLBACK_ARENA
     },
     plugin::IntoLua,
 };
@@ -145,4 +140,14 @@ pub fn buf_get_mark<TH: AsThinString>(buf: Buffer, name: TH) -> Result<(Integer,
         arena.reset_pos();
         ret
     })
+}
+
+pub fn buf_get_name(buf: Buffer) -> Result<OwnedThinString, Error> {
+    call_check();
+
+    tri_ret! {
+        err;
+        unsafe { nvim_buf_get_name(buf, &raw mut err) };
+        (|s: &OwnedThinString| s.clone());
+    }
 }
