@@ -21,4 +21,6 @@ unsafe extern "C" {
         name: ThinString<'a>,
         err: *mut Error,
     ) -> MaybeUninit<Boolean>;
+
+    pub fn nvim_buf_del_var<'a>(buf: Buffer, name: ThinString<'a>, err: *mut Error);
 }
