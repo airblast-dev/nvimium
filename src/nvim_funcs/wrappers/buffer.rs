@@ -4,10 +4,16 @@ use crate::{
     macros::tri::{tri_ez, tri_nc, tri_ret},
     nvim_funcs::c_funcs::buffer::{
         nvim_buf_attach, nvim_buf_call, nvim_buf_del_mark, nvim_buf_del_var, nvim_buf_delete,
-        nvim_buf_get_changedtick, nvim_buf_get_keymap, nvim_buf_get_lines, nvim_buf_get_mark, nvim_buf_get_name, nvim_buf_get_offset,
+        nvim_buf_get_changedtick, nvim_buf_get_keymap, nvim_buf_get_lines, nvim_buf_get_mark,
+        nvim_buf_get_name, nvim_buf_get_offset, nvim_buf_get_text,
     },
     nvim_types::{
-        func_types::keymap_mode::KeyMapMode, lua::{Function, NvFn}, opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts}, returns::get_keymap::Keymaps, Array, AsThinString, Boolean, Buffer, Channel, Error, Integer, Object, OwnedThinString, ThinString, CALLBACK_ARENA
+        Array, AsThinString, Boolean, Buffer, CALLBACK_ARENA, Channel, Error, Integer, Object,
+        OwnedThinString, ThinString,
+        func_types::keymap_mode::KeyMapMode,
+        lua::{Function, NvFn},
+        opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts},
+        returns::get_keymap::Keymaps,
     },
     plugin::IntoLua,
 };
@@ -159,4 +165,31 @@ pub fn buf_get_offset(buf: Buffer, index: Integer) -> Result<Integer, Error> {
         err;
         unsafe { nvim_buf_get_offset(buf, index, &raw mut err) };
     }
+}
+
+pub fn buf_get_text<R, F: for<'a> FnMut(&'a mut dyn Iterator<Item = ThinString<'a>>) -> R>(
+    mut consumer: F,
+    buf: Buffer,
+    start_row: Integer,
+    start_col: Integer,
+    end_row: Integer,
+    end_col: Integer,
+    opts: &mut GetTextOpts,
+) -> Result<R, Error> {
+    call_check();
+
+    CALLBACK_ARENA.with_borrow_mut(|arena| {
+        let ret = tri_ret! {
+            err;
+            unsafe { nvim_buf_get_text(Channel::LUA_INTERNAL_CALL, buf, start_row, start_col, end_row, end_col, opts, arena, core::ptr::null_mut(), &raw mut err) };
+            (|arr: &Array| {
+                let mut iter = arr.iter().map(|obj| obj.as_string().unwrap().as_thinstr());
+                (consumer)(&mut iter)
+            });
+        };
+
+        arena.reset_pos();
+
+        ret
+    })
 }

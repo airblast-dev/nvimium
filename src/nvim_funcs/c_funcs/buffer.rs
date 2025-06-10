@@ -3,10 +3,7 @@ use std::mem::MaybeUninit;
 use mlua_sys::lua_State;
 
 use crate::nvim_types::{
-    Arena, Array, Boolean, Buffer, Channel, Dict, Error, Integer, LuaRef, Object, OwnedThinString,
-    ThinString,
-    func_types::keymap_mode::KeyMapMode,
-    opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts},
+    func_types::keymap_mode::KeyMapMode, opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts}, Arena, Array, Boolean, Buffer, Channel, Dict, Error, Integer, LuaRef, Object, OwnedThinString, ThinString
 };
 
 unsafe extern "C" {
@@ -56,4 +53,16 @@ unsafe extern "C" {
         index: Integer,
         err: *mut Error,
     ) -> MaybeUninit<Integer>;
+    pub fn nvim_buf_get_text(
+        chan: Channel,
+        buf: Buffer,
+        start_row: Integer,
+        start_col: Integer,
+        end_row: Integer,
+        end_col: Integer,
+        opts: *mut GetTextOpts,
+        arena: *mut Arena,
+        l: *mut lua_State,
+        err: *mut Error,
+    ) -> MaybeUninit<Array>;
 }

@@ -9,6 +9,7 @@ pub mod get_commands;
 pub mod get_hl;
 pub mod get_hl_ns;
 pub mod get_mark;
+pub mod get_text;
 pub mod open_term;
 pub mod option;
 pub mod paste;
