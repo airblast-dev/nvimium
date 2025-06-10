@@ -9,8 +9,9 @@ use crate::{
     },
     nvim_types::{
         Array, AsThinString, Boolean, Buffer, CALLBACK_ARENA, Channel, Error, Integer, Object,
-        OwnedThinString, ThinString,
+        OwnedThinString,
         func_types::keymap_mode::KeyMapMode,
+        iter::ThIter,
         lua::{Function, NvFn},
         opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts},
         returns::get_keymap::Keymaps,
@@ -105,7 +106,7 @@ pub fn buf_get_keymap(buf: Buffer, mode: KeyMapMode) -> Result<Keymaps, Error> {
 /// `consumer`. This is done to avoid possibly huge allocations by using existing space in the
 /// arena that is already acquired.
 // TODO: return dyn until an exact iterator type is decided
-pub fn buf_get_lines<R, F: for<'a> FnMut(&'a mut dyn Iterator<Item = ThinString<'a>>) -> R>(
+pub fn buf_get_lines<R, F: for<'a> FnMut(ThIter<'a>) -> R>(
     mut consumer: F,
     buf: Buffer,
     start: Integer,
@@ -119,8 +120,7 @@ pub fn buf_get_lines<R, F: for<'a> FnMut(&'a mut dyn Iterator<Item = ThinString<
             err;
             unsafe { nvim_buf_get_lines(Channel::LUA_INTERNAL_CALL, buf, start, end, strict_indexing, arena, core::ptr::null_mut(), &raw mut err) };
             (|arr: &Array| {
-                let mut iter = arr.iter().map(|obj| obj.as_string().unwrap().as_thinstr());
-                (consumer)(&mut iter)
+                (consumer)(ThIter::new(arr.as_slice()))
             });
         };
 
@@ -173,7 +173,7 @@ pub fn buf_get_offset(buf: Buffer, index: Integer) -> Result<Integer, Error> {
 /// `consumer`. This is done to avoid possibly huge allocations by using existing space in the
 /// arena that is already acquired.
 // TODO: return dyn until an exact iterator type is decided
-pub fn buf_get_text<R, F: for<'a> FnMut(&'a mut dyn Iterator<Item = ThinString<'a>>) -> R>(
+pub fn buf_get_text<R, F: for<'a> FnMut(ThIter<'a>) -> R>(
     mut consumer: F,
     buf: Buffer,
     start_row: Integer,
@@ -188,10 +188,9 @@ pub fn buf_get_text<R, F: for<'a> FnMut(&'a mut dyn Iterator<Item = ThinString<'
         let ret = tri_ret! {
             err;
             unsafe { nvim_buf_get_text(Channel::LUA_INTERNAL_CALL, buf, start_row, start_col, end_row, end_col, opts, arena, core::ptr::null_mut(), &raw mut err) };
-            (|arr: &Array| {
-                let mut iter = arr.iter().map(|obj| obj.as_string().unwrap().as_thinstr());
-                (consumer)(&mut iter)
-            });
+            (|arr: &Array| 
+                (consumer)(ThIter::new(arr.as_slice()))
+            );
         };
 
         arena.reset_pos();
