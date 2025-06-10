@@ -16,7 +16,7 @@ use thread_lock::can_call;
 ///
 /// If [`thread_lock::can_call`] is `true` and an allocation fails Neovim will free unused
 /// allocations and trigger a garbage collection in Lua. If the allocation is still failing and
-/// `preserve_exit` is `true`, Neovim will be told that we have ran out of memory and it will 
+/// `preserve_exit` is `true`, Neovim will be told that we have ran out of memory and it will
 /// attempt to write swap files and perform any cleanup that may be needed before exitting.
 /// [`std::alloc::System`].
 #[derive(Default)]

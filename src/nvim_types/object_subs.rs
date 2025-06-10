@@ -1,6 +1,10 @@
 use crate::one_of_objects;
 
-use super::{object::{Object, ObjectTag}, string::OwnedThinString, Boolean, Integer, LuaRef, ThinString};
+use super::{
+    Boolean, Integer, LuaRef, ThinString,
+    object::{Object, ObjectTag},
+    string::OwnedThinString,
+};
 
 one_of_objects! {
     #[doc(hidden)]

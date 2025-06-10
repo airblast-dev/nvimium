@@ -33,7 +33,7 @@ thread_local! {
     /// access will cause a panic. Instead mutable access to the callback arena and neovim calls should
     /// be done in different scopes to avoid a panic.
     ///
-    /// Even if some functions may not use this arena, the library assumes that all neovim functions can acquire mutable access 
+    /// Even if some functions may not use this arena, the library assumes that all neovim functions can acquire mutable access
     /// and any change making a neovim function to make use of the arena is not considered a breaking.
     pub static CALLBACK_ARENA: RefCell<Arena> = const { RefCell::new(Arena::EMPTY) };
 }

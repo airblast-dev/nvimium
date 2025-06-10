@@ -101,7 +101,8 @@ mod tests {
             c"autoread",
             Object::Bool(false),
             OptionOpt::default().scope(OptionScope::Global),
-        ).unwrap();
+        )
+        .unwrap();
 
         let opt_inf =
             get_options_info2(c"autoread", OptionOpt::default().scope(OptionScope::Global))

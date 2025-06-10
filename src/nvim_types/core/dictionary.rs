@@ -83,9 +83,7 @@ impl PartialEq for Dict {
             return false;
         }
 
-        self.0.iter().all(|kv| {
-            other.0.contains(kv)
-        })
+        self.0.iter().all(|kv| other.0.contains(kv))
     }
 }
 
@@ -126,7 +124,7 @@ impl Dict {
     /// Insert a new [`KeyValuePair`] into the [`Dict`]
     ///
     /// If the key is already stored in the dictionary the provided key is not used, instead the
-    /// existing key will be reused and the existing [`Object`] is returned. 
+    /// existing key will be reused and the existing [`Object`] is returned.
     pub fn insert<K>(&mut self, key: K, mut object: Object) -> Option<Object>
     where
         K: PartialEq<OwnedThinString>,

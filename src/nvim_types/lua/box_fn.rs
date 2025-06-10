@@ -17,7 +17,10 @@ use mlua_sys::{
 use rand::{SeedableRng, distr::Distribution, rngs::SmallRng};
 use thread_lock::init_lua_ptr;
 
-use crate::nvim_types::{lua::utils::{cb_ret_handle_arena, handle_callback_err_ret}, NvString};
+use crate::nvim_types::{
+    NvString,
+    lua::utils::{cb_ret_handle_arena, handle_callback_err_ret},
+};
 
 use super::core::FromLuaMany;
 

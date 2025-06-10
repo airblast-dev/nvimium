@@ -1,6 +1,6 @@
 use crate::{macros::decl_derive::derive, nvim_types::Boolean};
 
-derive!{
+derive! {
     derive(masked_builder, zeroed_default);
     #[repr(C)]
     pub struct BufDeleteOpts {

@@ -3,9 +3,11 @@ use std::error::Error;
 use crate::{
     macros::decl_derive::derive,
     nvim_types::{
+        Boolean, LuaRef,
         args::buf_attach_cb::{
             BufOnBytesArgs, BufOnChangedTickArgs, BufOnDetach, BufOnLinesArgs, BufOnReload,
-        }, lua::{Function, NvFn}, Boolean, LuaRef
+        },
+        lua::{Function, NvFn},
     },
 };
 

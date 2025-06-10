@@ -188,9 +188,7 @@ pub fn buf_get_text<R, F: for<'a> FnMut(ThIter<'a>) -> R>(
         let ret = tri_ret! {
             err;
             unsafe { nvim_buf_get_text(Channel::LUA_INTERNAL_CALL, buf, start_row, start_col, end_row, end_col, opts, arena, core::ptr::null_mut(), &raw mut err) };
-            (|arr: &Array| 
-                (consumer)(ThIter::new(arr.as_slice()))
-            );
+            (|arr: &Array| (consumer)(ThIter::new(arr.as_slice())));
         };
 
         arena.reset_pos();

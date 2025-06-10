@@ -20,9 +20,7 @@ impl OptionsInfo {
             OptionInfo::from_c_func_ret(d)
         }));
 
-        Self {
-            options: kv
-        }
+        Self { options: kv }
     }
 }
 

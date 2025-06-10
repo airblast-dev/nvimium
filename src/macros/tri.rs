@@ -39,7 +39,7 @@ macro_rules! tri_ret {
         if $err.has_errored() {
             Err($err)
         } else {
-            Ok($conv( unsafe { result.assume_init_mut() } ))
+            Ok($conv(unsafe { result.assume_init_mut() }))
         }
     }};
 }
@@ -84,7 +84,7 @@ macro_rules! tri_match {
         if $err.has_errored() {
             Err($err_handle)
         } else {
-            Ok($conv( unsafe { result.assume_init() } ))
+            Ok($conv(unsafe { result.assume_init() }))
         }
     }};
 }
