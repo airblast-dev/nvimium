@@ -5,7 +5,7 @@ use crate::{
     nvim_funcs::c_funcs::buffer::{
         nvim_buf_attach, nvim_buf_call, nvim_buf_del_mark, nvim_buf_del_var, nvim_buf_delete,
         nvim_buf_get_changedtick, nvim_buf_get_keymap, nvim_buf_get_lines, nvim_buf_get_mark,
-        nvim_buf_get_name, nvim_buf_get_offset, nvim_buf_get_text,
+        nvim_buf_get_name, nvim_buf_get_offset, nvim_buf_get_text, nvim_buf_get_var,
     },
     nvim_types::{
         Array, AsThinString, Boolean, Buffer, CALLBACK_ARENA, Channel, Error, Integer, Object,
@@ -167,6 +167,12 @@ pub fn buf_get_offset(buf: Buffer, index: Integer) -> Result<Integer, Error> {
     }
 }
 
+/// Get's partial lines of a buffer and feeds it so the provided function
+///
+/// The `consumer` is given an iterator of [`ThinString`]'s where their lifetime cannot leave
+/// `consumer`. This is done to avoid possibly huge allocations by using existing space in the
+/// arena that is already acquired.
+// TODO: return dyn until an exact iterator type is decided
 pub fn buf_get_text<R, F: for<'a> FnMut(&'a mut dyn Iterator<Item = ThinString<'a>>) -> R>(
     mut consumer: F,
     buf: Buffer,
@@ -190,6 +196,21 @@ pub fn buf_get_text<R, F: for<'a> FnMut(&'a mut dyn Iterator<Item = ThinString<'
 
         arena.reset_pos();
 
+        ret
+    })
+}
+
+pub fn buf_get_var<TH: AsThinString>(buf: Buffer, name: TH) -> Result<Object, Error> {
+    call_check();
+
+    CALLBACK_ARENA.with_borrow_mut(|arena| {
+        let ret = tri_ret! {
+            err;
+            unsafe { nvim_buf_get_var(buf, name.as_thinstr(), arena, &raw mut err) };
+            Object::clone;
+        };
+
+        arena.reset_pos();
         ret
     })
 }
