@@ -1,13 +1,22 @@
 use std::{
     cell::{RefCell, UnsafeCell},
     ffi::c_void,
+    mem::MaybeUninit,
     ptr::NonNull,
 };
 
 use libc::{c_char, c_double, size_t};
 use thread_lock::call_check;
 
-// arena_alloc_block for allocating
+/// A block of memory provided by neovim
+///
+/// This does not take ownership of the block of memory but is only provided mutable access to said
+/// block.
+// neovim uses an arena for a sane alloc dealloc strategy
+//
+// the value at cur_blk is always a pointer to the previous block of memory or null
+// a previous block is(should) only (be) present where an allocation exceeds the 4096 byte default capacity of an arena
+// if the allocation did fit in 4096 bytes, the first value is a null pointer
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub struct Arena {
@@ -18,6 +27,14 @@ pub struct Arena {
 }
 
 thread_local! {
+    /// An [`Arena`] struct that is reused between neovim calls
+    ///
+    /// Acquiring mutable access to the arena and calling a neovim function in the scope of mutable
+    /// access will cause a panic. Instead mutable access to the callback arena and neovim calls should
+    /// be done in different scopes to avoid a panic.
+    ///
+    /// Even if some functions may not use this arena, the library assumes that all neovim functions can acquire mutable access 
+    /// and any change making a neovim function to make use of the arena is not considered a breaking.
     pub static CALLBACK_ARENA: RefCell<Arena> = const { RefCell::new(Arena::EMPTY) };
 }
 const _: () = assert!(size_of::<Arena>() == size_of::<*mut c_char>() + size_of::<size_t>() * 2);
@@ -51,18 +68,31 @@ impl Arena {
     /// Returns [`None`] if no block has been acquired or the position of our block is less than a
     /// [`size_t`].
     pub fn as_bytes(&self) -> Option<&[u8]> {
-        self.cur_blk
-            .and_then(|ptr| unsafe {
-                if self.pos >= Self::MAX_HEAD_SIZE {
-                    let start = ptr.add(Self::MAX_HEAD_SIZE);
-                    Some(std::slice::from_raw_parts(
-                        start.as_ptr() as *const u8,
-                        self.pos - Self::MAX_HEAD_SIZE,
-                    ))
-                } else {
-                    None
-                }
-            })
+        self.cur_blk.and_then(|ptr| unsafe {
+            if self.pos >= Self::MAX_HEAD_SIZE {
+                let start = ptr.add(Self::MAX_HEAD_SIZE);
+                Some(std::slice::from_raw_parts(
+                    start.as_ptr() as *const u8,
+                    self.pos - Self::MAX_HEAD_SIZE,
+                ))
+            } else {
+                None
+            }
+        })
+    }
+
+    pub fn spare_capacity(&mut self) -> &mut [MaybeUninit<u8>] {
+        unsafe {
+            self.cur_blk
+                .map(|blk| {
+                    NonNull::slice_from_raw_parts(
+                        blk.add(self.pos).cast::<MaybeUninit<u8>>(),
+                        self.size.saturating_sub(self.pos),
+                    )
+                    .as_mut()
+                })
+                .unwrap_or(&mut [])
+        }
     }
 }
 
