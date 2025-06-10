@@ -1,4 +1,4 @@
-use mlua_sys::{LUA_TSTRING, lua_checkstack, lua_getstack, lua_gettop, lua_type};
+use mlua_sys::lua_gettop;
 
 use crate::nvim_types::{
     Buffer, Integer, ThinString,

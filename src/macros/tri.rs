@@ -88,4 +88,3 @@ macro_rules! tri_match {
         }
     }};
 }
-pub(crate) use tri_match;

@@ -3,7 +3,7 @@ use std::mem::MaybeUninit;
 use mlua_sys::lua_State;
 
 use crate::nvim_types::{
-    Arena, Array, Boolean, Buffer, Channel, Dict, Error, Integer, LuaRef, Object, OwnedThinString,
+    Arena, Array, Boolean, Buffer, Channel, Error, Integer, LuaRef, Object, OwnedThinString,
     ThinString,
     func_types::keymap_mode::KeyMapMode,
     opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts},
