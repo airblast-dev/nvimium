@@ -9,10 +9,9 @@ use mlua_sys::{
 use crate::{
     nvim_funcs::global::echo,
     nvim_types::{
-        AsThinString, Boolean, NvString, TRACKED_ARENA, ThinString, func_types::echo::Echo,
-        opts::echo::EchoOpts,
+        AsThinString, Boolean, IntoLua, NvString, TRACKED_ARENA, ThinString,
+        func_types::echo::Echo, opts::echo::EchoOpts,
     },
-    plugin::IntoLua,
 };
 
 use super::{LuaInteger, core::FromLuaErr};
@@ -22,7 +21,7 @@ use super::{LuaInteger, core::FromLuaErr};
 // this allows us to attempt multiple ways to print out an error to neovim
 #[cold]
 #[inline(never)]
-pub(super) unsafe fn handle_callback_err_ret(l: *mut lua_State, err: &dyn Error) {
+pub(crate) unsafe fn handle_callback_err_ret(l: *mut lua_State, err: &dyn Error) {
     let mut s = NvString::default();
     write!(s, "Error: {}", &err).unwrap();
     if let Err(echo_err) = echo(&Echo::message(s), true, EchoOpts::default().err(true)) {
@@ -139,7 +138,9 @@ pub(crate) unsafe fn cb_ret_handle_arena(was_active: bool) {
     if !was_active {
         // if was active is false this is the top level call, no mutable references can exist.
         #[allow(static_mut_refs)]
-        unsafe { TRACKED_ARENA.reset_arena() };
+        unsafe {
+            TRACKED_ARENA.reset_arena()
+        };
     }
     unsafe { (&raw mut TRACKED_ARENA.is_nested).write(was_active) };
 }

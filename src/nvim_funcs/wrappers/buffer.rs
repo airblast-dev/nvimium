@@ -8,15 +8,14 @@ use crate::{
         nvim_buf_get_name, nvim_buf_get_offset, nvim_buf_get_text, nvim_buf_get_var,
     },
     nvim_types::{
-        Array, AsThinString, Boolean, Buffer, Channel, Error, Integer, Object, OwnedThinString,
-        call_with_arena,
+        Array, AsThinString, Boolean, Buffer, Channel, Error, Integer, IntoLua, Object,
+        OwnedThinString, call_with_arena,
         func_types::keymap_mode::KeyMapMode,
         iter::ThIter,
         lua::{Function, NvFn},
         opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts},
         returns::get_keymap::Keymaps,
     },
-    plugin::IntoLua,
 };
 
 pub fn buf_attach(
