@@ -1,9 +1,4 @@
-use std::{
-    cell::{RefCell, UnsafeCell},
-    ffi::c_void,
-    mem::MaybeUninit,
-    ptr::NonNull,
-};
+use std::{cell::UnsafeCell, ffi::c_void, ptr::NonNull};
 
 use libc::{c_char, c_double, size_t};
 use thread_lock::call_check;
