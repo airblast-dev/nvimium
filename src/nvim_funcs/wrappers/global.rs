@@ -2,7 +2,7 @@ use crate::{
     macros::tri::{tri_ez, tri_nc, tri_ret},
     nvim_funcs::c_funcs::global::{self, nvim_chan_send},
     nvim_types::{
-        Arena, CALLBACK_ARENA,
+        Arena, call_with_arena,
         returns::{get_hl::HighlightGroups, get_keymap::Keymaps},
     },
 };
@@ -41,40 +41,43 @@ pub fn chan_send<S: AsThinString>(chan: Channel, bytes: S) -> Result<(), Error> 
 
 pub fn create_buf(listed: Boolean, scratch: Boolean) -> Result<Buffer, Error> {
     call_check();
-    tri_nc! {
-        err;
-        unsafe { global::nvim_create_buf(listed, scratch, &mut err) };
+    unsafe {
+        tri_nc! {
+            err;
+            global::nvim_create_buf(listed, scratch, &mut err);
+        }
     }
 }
 
 pub fn del_current_line() -> Result<(), Error> {
     call_check();
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ez! {
-            err;
-            unsafe {global::nvim_del_current_line(arena, &mut err) };
-        };
-
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ez! {
+                err;
+                global::nvim_del_current_line(arena, &mut err);
+            }
+        })
+    }
 }
 
 pub fn del_keymap<S: AsThinString>(map_mode: KeyMapMode, lhs: S) -> Result<(), Error> {
     call_check();
-    tri_ez! {
-        err;
-        unsafe { global::nvim_del_keymap(Channel::LUA_INTERNAL_CALL, map_mode, lhs.as_thinstr(), &mut err) };
+    unsafe {
+        tri_ez! {
+            err;
+            global::nvim_del_keymap(Channel::LUA_INTERNAL_CALL, map_mode, lhs.as_thinstr(), &mut err);
+        }
     }
 }
 
 pub fn del_mark<S: AsThinString>(name: S) -> Result<Boolean, Error> {
     call_check();
-    tri_nc! {
-        err;
-        unsafe {
-            global::nvim_del_mark(name.as_thinstr(), &mut err)
-        };
+    unsafe {
+        tri_nc! {
+            err;
+            global::nvim_del_mark(name.as_thinstr(), &mut err);
+        }
     }
 }
 
@@ -121,16 +124,16 @@ pub fn eval_statusline<'a, S: AsThinString>(
     opts: &EvalStatusLineOpts<'a>,
 ) -> Result<EvalStatusLine, Error> {
     call_check();
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { global::nvim_eval_statusline(s.as_thinstr(), opts, arena, &mut err) };
-            EvalStatusLine::from_c_func_ret;
-        };
 
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                global::nvim_eval_statusline(s.as_thinstr(), opts, arena, &mut err);
+                EvalStatusLine::from_c_func_ret;
+            }
+        })
+    }
 }
 
 /// Execute a lua script
@@ -152,16 +155,16 @@ pub fn eval_statusline<'a, S: AsThinString>(
 /// This function is mainly useful when writing tests.
 pub fn exec_lua<S: AsThinString>(code: S, args: &Array) -> Result<Object, Error> {
     call_check();
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { global::nvim_exec_lua(code.as_thinstr(), args.into(), arena, &mut err) };
-            Object::clone;
-        };
 
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                global::nvim_exec_lua(code.as_thinstr(), args.into(), arena, &mut err);
+                Object::clone;
+            }
+        })
+    }
 }
 
 pub fn feedkeys<S: AsThinString>(keys: S, mode: &FeedKeysMode, escape_ks: Boolean) {
@@ -174,16 +177,15 @@ pub fn feedkeys<S: AsThinString>(keys: S, mode: &FeedKeysMode, escape_ks: Boolea
 pub fn get_chan_info(channel_id: Channel, chan: Integer) -> Result<ChannelInfo, Error> {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { global::nvim_get_chan_info(channel_id, chan, arena, &mut err) };
-            ChannelInfo::from_c_func_ret;
-        };
-
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                global::nvim_get_chan_info(channel_id, chan, arena, &mut err);
+                ChannelInfo::from_c_func_ret;
+            }
+        })
+    }
 }
 
 pub fn get_color_by_name<S: AsThinString>(name: S) -> Option<Integer> {
@@ -203,12 +205,12 @@ pub fn get_color_map() -> ColorMap {
         #[inline(never)]
         fn once() {}
         once();
-        let mut color_dict = CALLBACK_ARENA.with_borrow_mut(|arena| unsafe {
-            let ret = global::nvim_get_color_map(arena);
-            arena.reset_pos();
-            ret
-        });
-        ColorMap::from_c_func_ret(color_dict.deref_mut())
+        unsafe {
+            call_with_arena(|arena| {
+                let mut cd = global::nvim_get_color_map(arena);
+                ColorMap::from_c_func_ret(cd.deref_mut())
+            })
+        }
     } else {
         ColorMap::initialized()
     }
@@ -216,16 +218,15 @@ pub fn get_color_map() -> ColorMap {
 
 pub fn get_context(opts: &ContextOpts) -> Result<Context, Error> {
     call_check();
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { global::nvim_get_context(opts, arena, &mut err) };
-            Context::from_c_func_ret;
-        };
-
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                global::nvim_get_context(opts, arena, &mut err);
+                Context::from_c_func_ret;
+            }
+        })
+    }
 }
 
 pub fn get_current_buf() -> Buffer {
@@ -236,16 +237,15 @@ pub fn get_current_buf() -> Buffer {
 pub fn get_current_line() -> Result<OwnedThinString, Error> {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { global::nvim_get_current_line(arena, &mut err) };
-            (|l: &OwnedThinString| OwnedThinString::from(l.as_thinstr()) );
-        };
-
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                global::nvim_get_current_line(arena, &mut err);
+                (|l: &OwnedThinString| OwnedThinString::from(l.as_thinstr()) );
+            }
+        })
+    }
 }
 
 pub fn get_current_tabpage() -> TabPage {
@@ -261,16 +261,15 @@ pub fn get_current_win() -> Window {
 pub fn get_hl<'a>(ns: NameSpace, opts: &GetHlOpts<'a>) -> Result<HighlightGroups, Error> {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { global::nvim_get_hl(ns, opts, arena, &mut err) };
-            HighlightGroups::from_c_func_ret;
-        };
-
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                global::nvim_get_hl(ns, opts, arena, &mut err);
+                HighlightGroups::from_c_func_ret;
+            }
+        })
+    }
 }
 
 pub fn get_hl_id_by_name<S: AsThinString>(name: S) -> Integer {
@@ -280,20 +279,23 @@ pub fn get_hl_id_by_name<S: AsThinString>(name: S) -> Integer {
 
 pub fn get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpace, Error> {
     call_check();
-    tri_nc! {
-        err;
-        unsafe { global::nvim_get_hl_ns(opts, &mut err) };
+    unsafe {
+        tri_nc! {
+            err;
+            global::nvim_get_hl_ns(opts, &mut err);
+        }
     }
 }
 
 pub fn get_keymap(mode: KeyMapMode) -> Keymaps {
     call_check();
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let mut arr = unsafe { global::nvim_get_keymap(mode, arena) };
-        let ret = Keymaps::from_c_func_ret(&mut arr);
-        arena.reset_pos();
-        ret
-    })
+
+    unsafe {
+        call_with_arena(|arena| {
+            let mut arr = global::nvim_get_keymap(mode, arena);
+            Keymaps::from_c_func_ret(&mut arr)
+        })
+    }
 }
 
 pub fn get_mark<S: AsThinString>(name: S) -> Result<Array, Error> {
@@ -313,82 +315,82 @@ pub fn get_mark<S: AsThinString>(name: S) -> Result<Array, Error> {
 pub fn get_mode() -> Mode {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let mut dict = unsafe { global::nvim_get_mode(arena) };
-        let ret = Mode::from_c_func_ret(&mut dict);
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            let mut dict = global::nvim_get_mode(arena);
+            Mode::from_c_func_ret(&mut dict)
+        })
+    }
 }
 
 pub fn get_proc(pid: Integer) -> Result<Option<Dict>, Error> {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { global::nvim_get_proc(pid, arena, &mut err) };
-            (|d: &mut Object| d.clone().into_dict());
-        };
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                global::nvim_get_proc(pid, arena, &mut err);
+                (|d: &mut Object| d.clone().into_dict());
+            }
+        })
+    }
 }
 
 pub fn get_proc_children(pid: Integer) -> Result<Array, Error> {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { global::nvim_get_proc_children(pid, arena, &mut err) };
-            Array::clone;
-        };
-
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                global::nvim_get_proc_children(pid, arena, &mut err);
+                Array::clone;
+            }
+        })
+    }
 }
 
 pub fn get_runtime_file<S: AsThinString>(name: S, all: Boolean) -> Result<Array, Error> {
     call_check();
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { global::nvim_get_runtime_file(name.as_thinstr(), all, arena, &mut err) };
-            Array::clone;
-        };
-        arena.reset_pos();
-        ret
-    })
+
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                global::nvim_get_runtime_file(name.as_thinstr(), all, arena, &mut err);
+                Array::clone;
+            }
+        })
+    }
 }
 
 pub fn get_var<S: AsThinString>(name: S) -> Result<Object, Error> {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { global::nvim_get_var(name.as_thinstr(), arena, &mut err) };
-            Object::clone;
-        };
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                global::nvim_get_var(name.as_thinstr(), arena, &mut err);
+                Object::clone;
+            }
+        })
+    }
 }
 
 pub fn get_vvar<S: AsThinString>(name: S) -> Result<Object, Error> {
     call_check();
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { global::nvim_get_vvar(name.as_thinstr(), arena, &mut err) };
-            Object::clone;
-        };
 
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                global::nvim_get_vvar(name.as_thinstr(), arena, &mut err);
+                Object::clone;
+            }
+        })
+    }
 }
 
 pub fn input<S: AsThinString>(keys: S) -> Integer {
@@ -469,30 +471,32 @@ fn load_context(ctx: &Dict) -> Result<Object, Error> {
 
 pub fn open_term(buf: Buffer, opts: &mut OpenTermOpts) -> Result<Channel, Error> {
     call_check();
-    tri_nc! {
-        err;
-        unsafe { global::nvim_open_term(buf, opts, &mut err) };
+    unsafe {
+        tri_nc! {
+            err;
+            global::nvim_open_term(buf, opts, &mut err);
+        }
     }
 }
 
 pub fn paste<S: AsThinString>(src: S, crlf: Boolean, phase: PastePhase) -> Result<Boolean, Error> {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        tri_nc! {
-            err;
-            unsafe {
-                global::nvim_paste(
-                    Channel::LUA_INTERNAL_CALL,
-                    src.as_thinstr(),
-                    crlf,
-                    phase,
-                    arena,
-                    &mut err
-                )
-            };
-        }
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_nc! {
+                err;
+                    global::nvim_paste(
+                        Channel::LUA_INTERNAL_CALL,
+                        src.as_thinstr(),
+                        crlf,
+                        phase,
+                        arena,
+                        &mut err
+                    );
+            }
+        })
+    }
 }
 
 pub fn put<S: AsThinString>(
@@ -502,14 +506,15 @@ pub fn put<S: AsThinString>(
     follow: Boolean,
 ) -> Result<(), Error> {
     call_check();
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        tri_ez! {
-            err;
-            unsafe {
-                global::nvim_put(arr.into(), r#type.as_thinstr(), after, follow, arena, &mut err)
-            };
-        }
-    })
+
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ez! {
+                err;
+                    global::nvim_put(arr.into(), r#type.as_thinstr(), after, follow, arena, &mut err);
+            }
+        })
+    }
 }
 
 pub fn replace_termcodes<S: AsThinString>(
@@ -553,14 +558,15 @@ pub fn set_current_dir<S: AsThinString>(dir: S) -> Result<(), Error> {
 
 pub fn set_current_line<S: AsThinString>(line: S) -> Result<(), Error> {
     call_check();
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ez! {
-            err;
-            unsafe { global::nvim_set_current_line(line.as_thinstr(), arena, &mut err) };
-        };
-        arena.reset_pos();
-        ret
-    })
+
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ez! {
+                err;
+                global::nvim_set_current_line(line.as_thinstr(), arena, &mut err);
+            }
+        })
+    }
 }
 
 pub fn set_current_tabpage(page: TabPage) -> Result<(), Error> {
@@ -643,9 +649,11 @@ pub fn set_vvar<S: AsThinString>(s: S, obj: &Object) -> Result<(), Error> {
 
 pub fn strwidth<S: AsThinString>(s: S) -> Result<Integer, Error> {
     call_check();
-    tri_nc! {
-        err;
-        unsafe { global::nvim_strwidth(s.as_thinstr(), &mut err) };
+    unsafe {
+        tri_nc! {
+            err;
+            global::nvim_strwidth(s.as_thinstr(), &mut err);
+        }
     }
 }
 

@@ -17,6 +17,7 @@ use thread_lock::call_check;
 // the value at cur_blk is always a pointer to the previous block of memory or null
 // a previous block is(should) only (be) present where an allocation exceeds the 4096 byte default capacity of an arena
 // if the allocation did fit in 4096 bytes, the first value is a null pointer
+// TODO: allow for recursive calls and nestedness tracking
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub struct Arena {
@@ -26,17 +27,6 @@ pub struct Arena {
     pub size: size_t,
 }
 
-thread_local! {
-    /// An [`Arena`] struct that is reused between neovim calls
-    ///
-    /// Acquiring mutable access to the arena and calling a neovim function in the scope of mutable
-    /// access will cause a panic. Instead mutable access to the callback arena and neovim calls should
-    /// be done in different scopes to avoid a panic.
-    ///
-    /// Even if some functions may not use this arena, the library assumes that all neovim functions can acquire mutable access
-    /// and any change making a neovim function to make use of the arena is not considered a breaking.
-    pub static CALLBACK_ARENA: RefCell<Arena> = const { RefCell::new(Arena::EMPTY) };
-}
 const _: () = assert!(size_of::<Arena>() == size_of::<*mut c_char>() + size_of::<size_t>() * 2);
 
 impl Arena {
@@ -61,38 +51,6 @@ impl Arena {
     // is in
     pub(crate) fn reset_pos(&mut self) {
         self.pos = Self::MAX_HEAD_SIZE;
-    }
-
-    /// Get a view of the initialized portion of the arena as a slice of bytes
-    ///
-    /// Returns [`None`] if no block has been acquired or the position of our block is less than a
-    /// [`size_t`].
-    pub fn as_bytes(&self) -> Option<&[u8]> {
-        self.cur_blk.and_then(|ptr| unsafe {
-            if self.pos >= Self::MAX_HEAD_SIZE {
-                let start = ptr.add(Self::MAX_HEAD_SIZE);
-                Some(std::slice::from_raw_parts(
-                    start.as_ptr() as *const u8,
-                    self.pos - Self::MAX_HEAD_SIZE,
-                ))
-            } else {
-                None
-            }
-        })
-    }
-
-    pub fn spare_capacity(&mut self) -> &mut [MaybeUninit<u8>] {
-        unsafe {
-            self.cur_blk
-                .map(|blk| {
-                    NonNull::slice_from_raw_parts(
-                        blk.add(self.pos).cast::<MaybeUninit<u8>>(),
-                        self.size.saturating_sub(self.pos),
-                    )
-                    .as_mut()
-                })
-                .unwrap_or(&mut [])
-        }
     }
 }
 
@@ -136,6 +94,42 @@ const fn arena_align_offset(off: u64) -> size_t {
     // worst case we unnecesarily use the size of a pointer
     (off as usize + (ARENA_ALIGN - 1)) & !(ARENA_ALIGN - 1)
 }
+
+pub(crate) struct TrackedArena {
+    pub(crate) is_nested: bool,
+    arena: Arena,
+}
+impl TrackedArena {
+    /// # Safety
+    ///
+    /// Mutates a static mut by taking a mutable reference to it
+    /// This call should be used to discard the arena on the top level call. This means that
+    /// there cannot be other mutable references present at the point this is called.
+    pub(crate) unsafe fn reset_arena(&mut self) {
+        self.arena = Arena::EMPTY;
+    }
+
+    pub(crate) unsafe fn reset_pos(ta: *mut Self) {
+        if !unsafe { (&raw const (*ta).is_nested).read() } {
+            // SAFETY: no other mutable reference exists and ta is always a pointer to a static
+            unsafe {
+                ta.as_mut().unwrap_unchecked().arena.reset_pos();
+            }
+        };
+    }
+}
+
+pub(crate) unsafe fn call_with_arena<R, F: FnOnce(*mut Arena) -> R>(f: F) -> R {
+    let arena = unsafe { &raw mut TRACKED_ARENA.arena };
+    let ret = f(arena);
+    unsafe { TrackedArena::reset_pos(&raw mut TRACKED_ARENA) };
+    ret
+}
+
+pub(crate) static mut TRACKED_ARENA: TrackedArena = TrackedArena {
+    is_nested: false,
+    arena: Arena::EMPTY,
+};
 
 unsafe extern "C" {
     pub(crate) fn arena_mem_free(arena_mem: ArenaMem);

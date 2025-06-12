@@ -8,8 +8,8 @@ use crate::{
         nvim_buf_get_name, nvim_buf_get_offset, nvim_buf_get_text, nvim_buf_get_var,
     },
     nvim_types::{
-        Array, AsThinString, Boolean, Buffer, CALLBACK_ARENA, Channel, Error, Integer, Object,
-        OwnedThinString,
+        Array, AsThinString, Boolean, Buffer, Channel, Error, Integer, Object, OwnedThinString,
+        call_with_arena,
         func_types::keymap_mode::KeyMapMode,
         iter::ThIter,
         lua::{Function, NvFn},
@@ -26,9 +26,11 @@ pub fn buf_attach(
 ) -> Result<Boolean, Error> {
     call_check();
 
-    tri_nc! {
-        err;
-        unsafe { nvim_buf_attach(Channel::LUA_INTERNAL_CALL, buf, send_buffer, opts, &raw mut err) };
+    unsafe {
+        tri_nc! {
+            err;
+            nvim_buf_attach(Channel::LUA_INTERNAL_CALL, buf, send_buffer, opts, &raw mut err);
+        }
     }
 }
 
@@ -42,18 +44,22 @@ pub fn buf_call<
 ) -> Result<Object, Error> {
     call_check();
 
-    tri_nc! {
-        err;
-        unsafe { nvim_buf_call(buf, Function::wrap(f).into_luaref(), &raw mut err) };
+    unsafe {
+        tri_nc! {
+            err;
+            nvim_buf_call(buf, Function::wrap(f).into_luaref(), &raw mut err);
+        }
     }
 }
 
 pub fn buf_del_mark<TH: AsThinString>(buf: Buffer, name: TH) -> Result<Boolean, Error> {
     call_check();
 
-    tri_nc! {
-        err;
-        unsafe { nvim_buf_del_mark(buf, name.as_thinstr(), &raw mut err) };
+    unsafe {
+        tri_nc! {
+            err;
+            nvim_buf_del_mark(buf, name.as_thinstr(), &raw mut err);
+        }
     }
 }
 
@@ -78,26 +84,26 @@ pub fn buf_delete(buf: Buffer, opts: &mut BufDeleteOpts) -> Result<(), Error> {
 pub fn buf_get_changedtick(buf: Buffer) -> Result<Integer, Error> {
     call_check();
 
-    tri_nc! {
-        err;
-        unsafe { nvim_buf_get_changedtick(buf, &raw mut err) };
+    unsafe {
+        tri_nc! {
+            err;
+            nvim_buf_get_changedtick(buf, &raw mut err);
+        }
     }
 }
 
 pub fn buf_get_keymap(buf: Buffer, mode: KeyMapMode) -> Result<Keymaps, Error> {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { nvim_buf_get_keymap(buf, mode, arena, &raw mut err) };
-            Keymaps::from_c_func_ret;
-        };
-
-        arena.reset_pos();
-
-        ret
-    })
+    unsafe {
+        call_with_arena(move |arena| {
+            tri_ret! {
+                err;
+                nvim_buf_get_keymap(buf, mode, arena, &raw mut err);
+                Keymaps::from_c_func_ret;
+            }
+        })
+    }
 }
 
 /// Get's lines of a buffer and feeds it so the provided function
@@ -115,37 +121,34 @@ pub fn buf_get_lines<R, F: for<'a> FnMut(ThIter<'a>) -> R>(
 ) -> Result<R, Error> {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { nvim_buf_get_lines(Channel::LUA_INTERNAL_CALL, buf, start, end, strict_indexing, arena, core::ptr::null_mut(), &raw mut err) };
-            (|arr: &Array| {
-                (consumer)(ThIter::new(arr.as_slice()))
-            });
-        };
-
-        arena.reset_pos();
-
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                nvim_buf_get_lines(Channel::LUA_INTERNAL_CALL, buf, start, end, strict_indexing, arena, core::ptr::null_mut(), &raw mut err);
+                (|arr: &Array| {
+                    (consumer)(ThIter::new(arr.as_slice()))
+                });
+            }
+        })
+    }
 }
 
 pub fn buf_get_mark<TH: AsThinString>(buf: Buffer, name: TH) -> Result<(Integer, Integer), Error> {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { nvim_buf_get_mark(buf, name.as_thinstr(), arena, &raw mut err) };
-            (|arr: &Array| {
-                let pos = arr.as_slice();
-                (pos[0].as_int().unwrap(), pos[1].as_int().unwrap())
-            });
-        };
-
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                nvim_buf_get_mark(buf, name.as_thinstr(), arena, &raw mut err);
+                (|arr: &Array| {
+                    let pos = arr.as_slice();
+                    (pos[0].as_int().unwrap(), pos[1].as_int().unwrap())
+                });
+            }
+        })
+    }
 }
 
 pub fn buf_get_name(buf: Buffer) -> Result<OwnedThinString, Error> {
@@ -161,9 +164,11 @@ pub fn buf_get_name(buf: Buffer) -> Result<OwnedThinString, Error> {
 pub fn buf_get_offset(buf: Buffer, index: Integer) -> Result<Integer, Error> {
     call_check();
 
-    tri_nc! {
-        err;
-        unsafe { nvim_buf_get_offset(buf, index, &raw mut err) };
+    unsafe {
+        tri_nc! {
+            err;
+            nvim_buf_get_offset(buf, index, &raw mut err);
+        }
     }
 }
 
@@ -184,30 +189,27 @@ pub fn buf_get_text<R, F: for<'a> FnMut(ThIter<'a>) -> R>(
 ) -> Result<R, Error> {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { nvim_buf_get_text(Channel::LUA_INTERNAL_CALL, buf, start_row, start_col, end_row, end_col, opts, arena, core::ptr::null_mut(), &raw mut err) };
-            (|arr: &Array| (consumer)(ThIter::new(arr.as_slice())));
-        };
-
-        arena.reset_pos();
-
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                nvim_buf_get_text(Channel::LUA_INTERNAL_CALL, buf, start_row, start_col, end_row, end_col, opts, arena, core::ptr::null_mut(), &raw mut err);
+                (|arr: &Array| (consumer)(ThIter::new(arr.as_slice())));
+            }
+        })
+    }
 }
 
 pub fn buf_get_var<TH: AsThinString>(buf: Buffer, name: TH) -> Result<Object, Error> {
     call_check();
 
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        let ret = tri_ret! {
-            err;
-            unsafe { nvim_buf_get_var(buf, name.as_thinstr(), arena, &raw mut err) };
-            Object::clone;
-        };
-
-        arena.reset_pos();
-        ret
-    })
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ret! {
+                err;
+                nvim_buf_get_var(buf, name.as_thinstr(), arena, &raw mut err);
+                Object::clone;
+            }
+        })
+    }
 }

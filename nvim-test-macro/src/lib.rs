@@ -53,7 +53,7 @@ pub fn nvim_test(
                 #sp_quote
                 let _: fn() -> () = #orig_ident;
                 #orig_ident();
-                nvimium::nvim_types::arena::CALLBACK_ARENA.with_borrow_mut(|arena| *arena = nvimium::nvim_types::arena::Arena::EMPTY);
+                // TODO: free arena
                 #exit_call;
             }, ()) }
             return 0;

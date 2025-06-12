@@ -9,7 +9,7 @@ use mlua_sys::{
 use crate::{
     nvim_funcs::global::echo,
     nvim_types::{
-        Arena, AsThinString, Boolean, CALLBACK_ARENA, NvString, ThinString, func_types::echo::Echo,
+        AsThinString, Boolean, NvString, TRACKED_ARENA, ThinString, func_types::echo::Echo,
         opts::echo::EchoOpts,
     },
     plugin::IntoLua,
@@ -136,13 +136,14 @@ pub(crate) unsafe fn get_table_int_val(
 }
 
 pub(crate) unsafe fn cb_ret_handle_arena(was_active: bool) {
-    CALLBACK_ARENA.with_borrow_mut(|arena| {
-        if was_active {
-            // the arena may be used again, just reset its position
-            arena.reset_pos();
-        } else {
-            // this is the highest level call so reset the arena
-            *arena = Arena::EMPTY;
-        }
-    })
+    if !was_active {
+        // if was active is false this is the top level call, no mutable references can exist.
+        #[allow(static_mut_refs)]
+        unsafe { TRACKED_ARENA.reset_arena() };
+    }
+    unsafe { (&raw mut TRACKED_ARENA.is_nested).write(was_active) };
+}
+
+pub(crate) unsafe fn cb_entry_set_arena_flag(was_active: bool) {
+    unsafe { (&raw mut TRACKED_ARENA.is_nested).write(was_active) };
 }

@@ -135,17 +135,38 @@ pub unsafe fn scoped<F: Fn(A) -> R, A, R>(f: F, arg: A) -> R {
     }
 }
 
-/// Calls the provided function same way as [`scoped`] but restores access if it already has
+/// Calls the provided function same way as [`scoped`] but keeps access if it already has
 /// access.
 ///
 /// Only relevant when a callback indirectly calls another callback such as a user command.
+///
+/// # In Arena's
+///
+/// In the context of an arena this allows deallocation to be performed on the top level function
+/// and provide access to the arena when performing a direct or indirect call to other functions in the
+/// library.
+///
+/// Imagine we have a callback that runs a user command previously defined in this library.
+/// The control flow would be something like: top_callback -> neovim -> user_command_callback
+/// This makes it very difficult to manage our arena as we have no way to know which function is
+/// the `top_callback` described above at runtime.
+///
+/// To solve this the function checks if we already had access and gives access and retains it if
+/// we already had access.
+/// `cleanup` is then provided a boolean signifiying if access was already present when this
+/// function was called.
+///
+/// For arena's this means we can do the following even we are calling completely disjoint callbacks:
+/// - Know when to return the memory block.
+/// - Reuse our arena without touching neovim statics.
 ///
 /// # Safety
 ///
 /// Same as [`scoped`] but does not correct an incorrect state if it access was not revoked on
 /// return.
-pub unsafe fn scoped_callback<F: Fn(A) -> R, A, R>(f: F, arg: A, cleanup: unsafe fn(bool)) -> R {
+pub unsafe fn scoped_callback<F: Fn(A) -> R, A, R>(f: F, arg: A, entry: unsafe fn(bool), cleanup: unsafe fn(bool)) -> R {
     let can_call = can_call();
+    unsafe { entry(can_call) };
     let th_lock = ManuallyDrop::new(unsafe { unlock() });
     let ret = catch_unwind(AssertUnwindSafe(|| f(arg)));
     unsafe { cleanup(can_call) };

@@ -19,7 +19,7 @@ use thread_lock::init_lua_ptr;
 
 use crate::nvim_types::{
     NvString,
-    lua::utils::{cb_ret_handle_arena, handle_callback_err_ret},
+    lua::utils::{cb_entry_set_arena_flag, cb_ret_handle_arena, handle_callback_err_ret},
 };
 
 use super::core::FromLuaMany;
@@ -123,7 +123,7 @@ pub fn register<E: Error, F: 'static + Fn(A) -> Result<R, E>, A: FromLuaMany, R>
                 (ud as *mut Box<dyn Fn(*mut lua_State) -> c_int>)
                     .as_ref()
                     .expect("registered closure's userdata pointer is null");
-            thread_lock::scoped_callback(cb, l, cb_ret_handle_arena)
+            thread_lock::scoped_callback(cb, l, cb_entry_set_arena_flag, cb_ret_handle_arena)
         }
     }
     unsafe {

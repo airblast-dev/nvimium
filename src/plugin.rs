@@ -91,10 +91,8 @@ macro_rules! plugin {
                                 );
                             }
                         };
-                        nvimium::nvim_types::arena::CALLBACK_ARENA.with_borrow_mut(|arena| {
-                            *arena = nvimium::nvim_types::arena::Arena::EMPTY
-                        });
                     },
+                    // TODO: drop arena
                     (),
                 );
             }

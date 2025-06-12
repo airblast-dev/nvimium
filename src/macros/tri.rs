@@ -39,6 +39,7 @@ macro_rules! tri_ret {
         if $err.has_errored() {
             Err($err)
         } else {
+            #[allow(unused_unsafe)]
             Ok($conv(unsafe { result.assume_init_mut() }))
         }
     }};
@@ -55,7 +56,7 @@ macro_rules! tri_nc {
         if $err.has_errored() {
             Err($err)
         } else {
-            Ok(unsafe { result.assume_init() })
+            Ok(result.assume_init())
         }
     }};
 }

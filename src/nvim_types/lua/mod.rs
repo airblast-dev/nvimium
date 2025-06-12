@@ -16,7 +16,6 @@
 // as all use cases have a fix set of arguments which we can handle internally
 mod box_fn;
 pub mod core;
-mod fn_ptr;
 pub(crate) mod utils;
 
 // used from a plugin! macro in user crate
@@ -45,13 +44,6 @@ pub(crate) type LuaInteger = i64;
 pub struct Function(LuaRef);
 
 impl Function {
-    pub(crate) fn from_fn_ptr<E: Error, A: FromLuaMany, R: IntoLua>(
-        f: fn(A) -> Result<R, E>,
-    ) -> Self {
-        let mut l = get_lua_ptr();
-        Self(unsafe { LuaRef::new(fn_ptr::register(l.as_ptr(), f)) })
-    }
-
     pub(crate) fn from_box_fn<
         E: Error,
         F: 'static + Fn(A) -> Result<R, E>,
@@ -81,23 +73,6 @@ impl Function {
         f: F,
     ) -> Self {
         Self::from_box_fn(f)
-    }
-
-    /// Wraps the provided function pointer and passes it to Lua
-    ///
-    /// [`Function::wrap_ptr`] will pass the function pointer to Lua and return a [`Function`]
-    /// containing the Lua reference.
-    ///
-    /// Compared to [`Function::wrap`] this is a better performing solution due to the following
-    /// reasons:
-    /// - No allocation when passing the function
-    /// - A single indirection from Lua to our Rust function
-    /// - More efficient drop handling in Lua (only really matters if its passed and destroyed often)
-    /// - No dynamic dispatch
-    pub fn wrap_ptr<A: 'static + FromLuaMany, R: 'static + IntoLua, E: 'static + Error>(
-        f: fn(A) -> Result<R, E>,
-    ) -> Self {
-        Self::from_fn_ptr(f)
     }
 }
 
