@@ -1,12 +1,10 @@
-use std::error::Error;
-
 use nvimium::{
     nvim_funcs::global::echo,
-    nvim_types::{func_types::echo::Echo, opts::echo::EchoOpts},
+    nvim_types::{Error, func_types::echo::Echo, opts::echo::EchoOpts},
     plugin,
 };
 
-fn hello_world() -> Result<(), Box<dyn Error>> {
+fn hello_world() -> Result<(), Error> {
     let echo_msg = Echo::message(c"Example Error message!");
     let mut opts = EchoOpts::default();
     // once set neovim prints out the message with the error highlighting
