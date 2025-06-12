@@ -18,8 +18,8 @@ pub use nvim_test::test_pkg;
 ///
 /// # Example
 /// ```no_run
-/// use nvimium::plugin;
-/// fn my_entry_point() -> Result<(), &'static str> {
+/// use nvimium::{plugin, nvim_types::Error};
+/// fn my_entry_point() -> Result<(), Error> {
 ///     // call neovim functions
 ///     Ok(())
 /// }
