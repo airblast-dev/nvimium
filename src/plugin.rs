@@ -1,7 +1,11 @@
-#[doc(hidden)]
-pub use crate::nvim_types::IntoLua;
-#[doc(hidden)]
-pub use thread_lock::scoped;
+use std::error::Error;
+
+use crate::nvim_types::{
+    IntoLua, TRACKED_ARENA, ThinString,
+    lua::{set_callback_name, utils::handle_callback_err_ret},
+};
+use libc::c_int;
+use thread_lock::{init_main_lua_ptr, scoped};
 
 pub use mlua_sys::lua_State;
 #[doc(hidden)]
@@ -62,41 +66,44 @@ macro_rules! plugin {
         };
 
         #[unsafe(no_mangle)]
-        extern "C" fn $open(lstate: *mut $crate::plugin::lua_State) -> ::std::ffi::c_int {
-            unsafe { $crate::nvim_types::lua::set_callback_name($crate::gen_unique_ish_id!()) };
-            let func: fn() -> _ = $ident;
-            use ::core::result::Result;
-            unsafe {
-                $crate::thread_lock::init_main_lua_ptr(lstate);
-                $crate::thread_lock::scoped(
-                    |_| {
-                        let ret = $ident();
-
-                        match ret {
-                            Ok(k) => $crate::nvim_types::lua::IntoLua::push(&k, lstate),
-                            Err(err) => {
-                                use std::fmt::Write;
-                                use $crate::nvim_types::{NvString, ThinString};
-                                use $crate::{
-                                    nvim_funcs::global::echo,
-                                    nvim_types::{func_types::echo::Echo, opts::echo::EchoOpts},
-                                };
-                                let mut msg = <NvString as ::std::default::Default>::default();
-                                // TODO: add fallback messages
-                                let _ = ::std::write!(&mut msg, "Nvimium Error: {}", err);
-                                let _ = echo(
-                                    &Echo::message(msg),
-                                    true,
-                                    <EchoOpts as ::std::default::Default>::default().err(true),
-                                );
-                            }
-                        };
-                    },
-                    // TODO: drop arena
-                    (),
-                );
-            }
-            1
+        extern "C" fn $open(l: *mut $crate::plugin::lua_State) -> ::std::ffi::c_int {
+            unsafe { $crate::plugin::open_plugin(l, $crate::gen_unique_ish_id!(), $ident) }
         }
     };
+}
+
+/// Initialize statics and create a scope for the plugin entrypoint
+///
+/// # Safety
+///
+/// This should never be called outside of the plugin entrypoint. Changing initialization related
+/// values outside of the entrypoint will almost always result in a panic and may cause UB.
+#[doc(hidden)]
+#[inline]
+pub unsafe fn open_plugin<Ret: IntoLua, Err: Sized + Error, F: Fn() -> Result<Ret, Err>>(
+    l: *mut lua_State,
+    cb_name: ThinString<'static>,
+    open: F,
+) -> c_int {
+    unsafe {
+        set_callback_name(cb_name.as_ptr() as *mut _);
+        init_main_lua_ptr(l);
+        scoped(
+            |open| {
+                let ret = open();
+                // SAFETY: this is the entrypoint of our plugin, can never be called concurently
+                // another mutable reference cannot exist at this point
+                #[allow(static_mut_refs)]
+                TRACKED_ARENA.reset_arena();
+                match ret {
+                    Ok(ret) => ret.push(l),
+                    Err(err) => handle_callback_err_ret(l, &err as &dyn Error),
+                }
+            },
+            open,
+        );
+    }
+
+    // TODO: actually set ret vals
+    0
 }
