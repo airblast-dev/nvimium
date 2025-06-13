@@ -15,7 +15,7 @@ panics = { workspace = true }
 rand = { version = "0.9.1", features = ["small_rng"], default-features = false }
 
 [workspace.dependencies]
-mlua-sys = { version = "0.7.0", features = ["lua51"] }
+mlua-sys = { version = "0.8.0", features = ["lua51"] }
 libc = { version = "0.2.169", default-features = false }
 thread-lock = { path = "./thread-lock/" }
 panics = { path = "./panics" }
