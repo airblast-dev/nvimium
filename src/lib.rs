@@ -11,6 +11,9 @@ static GLOBAL_ALLOCATOR: NvAllocator = NvAllocator::new(true);
 
 #[cfg(feature = "testing")]
 pub use nvim_test_macro;
+#[doc(hidden)]
+#[cfg(feature = "testing")]
+pub mod test_macro_utils;
 #[cfg(all(test, not(miri)))]
 nvim_test::test_pkg!();
 pub mod plugin;

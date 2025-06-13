@@ -44,19 +44,9 @@ pub fn nvim_test(
         #[cfg_attr(not(test), unsafe(no_mangle))]
         #[allow(non_snake_case)]
         #[doc(hidden)]
-        pub extern "C" fn #cdylib_ident(state: *mut ()) -> ::std::ffi::c_int {
-            unsafe { nvimium::thread_lock::init_main_lua_ptr(state as _) };
-            unsafe { nvimium::thread_lock::scoped(|_: ()| {
-                let panic_out_th = nvimium::nvim_funcs::global::get_var(c"NVIMIUM_PANIC_LOG_FILE").unwrap().into_string().unwrap();
-                let panic_out_path = ::std::path::PathBuf::from(::std::string::String::from_utf8(panic_out_th.as_thinstr().as_slice().to_vec()).unwrap());
-                nvimium::nvim_test::set_test_panic_hook(panic_out_path);
-                #sp_quote
-                let _: fn() -> () = #orig_ident;
-                #orig_ident();
-                // TODO: free arena
-                #exit_call;
-            }, ()) }
-            return 0;
+        pub extern "C" fn #cdylib_ident(l: *mut ()) -> ::std::ffi::c_int {
+            #sp_quote
+            unsafe { nvimium::test_macro_utils::test_body(l as *mut _, #orig_ident, #exit_call) }
         }
     }
     .into()
@@ -99,14 +89,14 @@ mod stuff {
     pub fn get_exit_call(t: proc_macro::TokenStream) -> proc_macro::TokenStream {
         if t.is_empty() {
             quote! {
-                nvimium::nvim_funcs::vimscript::exec2(c":qall!", &Default::default()).unwrap()
+                (||{nvimium::nvim_funcs::vimscript::exec2(c":qall!", &Default::default()).unwrap(); })
             }
             .into()
         } else {
             let _: AttributeArgs = syn::parse_macro_input!(t as AttributeArgs);
             quote! {
                 #[allow(unused)]
-                (|| {})()
+                || {}
             }
             .into()
         }
