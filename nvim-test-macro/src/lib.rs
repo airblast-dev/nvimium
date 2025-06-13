@@ -34,6 +34,7 @@ pub fn nvim_test(
     let orig_ident = &func.sig.ident;
     let orig_attrs = core::mem::take(&mut func.attrs);
     let sp_quote = quote_spanned! {fs => #func};
+    // TODO: provide better ways to set attributes on test funcs
     quote! {
         #[cfg(test)]
         #( #orig_attrs )*
