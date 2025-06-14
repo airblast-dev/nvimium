@@ -126,6 +126,7 @@ pub fn buf_get_lines<R, F: for<'a> FnMut(ThIter<'a>) -> R>(
 ) -> Result<R, Error> {
     call_check();
 
+    // TODO: fix UB due to possible arena reset in user function
     unsafe {
         call_with_arena(|arena| {
             tri_ret! {
@@ -344,7 +345,7 @@ mod tests {
     use super::{buf_get_var, buf_set_var};
     use crate::{
         self as nvimium,
-        nvim_funcs::global::paste,
+        nvim_funcs::global::{create_buf, get_current_buf, paste, set_current_buf},
         nvim_types::{
             Boolean, Buffer, Error, Object,
             opts::{buf_attach::BufAttachOpts, paste::PastePhase},
@@ -381,6 +382,23 @@ mod tests {
 
         assert!(ON_BYTES_FLAG.load(Ordering::SeqCst));
         assert!(ON_LINES_FLAG.load(Ordering::SeqCst));
+    }
+
+    #[nvim_test::nvim_test]
+    fn buf_call() {
+        let buf1 = create_buf(true, false).unwrap();
+        let buf2 = create_buf(true, false).unwrap();
+        static BUF_CALL_CALLED: AtomicBool = AtomicBool::new(false);
+        set_current_buf(buf1).unwrap();
+        super::buf_call(buf2, move |_| {
+            assert_eq!(get_current_buf(), buf2);
+            BUF_CALL_CALLED.store(true, Ordering::SeqCst);
+            Ok::<(), Error>(())
+        })
+        .unwrap();
+
+        assert!(BUF_CALL_CALLED.load(Ordering::SeqCst));
+        assert_eq!(get_current_buf(), buf1);
     }
 
     // LATER
