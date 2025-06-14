@@ -336,3 +336,59 @@ pub fn buf_set_var<TH: AsThinString>(buf: Buffer, name: TH, val: &Object) -> Res
         }
     }
 }
+
+#[cfg(all(not(miri), feature = "testing"))]
+mod tests {
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    use super::{buf_get_var, buf_set_var};
+    use crate::{
+        self as nvimium,
+        nvim_funcs::global::paste,
+        nvim_types::{
+            Boolean, Buffer, Error, Object,
+            opts::{buf_attach::BufAttachOpts, paste::PastePhase},
+        },
+        th,
+    };
+
+    #[nvim_test::nvim_test]
+    fn buf_attach() {
+        // flags that we set when our callback is invoked
+        static ON_BYTES_FLAG: AtomicBool = AtomicBool::new(false);
+        static ON_LINES_FLAG: AtomicBool = AtomicBool::new(false);
+        super::buf_attach(
+            Buffer::new(0),
+            true,
+            BufAttachOpts::default()
+                .on_bytes(move |args| {
+                    assert_eq!(args.source, th!("bytes"));
+                    ON_BYTES_FLAG.store(true, Ordering::SeqCst);
+                    Ok::<Boolean, Error>(true)
+                })
+                .on_lines(move |args| {
+                    assert_eq!(args.source, th!("lines"));
+                    assert!(args.deleted_codeunits.is_some());
+                    assert!(args.deleted_codepoints.is_some());
+                    ON_LINES_FLAG.store(true, Ordering::SeqCst);
+                    Ok::<Boolean, Error>(true)
+                })
+                .utf_sizes(true),
+        )
+        .unwrap();
+
+        paste(c"SomeText", false, PastePhase::Single).unwrap();
+
+        assert!(ON_BYTES_FLAG.load(Ordering::SeqCst));
+        assert!(ON_LINES_FLAG.load(Ordering::SeqCst));
+    }
+
+    // LATER
+
+    #[nvim_test::nvim_test]
+    fn get_set_var() {
+        buf_set_var(Buffer::new(0), c"NvimiumEpicVar", &Object::Bool(true)).unwrap();
+        let var = buf_get_var(Buffer::new(0), c"NvimiumEpicVar").unwrap();
+        assert_eq!(var, Object::Bool(true));
+    }
+}
