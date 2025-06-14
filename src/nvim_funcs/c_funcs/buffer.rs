@@ -5,12 +5,11 @@ use mlua_sys::lua_State;
 use crate::nvim_types::{
     Arena, Array, Boolean, Buffer, Channel, Error, Integer, LuaRef, Object, OwnedThinString,
     ThinString,
-    array::StringArray,
     borrowed::Borrowed,
     func_types::keymap_mode::KeyMapMode,
     opts::{
-        buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_mark::GetMarkOpts,
-        get_text::GetTextOpts, set_keymap::SetKeymapOpts, set_mark::SetMarkOpts,
+        buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts,
+        set_keymap::SetKeymapOpts, set_mark::SetMarkOpts,
     },
 };
 
