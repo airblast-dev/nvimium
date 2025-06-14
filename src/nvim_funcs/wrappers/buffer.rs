@@ -7,6 +7,8 @@ use crate::{
         nvim_buf_get_changedtick, nvim_buf_get_keymap, nvim_buf_get_lines, nvim_buf_get_mark,
         nvim_buf_get_name, nvim_buf_get_offset, nvim_buf_get_text, nvim_buf_get_var,
         nvim_buf_is_loaded, nvim_buf_is_valid, nvim_buf_line_count, nvim_buf_set_keymap,
+        nvim_buf_set_lines, nvim_buf_set_mark, nvim_buf_set_name, nvim_buf_set_text,
+        nvim_buf_set_var,
     },
     nvim_types::{
         Array, AsThinString, Boolean, Buffer, Channel, Error, Integer, IntoLua, Object,
@@ -16,7 +18,7 @@ use crate::{
         lua::{Function, NvFn},
         opts::{
             buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts,
-            set_keymap::SetKeymapOpts,
+            set_keymap::SetKeymapOpts, set_mark::SetMarkOpts,
         },
         returns::get_keymap::Keymaps,
     },
@@ -253,6 +255,84 @@ pub fn buf_set_keymap<TH: AsThinString, TH2: AsThinString>(
         tri_ez! {
             err;
             nvim_buf_set_keymap(Channel::LUA_INTERNAL_CALL, buf, mode, lhs.as_thinstr(), rhs.as_thinstr(), opts, &raw mut err);
+        }
+    }
+}
+
+pub fn buf_set_lines(
+    buf: Buffer,
+    start: Integer,
+    end: Integer,
+    strict_indexing: Boolean,
+    replacement: &Array,
+) -> Result<(), Error> {
+    call_check();
+
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ez! {
+                err;
+                nvim_buf_set_lines(Channel::LUA_INTERNAL_CALL, buf, start, end, strict_indexing, replacement.into(), arena, &raw mut err);
+            }
+        })
+    }
+}
+
+pub fn buf_set_mark<TH: AsThinString>(
+    buf: Buffer,
+    name: TH,
+    line: Integer,
+    col: Integer,
+    opts: &mut SetMarkOpts,
+) -> Result<Boolean, Error> {
+    call_check();
+
+    unsafe {
+        tri_nc! {
+            err;
+            nvim_buf_set_mark(buf, name.as_thinstr(), line, col, opts, &raw mut err);
+        }
+    }
+}
+
+pub fn buf_set_name<TH: AsThinString>(buf: Buffer, name: TH) -> Result<(), Error> {
+    call_check();
+
+    unsafe {
+        tri_ez! {
+            err;
+            nvim_buf_set_name(buf, name.as_thinstr(), &raw mut err);
+        }
+    }
+}
+
+pub fn buf_set_text(
+    buf: Buffer,
+    start_row: Integer,
+    start_col: Integer,
+    end_row: Integer,
+    end_col: Integer,
+    replacement: &Array,
+) -> Result<(), Error> {
+    call_check();
+
+    unsafe {
+        call_with_arena(|arena| {
+            tri_ez! {
+                err;
+                nvim_buf_set_text(Channel::LUA_INTERNAL_CALL, buf, start_row, start_col, end_row, end_col, replacement.into(), arena, &raw mut err);
+            }
+        })
+    }
+}
+
+pub fn buf_set_var<TH: AsThinString>(buf: Buffer, name: TH, val: &Object) -> Result<(), Error> {
+    call_check();
+
+    unsafe {
+        tri_ez! {
+            err;
+            nvim_buf_set_var(buf, name.as_thinstr(), val.into(), &raw mut err);
         }
     }
 }

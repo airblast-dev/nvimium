@@ -5,10 +5,12 @@ use mlua_sys::lua_State;
 use crate::nvim_types::{
     Arena, Array, Boolean, Buffer, Channel, Error, Integer, LuaRef, Object, OwnedThinString,
     ThinString,
+    array::StringArray,
+    borrowed::Borrowed,
     func_types::keymap_mode::KeyMapMode,
     opts::{
-        buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts,
-        set_keymap::SetKeymapOpts,
+        buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_mark::GetMarkOpts,
+        get_text::GetTextOpts, set_keymap::SetKeymapOpts, set_mark::SetMarkOpts,
     },
 };
 
@@ -87,6 +89,43 @@ unsafe extern "C" {
         lhs: ThinString<'a>,
         rhs: ThinString<'a>,
         opts: *mut SetKeymapOpts,
+        err: *mut Error,
+    );
+    pub fn nvim_buf_set_lines<'a>(
+        chan: Channel,
+        buf: Buffer,
+        start: Integer,
+        end: Integer,
+        strict_indexing: Boolean,
+        replacement: Borrowed<'a, Array>,
+        arena: *mut Arena,
+        err: *mut Error,
+    );
+
+    pub fn nvim_buf_set_mark<'a>(
+        buf: Buffer,
+        name: ThinString<'a>,
+        line: Integer,
+        col: Integer,
+        opts: *mut SetMarkOpts,
+        err: *mut Error,
+    ) -> MaybeUninit<Boolean>;
+    pub fn nvim_buf_set_name<'a>(buf: Buffer, name: ThinString<'a>, err: *mut Error);
+    pub fn nvim_buf_set_text<'a>(
+        chan: Channel,
+        buf: Buffer,
+        start_row: Integer,
+        start_col: Integer,
+        end_row: Integer,
+        end_col: Integer,
+        replacement: Borrowed<'a, Array>,
+        arena: *mut Arena,
+        err: *mut Error,
+    );
+    pub fn nvim_buf_set_var<'a>(
+        buf: Buffer,
+        name: ThinString<'a>,
+        val: Borrowed<'a, Object>,
         err: *mut Error,
     );
 }
