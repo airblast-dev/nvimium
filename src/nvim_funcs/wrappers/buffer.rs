@@ -6,6 +6,7 @@ use crate::{
         nvim_buf_attach, nvim_buf_call, nvim_buf_del_mark, nvim_buf_del_var, nvim_buf_delete,
         nvim_buf_get_changedtick, nvim_buf_get_keymap, nvim_buf_get_lines, nvim_buf_get_mark,
         nvim_buf_get_name, nvim_buf_get_offset, nvim_buf_get_text, nvim_buf_get_var,
+        nvim_buf_is_loaded, nvim_buf_is_valid, nvim_buf_line_count, nvim_buf_set_keymap,
     },
     nvim_types::{
         Array, AsThinString, Boolean, Buffer, Channel, Error, Integer, IntoLua, Object,
@@ -13,7 +14,10 @@ use crate::{
         func_types::keymap_mode::KeyMapMode,
         iter::ThIter,
         lua::{Function, NvFn},
-        opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts},
+        opts::{
+            buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts,
+            set_keymap::SetKeymapOpts,
+        },
         returns::get_keymap::Keymaps,
     },
 };
@@ -210,5 +214,45 @@ pub fn buf_get_var<TH: AsThinString>(buf: Buffer, name: TH) -> Result<Object, Er
                 Object::clone;
             }
         })
+    }
+}
+
+pub fn buf_is_loaded(buf: Buffer) -> Boolean {
+    call_check();
+
+    unsafe { nvim_buf_is_loaded(buf) }
+}
+
+pub fn buf_is_valid(buf: Buffer) -> Boolean {
+    call_check();
+
+    unsafe { nvim_buf_is_valid(buf) }
+}
+
+pub fn buf_line_count(buf: Buffer) -> Result<Integer, Error> {
+    call_check();
+
+    unsafe {
+        tri_nc! {
+            err;
+            nvim_buf_line_count(buf, &raw mut err);
+        }
+    }
+}
+
+pub fn buf_set_keymap<TH: AsThinString, TH2: AsThinString>(
+    buf: Buffer,
+    mode: KeyMapMode,
+    lhs: TH,
+    rhs: TH2,
+    opts: &mut SetKeymapOpts,
+) -> Result<(), Error> {
+    call_check();
+
+    unsafe {
+        tri_ez! {
+            err;
+            nvim_buf_set_keymap(Channel::LUA_INTERNAL_CALL, buf, mode, lhs.as_thinstr(), rhs.as_thinstr(), opts, &raw mut err);
+        }
     }
 }

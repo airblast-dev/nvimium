@@ -6,7 +6,10 @@ use crate::nvim_types::{
     Arena, Array, Boolean, Buffer, Channel, Error, Integer, LuaRef, Object, OwnedThinString,
     ThinString,
     func_types::keymap_mode::KeyMapMode,
-    opts::{buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts},
+    opts::{
+        buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts,
+        set_keymap::SetKeymapOpts,
+    },
 };
 
 unsafe extern "C" {
@@ -74,4 +77,16 @@ unsafe extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
+    pub fn nvim_buf_is_loaded(buf: Buffer) -> Boolean;
+    pub fn nvim_buf_is_valid(buf: Buffer) -> Boolean;
+    pub fn nvim_buf_line_count(buf: Buffer, err: *mut Error) -> MaybeUninit<Integer>;
+    pub fn nvim_buf_set_keymap<'a>(
+        chan: Channel,
+        buf: Buffer,
+        mode: KeyMapMode,
+        lhs: ThinString<'a>,
+        rhs: ThinString<'a>,
+        opts: *mut SetKeymapOpts,
+        err: *mut Error,
+    );
 }
