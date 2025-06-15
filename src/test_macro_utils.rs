@@ -24,7 +24,7 @@ pub unsafe fn test_body(l: *mut lua_State, test_call: fn(), exit_call: fn()) -> 
                     test_out.as_thinstr().as_slice(),
                 ));
                 set_test_panic_hook(test_out.to_path_buf());
-                set_option_value(c"swapfile", Object::Bool(true), &mut OptionOpt::default())
+                set_option_value(c"swapfile", Object::Bool(false), &mut OptionOpt::default())
                     .unwrap();
                 test_call();
                 #[allow(static_mut_refs)]
