@@ -3,6 +3,8 @@ use std::{cell::UnsafeCell, ffi::c_void, ptr::NonNull};
 use libc::{c_char, c_double, size_t};
 use thread_lock::call_check;
 
+use crate::nvim_types::Boolean;
+
 /// A block of memory provided by neovim
 ///
 /// This does not take ownership of the block of memory but is only provided mutable access to said
@@ -115,10 +117,25 @@ impl TrackedArena {
 }
 
 pub(crate) unsafe fn call_with_arena<R, F: FnOnce(*mut Arena) -> R>(f: F) -> R {
-    let arena = unsafe { &raw mut TRACKED_ARENA.arena };
-    let ret = f(arena);
-    unsafe { TrackedArena::reset_pos(&raw mut TRACKED_ARENA) };
-    ret
+    unsafe {
+        let ret;
+        {
+
+            let _drop_lock = NestRestore((&raw mut TRACKED_ARENA.is_nested).read());
+            // in case of panics we ensure that
+            struct NestRestore(Boolean);
+            impl Drop for NestRestore {
+                fn drop(&mut self) {
+                    unsafe { (&raw mut TRACKED_ARENA.is_nested).write(self.0) };
+                }
+            }
+            (&raw mut TRACKED_ARENA.is_nested).write(true);
+            let arena = &raw mut TRACKED_ARENA.arena;
+            ret = f(arena);
+        }
+        TrackedArena::reset_pos(&raw mut TRACKED_ARENA);
+        ret
+    }
 }
 
 pub(crate) static mut TRACKED_ARENA: TrackedArena = TrackedArena {

@@ -126,7 +126,6 @@ pub fn buf_get_lines<R, F: for<'a> FnMut(ThIter<'a>) -> R>(
 ) -> Result<R, Error> {
     call_check();
 
-    // TODO: fix UB due to possible arena reset in user function
     unsafe {
         call_with_arena(|arena| {
             tri_ret! {
