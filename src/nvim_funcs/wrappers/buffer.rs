@@ -344,11 +344,14 @@ mod tests {
 
     use super::{buf_get_var, buf_set_var};
     use crate::{
-        self as nvimium,
-        nvim_funcs::global::{create_buf, get_current_buf, paste, set_current_buf},
+        self as nvimium, array,
+        nvim_funcs::{
+            buffer::{buf_set_lines, buf_set_text},
+            global::{create_buf, get_current_buf, paste, set_current_buf},
+        },
         nvim_types::{
             Boolean, Buffer, Error, Object,
-            opts::{buf_attach::BufAttachOpts, paste::PastePhase},
+            opts::{buf_attach::BufAttachOpts, paste::PastePhase, set_mark::SetMarkOpts},
         },
         th,
     };
@@ -399,6 +402,30 @@ mod tests {
 
         assert!(BUF_CALL_CALLED.load(Ordering::SeqCst));
         assert_eq!(get_current_buf(), buf1);
+    }
+
+    #[nvim_test::nvim_test]
+    fn buf_get_set_mark() {
+        paste(c"Hello\nBye\n3rdline", false, PastePhase::Single).unwrap();
+        super::buf_set_mark(Buffer::new(0), c"a", 2, 4, &mut SetMarkOpts::default()).unwrap();
+        let mark = super::buf_get_mark(Buffer::new(0), c"a").unwrap();
+        assert_eq!(mark, (2, 4));
+
+        // after adding two lines of text the mark should be moved two lines down
+        buf_set_lines(
+            Buffer::new(0),
+            0,
+            0,
+            true,
+            &array!["SomeText", "SomeOtherText"],
+        )
+        .unwrap();
+        let mark = super::buf_get_mark(Buffer::new(0), c"a").unwrap();
+        assert_eq!(mark, (4, 4));
+        buf_set_text(Buffer::new(0), 3, 1, 3, 1, &array!["Helloalskdjasldj"]).unwrap();
+
+        let mark = super::buf_get_mark(Buffer::new(0), c"a").unwrap();
+        assert_eq!(mark, (0, 4));
     }
 
     // LATER
