@@ -341,16 +341,18 @@ pub fn buf_set_var<TH: AsThinString>(buf: Buffer, name: TH, val: &Object) -> Res
 mod tests {
     use std::sync::atomic::{AtomicBool, Ordering};
 
-    use super::{buf_get_var, buf_set_var};
     use crate::{
         self as nvimium, array,
         nvim_funcs::{
-            buffer::{buf_set_lines, buf_set_text},
+            buffer::{buf_is_loaded, buf_is_valid, buf_set_lines, buf_set_text},
             global::{create_buf, get_current_buf, paste, set_current_buf},
         },
         nvim_types::{
             Boolean, Buffer, Error, Object,
-            opts::{buf_attach::BufAttachOpts, paste::PastePhase, set_mark::SetMarkOpts},
+            opts::{
+                buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, paste::PastePhase,
+                set_mark::SetMarkOpts,
+            },
         },
         th,
     };
@@ -436,12 +438,14 @@ mod tests {
         super::buf_del_var(Buffer::new(0), c"EpicVarName").unwrap();
     }
 
-    // LATER
-
     #[nvim_test::nvim_test]
-    fn get_set_var() {
-        buf_set_var(Buffer::new(0), c"NvimiumEpicVar", &Object::Bool(true)).unwrap();
-        let var = buf_get_var(Buffer::new(0), c"NvimiumEpicVar").unwrap();
-        assert_eq!(var, Object::Bool(true));
+    fn buf_delete_valid_loaded() {
+        let buf = create_buf(true, false).unwrap();
+        set_current_buf(buf).unwrap();
+        assert!(buf_is_valid(buf));
+        assert!(buf_is_loaded(buf));
+        super::buf_delete(buf, BufDeleteOpts::default().unload(true)).unwrap();
+        assert!(buf_is_valid(buf));
+        assert!(!buf_is_loaded(buf));
     }
 }
