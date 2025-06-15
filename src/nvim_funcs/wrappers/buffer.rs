@@ -428,6 +428,15 @@ mod tests {
         assert_eq!(mark, (0, 4));
     }
 
+    #[nvim_test::nvim_test]
+    fn buf_get_set_del_var() {
+        super::buf_get_var(Buffer::new(0), c"EpicVarName").unwrap_err();
+        super::buf_set_var(Buffer::new(0), c"EpicVarName", &Object::Integer(299)).unwrap();
+        let var = super::buf_get_var(Buffer::new(0), c"EpicVarName").unwrap();
+        assert_eq!(var, Object::Integer(299));
+        super::buf_del_var(Buffer::new(0), c"EpicVarName").unwrap();
+    }
+
     // LATER
 
     #[nvim_test::nvim_test]
