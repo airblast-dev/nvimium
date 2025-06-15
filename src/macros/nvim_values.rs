@@ -99,7 +99,7 @@ macro_rules! dict {
 macro_rules! array {
     ($($val:tt $(: $kind:tt)?),*) => {{
         use $crate::nvim_types::{Array, KVec};
-        let count = $crate::count_tts!($($key),*);
+        let count = $crate::count_tts!($($val),*);
         let mut kv = KVec::with_capacity(count);
         $(
             let object = $crate::to_value!($val $(: $kind)?);
