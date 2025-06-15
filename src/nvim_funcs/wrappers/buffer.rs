@@ -344,17 +344,19 @@ mod tests {
     use crate::{
         self as nvimium, array,
         nvim_funcs::{
-            buffer::{buf_is_loaded, buf_is_valid, buf_set_lines, buf_set_text},
+            buffer::{buf_is_loaded, buf_is_valid, buf_set_text},
             global::{create_buf, feedkeys, get_current_buf, paste, set_current_buf},
         },
         nvim_types::{
+            Boolean, Buffer, Error, NvString, Object, OwnedThinString,
             func_types::{
                 feedkeys::{FeedKeysMode, FeedKeysModeKind},
                 keymap_mode::KeyMapMode,
-            }, opts::{
-                buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, paste::PastePhase,
-                set_keymap::SetKeymapOpts, set_mark::SetMarkOpts,
-            }, Boolean, Buffer, Error, Object, OwnedThinString
+            },
+            opts::{
+                buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, get_text::GetTextOpts,
+                paste::PastePhase, set_keymap::SetKeymapOpts, set_mark::SetMarkOpts,
+            },
         },
         th,
     };
@@ -415,7 +417,7 @@ mod tests {
         assert_eq!(mark, (2, 4));
 
         // after adding two lines of text the mark should be moved two lines down
-        buf_set_lines(
+        super::buf_set_lines(
             Buffer::new(0),
             0,
             0,
@@ -471,8 +473,98 @@ mod tests {
 
         let km = super::buf_get_keymap(Buffer::new(0), KeyMapMode::INSERT).unwrap();
         assert_eq!(&km.maps[0].lhs, c"b");
-        assert_eq!(&km.maps[0].desc, &Some(OwnedThinString::from("Epic description")));
+        assert_eq!(
+            &km.maps[0].desc,
+            &Some(OwnedThinString::from("Epic description"))
+        );
         let mode = FeedKeysMode::from(&[FeedKeysModeKind::Typed]);
         feedkeys(c"ib", &mode, false);
+    }
+
+    #[nvim_test::nvim_test]
+    fn buf_line_count() {
+        let count = super::buf_line_count(Buffer::new(0)).unwrap();
+        assert_eq!(count, 1);
+        paste(c"a\nb\nc\nd\n", false, PastePhase::Single).unwrap();
+
+        let count = super::buf_line_count(Buffer::new(0)).unwrap();
+        assert_eq!(count, 5);
+    }
+
+    #[nvim_test::nvim_test]
+    fn buf_set_get_del_lines() {
+        super::buf_set_lines(
+            Buffer::new(0),
+            0,
+            0,
+            true,
+            &array!["a", "b", "c", "d", "e", "f"],
+        )
+        .unwrap();
+
+        super::buf_get_lines(
+            |lines| {
+                let mut s = NvString::default();
+                lines.for_each(|l| {
+                    s.push(l.as_slice());
+                    s.push("\n");
+                });
+
+                assert_eq!(s, "a\nb\nc\nd\ne\nf\n\n");
+            },
+            Buffer::new(0),
+            0,
+            -1,
+            true,
+        )
+        .unwrap();
+    }
+
+    #[nvim_test::nvim_test]
+    fn buf_get_set_name() {
+        let new_name = c"NvimiumEpicBuffer";
+        super::buf_set_name(Buffer::new(0), c"NvimiumEpicBuffer").unwrap();
+        let buf_name = super::buf_get_name(Buffer::new(0)).unwrap();
+        let buf_name = &buf_name.as_thinstr().as_slice()
+            [buf_name.as_thinstr().len() - new_name.count_bytes()..buf_name.as_thinstr().len()];
+        assert_eq!(buf_name, new_name.to_bytes());
+    }
+
+    #[nvim_test::nvim_test]
+    fn buf_get_offset() {
+        paste(c"Hello\nBye\nEpic", false, PastePhase::Single).unwrap();
+        let offset = super::buf_get_offset(Buffer::new(0), 2).unwrap();
+        assert_eq!(offset, 9);
+    }
+
+    #[nvim_test::nvim_test]
+    fn buf_get_set_text() {
+        super::buf_set_text(
+            Buffer::new(0),
+            0,
+            0,
+            0,
+            0,
+            &array!["Hello, Bye", "1231231", "7890f7sd9fysdhf"],
+        )
+        .unwrap();
+        super::buf_get_text(
+            |lines| {
+                let mut s = NvString::default();
+                for line in lines {
+                    s.push(line.as_slice());
+                    s.push("\n");
+                }
+
+                assert_eq!(s, "llo, Bye\n123\n");
+            },
+            Buffer::new(0),
+            0,
+            2,
+            1,
+            3,
+            &mut GetTextOpts::default(),
+        )
+        .unwrap();
     }
 }
