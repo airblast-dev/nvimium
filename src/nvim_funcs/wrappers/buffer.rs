@@ -345,14 +345,16 @@ mod tests {
         self as nvimium, array,
         nvim_funcs::{
             buffer::{buf_is_loaded, buf_is_valid, buf_set_lines, buf_set_text},
-            global::{create_buf, get_current_buf, paste, set_current_buf},
+            global::{create_buf, feedkeys, get_current_buf, paste, set_current_buf},
         },
         nvim_types::{
-            Boolean, Buffer, Error, Object,
-            opts::{
+            func_types::{
+                feedkeys::{FeedKeysMode, FeedKeysModeKind},
+                keymap_mode::KeyMapMode,
+            }, opts::{
                 buf_attach::BufAttachOpts, buf_delete::BufDeleteOpts, paste::PastePhase,
-                set_mark::SetMarkOpts,
-            },
+                set_keymap::SetKeymapOpts, set_mark::SetMarkOpts,
+            }, Boolean, Buffer, Error, Object, OwnedThinString
         },
         th,
     };
@@ -447,5 +449,30 @@ mod tests {
         super::buf_delete(buf, BufDeleteOpts::default().unload(true)).unwrap();
         assert!(buf_is_valid(buf));
         assert!(!buf_is_loaded(buf));
+    }
+
+    #[nvim_test::nvim_test]
+    fn buf_get_changedtick() {
+        let _tick = super::buf_get_changedtick(Buffer::new(0)).unwrap();
+    }
+
+    #[nvim_test::nvim_test(no_exit)]
+    fn buf_set_del_keymap() {
+        let km = super::buf_get_keymap(Buffer::new(0), KeyMapMode::INSERT).unwrap();
+        assert!(km.maps.is_empty());
+        super::buf_set_keymap(
+            Buffer::new(0),
+            KeyMapMode::INSERT,
+            c"b",
+            c"<Esc>:qall!<CR>",
+            SetKeymapOpts::default().desc(c"Epic description"),
+        )
+        .unwrap();
+
+        let km = super::buf_get_keymap(Buffer::new(0), KeyMapMode::INSERT).unwrap();
+        assert_eq!(&km.maps[0].lhs, c"b");
+        assert_eq!(&km.maps[0].desc, &Some(OwnedThinString::from("Epic description")));
+        let mode = FeedKeysMode::from(&[FeedKeysModeKind::Typed]);
+        feedkeys(c"ib", &mode, false);
     }
 }

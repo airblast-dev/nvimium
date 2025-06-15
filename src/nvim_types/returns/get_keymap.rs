@@ -10,6 +10,7 @@ use crate::nvim_types::{
 
 use super::utils::skip_drop_remove_keys;
 
+#[derive(Clone, Debug)]
 pub struct Keymaps {
     pub maps: KVec<Keymap>,
 }
