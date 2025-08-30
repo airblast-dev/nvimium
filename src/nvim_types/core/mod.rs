@@ -4,6 +4,7 @@ pub mod buffer;
 pub mod call_site;
 pub mod dictionary;
 pub mod error;
+pub mod extmark;
 pub mod hl_group;
 pub mod kvec;
 pub mod lua_ref;
