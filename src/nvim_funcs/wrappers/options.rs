@@ -20,7 +20,7 @@ pub fn get_all_options() -> Result<OptionsInfo, Error> {
         call_with_arena(|arena| {
             tri_ret! {
                 err;
-                nvim_get_all_options_info(arena, &raw mut err) ;
+                nvim_get_all_options_info(arena, &raw mut err);
                 OptionsInfo::from_c_func_ret;
             }
         })
