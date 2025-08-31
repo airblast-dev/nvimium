@@ -21,6 +21,8 @@ pub fn tabpage_del_var<TH: AsThinString>(tp: TabPage, name: TH) -> Result<(), Er
     }
 }
 
+// TODO: add testing for this as I am not sure what the return value means
+// i dont think this is practically usable within the C bindings
 pub fn tabpage_get_number(tp: TabPage) -> Result<Integer, Error> {
     call_check();
 
@@ -101,8 +103,14 @@ mod tests {
 
     use crate::{
         self as nvimium,
-        nvim_funcs::tabpage::{tabpage_get_var, tabpage_set_var},
-        nvim_types::{Error, Object, OwnedThinString, TabPage, lua::Function},
+        nvim_funcs::{
+            global::{get_current_tabpage, list_tabpages, set_current_tabpage},
+            tabpage::{tabpage_get_var, tabpage_is_valid, tabpage_list_wins, tabpage_set_var},
+            vimscript::exec2,
+        },
+        nvim_types::{
+            Error, Object, OwnedThinString, TabPage, lua::Function, opts::exec::ExecOpts,
+        },
     };
 
     #[nvim_test::nvim_test]
@@ -124,19 +132,69 @@ mod tests {
 
         let cb = Function::wrap(|_: ()| Ok::<(), Error>(())).into_luaref();
         let ref_obj = Object::LuaRef(cb);
-        tabpage_set_var(
-            TabPage::new(0),
-            c"super_secret_value",
-            &ref_obj,
-        )
-        .unwrap();
+        tabpage_set_var(TabPage::new(0), c"super_secret_value", &ref_obj).unwrap();
 
         // esnure that we dont double free the lua reference as this function should not
         // take/mutate the ref but instead should take a new reference to it
+        // this shouldnt cause UB but can result in assertions being triggered in neovim or best
+        // case confusing errors
         assert_ne!(ref_obj.into_luaref().unwrap().0, LUA_NOREF);
 
         let val = tabpage_get_var(TabPage::new(0), c"super_secret_value").unwrap();
         assert!(val.into_luaref().is_some_and(|v| v.0 != LUA_NOREF));
+    }
 
+    #[nvim_test::nvim_test]
+    fn list_wins() {
+        // TODO: add more window related tests once win config and window functions are
+        // implemented
+        let wins = tabpage_list_wins(TabPage::new(0)).unwrap();
+        assert!(!wins.is_empty());
+    }
+
+    #[nvim_test::nvim_test]
+    fn is_valid_and_get_win() {
+        // upon start we have 1 tabpage
+        let tabpages = list_tabpages();
+        assert!(tabpages.len() == 1);
+        let tp_main = tabpages[0];
+
+        // there is no C api to create a tabpage so use exec2
+        exec2(c"tabnew", &ExecOpts::default()).unwrap();
+        let tabpages = list_tabpages();
+
+        // ensure that we actually created a tabpage
+        assert!(tabpages.len() > 1);
+
+        // the order of the returned tabpages are not guaranteed so get the new one via comparison
+        // in real use cases should use something more robust by getting the current tabpage
+        let tp_new = if tabpages[1] != tp_main {
+            tabpages[1]
+        } else {
+            tabpages[0]
+        };
+
+        assert_ne!(tp_new, tp_main);
+
+        // ensure both are valid
+        assert!(tabpage_is_valid(tp_new));
+        assert!(tabpage_is_valid(tp_main));
+
+        // our current tabpage should be the one we just created
+        assert_eq!(get_current_tabpage(), tp_new);
+
+        // set the current tabpage to the newly created one
+        set_current_tabpage(tp_new).unwrap();
+
+        // ensure that setting current tabpage didnt break anything
+        assert_eq!(get_current_tabpage(), tp_new);
+
+        // close the newly created tab
+        exec2(c"tabclose", &ExecOpts::default()).unwrap();
+
+        // we should be left with the first tabpage created when neovim launched
+        let tabpages = list_tabpages();
+        assert!(tabpages.len() == 1);
+        assert_eq!(tabpages[0], tp_main);
     }
 }
