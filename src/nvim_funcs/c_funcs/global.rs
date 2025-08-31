@@ -135,12 +135,12 @@ unsafe extern "C" {
         col: Integer,
         err: *mut Error,
     );
-    pub fn nvim_list_bufs(arena: *mut Arena) -> ArrayOf<Buffer>;
-    pub fn nvim_list_chans(arena: *mut Arena) -> ArrayOf<Integer>;
+    pub fn nvim_list_bufs(arena: *mut Arena) -> ManuallyDrop<ArrayOf<Buffer>>;
+    pub fn nvim_list_chans(arena: *mut Arena) -> ManuallyDrop<ArrayOf<Integer>>;
     pub fn nvim_list_runtime_paths(arena: *mut Arena, err: *mut Error) -> MaybeUninit<Array>;
-    pub fn nvim_list_tabpages(arena: *mut Arena) -> ArrayOf<TabPage>;
+    pub fn nvim_list_tabpages(arena: *mut Arena) -> ManuallyDrop<ArrayOf<TabPage>>;
     pub fn nvim_list_uis(arena: *mut Arena) -> ManuallyDrop<Array>;
-    pub fn nvim_list_wins(arena: *mut Arena) -> ArrayOf<Window>;
+    pub fn nvim_list_wins(arena: *mut Arena) -> ManuallyDrop<ArrayOf<Window>>;
     pub fn nvim_load_context<'a>(dict: Borrowed<'a, Dict>, err: *mut Error) -> MaybeUninit<Object>;
     pub fn nvim_open_term(
         buffer: Buffer,
