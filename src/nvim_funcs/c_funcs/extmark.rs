@@ -2,7 +2,6 @@ use std::mem::MaybeUninit;
 
 use crate::nvim_types::{
     Arena, Array, Boolean, Buffer, Error, Integer, NameSpace, extmark::ExtMark,
-    opts::get_extmark::GetExtmarkOpts,
 };
 
 unsafe extern "C" {
@@ -25,7 +24,8 @@ unsafe extern "C" {
         buf: Buffer,
         ns: NameSpace,
         ex: ExtMark,
-        opts: *mut GetExtmarkOpts,
+        // TODO
+        opts: *mut (),
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Array>;
