@@ -50,12 +50,10 @@ pub fn get_option_value<'a, TH: AsThinString>(
 ) -> Result<Object, Error> {
     call_check();
 
-    unsafe {
-        tri_nc! {
-            err;
-            // returns fully allocated object
-            nvim_get_option_value(name.as_thinstr(), opts, &raw mut err);
-        }
+    tri_nc! {
+        err;
+        // returns fully allocated object
+        unsafe { nvim_get_option_value(name.as_thinstr(), opts, &raw mut err) };
     }
 }
 

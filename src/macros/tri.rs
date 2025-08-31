@@ -56,7 +56,10 @@ macro_rules! tri_nc {
         if $err.has_errored() {
             Err($err)
         } else {
-            Ok(result.assume_init())
+            #[allow(unused_unsafe)]
+            unsafe {
+                Ok(result.assume_init())
+            }
         }
     }};
 }

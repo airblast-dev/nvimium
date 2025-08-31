@@ -41,11 +41,9 @@ pub fn chan_send<S: AsThinString>(chan: Channel, bytes: S) -> Result<(), Error> 
 
 pub fn create_buf(listed: Boolean, scratch: Boolean) -> Result<Buffer, Error> {
     call_check();
-    unsafe {
-        tri_nc! {
-            err;
-            global::nvim_create_buf(listed, scratch, &mut err);
-        }
+    tri_nc! {
+        err;
+        unsafe { global::nvim_create_buf(listed, scratch, &mut err) };
     }
 }
 
@@ -73,11 +71,9 @@ pub fn del_keymap<S: AsThinString>(map_mode: KeyMapMode, lhs: S) -> Result<(), E
 
 pub fn del_mark<S: AsThinString>(name: S) -> Result<Boolean, Error> {
     call_check();
-    unsafe {
-        tri_nc! {
-            err;
-            global::nvim_del_mark(name.as_thinstr(), &mut err);
-        }
+    tri_nc! {
+        err;
+        unsafe { global::nvim_del_mark(name.as_thinstr(), &mut err) };
     }
 }
 
@@ -279,11 +275,9 @@ pub fn get_hl_id_by_name<S: AsThinString>(name: S) -> Integer {
 
 pub fn get_hl_ns(opts: &GetHlNsOpts) -> Result<NameSpace, Error> {
     call_check();
-    unsafe {
-        tri_nc! {
-            err;
-            global::nvim_get_hl_ns(opts, &mut err);
-        }
+    tri_nc! {
+        err;
+        unsafe { global::nvim_get_hl_ns(opts, &mut err) };
     }
 }
 
@@ -471,11 +465,9 @@ fn load_context(ctx: &Dict) -> Result<Object, Error> {
 
 pub fn open_term(buf: Buffer, opts: &mut OpenTermOpts) -> Result<Channel, Error> {
     call_check();
-    unsafe {
-        tri_nc! {
-            err;
-            global::nvim_open_term(buf, opts, &mut err);
-        }
+    tri_nc! {
+        err;
+        unsafe { global::nvim_open_term(buf, opts, &mut err) };
     }
 }
 
@@ -486,7 +478,7 @@ pub fn paste<S: AsThinString>(src: S, crlf: Boolean, phase: PastePhase) -> Resul
         call_with_arena(|arena| {
             tri_nc! {
                 err;
-                    global::nvim_paste(
+                global::nvim_paste(
                         Channel::LUA_INTERNAL_CALL,
                         src.as_thinstr(),
                         crlf,
