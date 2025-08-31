@@ -244,7 +244,7 @@ impl NvString {
     /// Prefer this over cloning the value. When passing to raw C functions this should be used
     /// instead of [`String`].
     #[inline(always)]
-    pub const fn as_thinstr(&self) -> ThinString {
+    pub const fn as_thinstr(&self) -> ThinString<'_> {
         if self.data.is_null() {
             EMPTY
         } else {
