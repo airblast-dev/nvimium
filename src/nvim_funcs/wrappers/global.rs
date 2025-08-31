@@ -12,7 +12,7 @@ use std::{
 };
 
 use crate::nvim_types::{
-    Array, AsThinString, Boolean, Buffer, Channel, Dict, Error, Integer, NameSpace, Object,
+    Array, AsThinString, Boolean, Buffer, Channel, Dict, Error, Integer, KVec, NameSpace, Object,
     OwnedThinString,
     func_types::{echo::Echo, feedkeys::FeedKeysMode, keymap_mode::KeyMapMode},
     opts::{
@@ -417,16 +417,29 @@ pub fn input_mouse<S: AsThinString, S1: AsThinString, S2: AsThinString>(
     }
 }
 
-pub fn list_bufs() -> Array {
+pub fn list_bufs() -> KVec<Buffer> {
     call_check();
-    unsafe { global::nvim_list_bufs(core::ptr::null_mut()) }
+    unsafe { call_with_arena(|arena| global::nvim_list_bufs(arena).conv_to_kvec()) }
 }
 
-pub fn list_chans() -> Array {
+pub fn list_chans() -> KVec<Channel> {
     call_check();
-    unsafe { global::nvim_list_chans(core::ptr::null_mut()) }
+    unsafe {
+        call_with_arena(|arena| {
+            // TODO: this unsafe is highly unnecessary remove this
+            // SAFETY: channel and integer types have the same size an alignment and kvec is repr(C) with a fixed size
+            const _: () = assert!(size_of::<Integer>() == size_of::<Channel>());
+            const _: () = assert!(align_of::<Integer>() == align_of::<Channel>());
+            const _: () = assert!(size_of::<KVec<Integer>>() == size_of::<KVec<Channel>>());
+            const _: () = assert!(align_of::<KVec<Integer>>() == align_of::<KVec<Channel>>());
+            core::mem::transmute::<KVec<Integer>, KVec<Channel>>(
+                global::nvim_list_chans(arena).conv_to_kvec(),
+            )
+        })
+    }
 }
 
+// TODO: maybe use ArrayOf and return a KVec<OwnedThinString>
 pub fn list_runtime_paths() -> Result<Array, Error> {
     call_check();
     let mut arena = Arena::EMPTY;
@@ -437,9 +450,10 @@ pub fn list_runtime_paths() -> Result<Array, Error> {
     }
 }
 
-pub fn list_tabpages() -> Array {
+pub fn list_tabpages() -> KVec<TabPage> {
     call_check();
-    unsafe { global::nvim_list_tabpages(core::ptr::null_mut()) }
+
+    unsafe { call_with_arena(|arena| global::nvim_list_tabpages(arena).conv_to_kvec()) }
 }
 
 pub fn list_uis() -> Array {
@@ -448,9 +462,10 @@ pub fn list_uis() -> Array {
     unsafe { global::nvim_list_uis(&raw mut arena).deref().clone() }
 }
 
-pub fn list_wins() -> Array {
+pub fn list_wins() -> KVec<Window> {
     call_check();
-    unsafe { global::nvim_list_wins(core::ptr::null_mut()) }
+
+    unsafe { call_with_arena(|arena| global::nvim_list_wins(arena).conv_to_kvec()) }
 }
 
 // TODO: might not be safe to call, look into details

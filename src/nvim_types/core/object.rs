@@ -293,6 +293,16 @@ impl TryFrom<Object> for Boolean {
     }
 }
 
+impl TryFrom<&Object> for Boolean {
+    type Error = ObjectConversionError;
+    fn try_from(value: &Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Bool(b) => Ok(*b),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
 impl TryFrom<Object> for Integer {
     type Error = ObjectConversionError;
     fn try_from(value: Object) -> Result<Self, Self::Error> {
@@ -303,11 +313,31 @@ impl TryFrom<Object> for Integer {
     }
 }
 
+impl TryFrom<&Object> for Integer {
+    type Error = ObjectConversionError;
+    fn try_from(value: &Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Integer(i) => Ok(*i),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
 impl TryFrom<Object> for Float {
     type Error = ObjectConversionError;
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
             Object::Float(f) => Ok(f),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
+impl TryFrom<&Object> for Float {
+    type Error = ObjectConversionError;
+    fn try_from(value: &Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Float(f) => Ok(*f),
             _ => Err(ObjectConversionError::IncorrectKind),
         }
     }
@@ -363,6 +393,16 @@ impl TryFrom<Object> for Buffer {
     }
 }
 
+impl TryFrom<&Object> for Buffer {
+    type Error = ObjectConversionError;
+    fn try_from(value: &Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Buffer(b) => Ok(*b),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
 impl TryFrom<Object> for Window {
     type Error = ObjectConversionError;
     fn try_from(value: Object) -> Result<Self, Self::Error> {
@@ -373,11 +413,31 @@ impl TryFrom<Object> for Window {
     }
 }
 
+impl TryFrom<&Object> for Window {
+    type Error = ObjectConversionError;
+    fn try_from(value: &Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Window(w) => Ok(*w),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
 impl TryFrom<Object> for TabPage {
     type Error = ObjectConversionError;
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
             Object::TabPage(v) => Ok(v),
+            _ => Err(ObjectConversionError::IncorrectKind),
+        }
+    }
+}
+
+impl TryFrom<&Object> for TabPage {
+    type Error = ObjectConversionError;
+    fn try_from(value: &Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::TabPage(v) => Ok(*v),
             _ => Err(ObjectConversionError::IncorrectKind),
         }
     }

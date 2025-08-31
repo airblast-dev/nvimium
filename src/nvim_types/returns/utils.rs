@@ -1,6 +1,10 @@
-use std::mem::{ManuallyDrop, MaybeUninit};
+use std::{
+    fmt::Debug,
+    marker::PhantomData,
+    mem::{ManuallyDrop, MaybeUninit},
+};
 
-use crate::nvim_types::{Dict, Object};
+use crate::nvim_types::{Array, Dict, KVec, Object};
 
 /// Removes the keys without dropping them and
 #[inline(never)]
@@ -44,4 +48,21 @@ pub(crate) fn skip_drop_remove_keys<const N: usize>(
 
     // cant use transmute with arrays in this context
     Ok(unsafe { ((&raw const objects) as *const [ManuallyDrop<Object>; N]).read() })
+}
+
+#[repr(transparent)]
+pub(crate) struct ArrayOf<T>(Array, PhantomData<T>);
+
+impl<T> ArrayOf<T>
+where
+    T: for<'a> TryFrom<&'a Object>,
+    for<'a> <T as TryFrom<&'a Object>>::Error: Debug,
+{
+    pub(crate) fn conv_to_kvec(&self) -> KVec<T> {
+        let mut kv = KVec::with_capacity(self.0.len());
+        self.0.iter().for_each(|obj| unsafe {
+            kv.push_unchecked(T::try_from(obj).expect("got unexpected type in ArrayOf conversion"))
+        });
+        kv
+    }
 }
