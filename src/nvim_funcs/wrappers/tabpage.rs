@@ -94,3 +94,49 @@ pub fn tabpage_set_win(tp: TabPage, win: Window) -> Result<(), Error> {
         unsafe { nvim_tabpage_set_win(tp, win, &raw mut err) };
     }
 }
+
+#[cfg(all(not(miri), feature = "testing"))]
+mod tests {
+    use mlua_sys::LUA_NOREF;
+
+    use crate::{
+        self as nvimium,
+        nvim_funcs::tabpage::{tabpage_get_var, tabpage_set_var},
+        nvim_types::{Error, Object, OwnedThinString, TabPage, lua::Function},
+    };
+
+    #[nvim_test::nvim_test]
+    fn set_get_tabpage_value() {
+        tabpage_get_var(TabPage::new(0), c"super_secret_value").unwrap_err();
+
+        tabpage_set_var(
+            TabPage::new(0),
+            c"super_secret_value",
+            &Object::String(OwnedThinString::from(c"important string")),
+        )
+        .unwrap();
+
+        let val = tabpage_get_var(TabPage::new(0), c"super_secret_value").unwrap();
+        assert_eq!(
+            val,
+            Object::String(OwnedThinString::from(c"important string"))
+        );
+
+        let cb = Function::wrap(|_: ()| Ok::<(), Error>(())).into_luaref();
+        let ref_obj = Object::LuaRef(cb);
+        tabpage_set_var(
+            TabPage::new(0),
+            c"super_secret_value",
+            &ref_obj,
+        )
+        .unwrap();
+
+        // esnure that we dont double free the lua reference as this function should not
+        // take/mutate the ref but instead should take a new reference to it
+        assert_ne!(ref_obj.into_luaref().unwrap().0, LUA_NOREF);
+
+        let val = tabpage_get_var(TabPage::new(0), c"super_secret_value").unwrap();
+        assert!(val.into_luaref().is_some_and(|v| v.0 != LUA_NOREF));
+
+    }
+}
