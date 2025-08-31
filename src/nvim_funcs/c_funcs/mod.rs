@@ -4,3 +4,4 @@ pub mod extmark;
 pub mod global;
 pub mod options;
 pub mod vimscript;
+pub mod tabpage;
