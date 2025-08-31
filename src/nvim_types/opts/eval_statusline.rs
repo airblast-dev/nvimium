@@ -1,10 +1,8 @@
 use crate::{
-    macros::decl_derive::derive,
-    nvim_types::{Boolean, Integer, string::ThinString, window::Window},
+    macros::{masked_builder::masked_builder, zeroed_default::zeroed_default},
+    nvim_types::{string::ThinString, window::Window, Boolean, Integer},
 };
-
-derive!(
-    derive(masked_builder, zeroed_default);
+masked_builder!(
     #[derive(Clone)]
     #[repr(C)]
     pub struct EvalStatusLineOpts<'a> {
@@ -17,3 +15,5 @@ derive!(
         use_statuscol_lnum: Integer,
     }
 );
+
+zeroed_default!(EvalStatusLineOpts<'_>);

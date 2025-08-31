@@ -1,10 +1,8 @@
 macro_rules! zeroed_default {
     (
-        $(#[$( $attrs:tt )+])*
-        $vis:vis struct $struct_ident:ident $(<$($lf:lifetime),+>)?
-        { $($tt:tt)* }
+        $struct_ty:ty
     ) => {
-        impl $(<$($lf),+>)? core::default::Default for $struct_ident $(<$($lf),+>)? {
+        impl ::core::default::Default for $struct_ty {
             fn default() -> Self {
                 unsafe { ::core::mem::zeroed() }
             }

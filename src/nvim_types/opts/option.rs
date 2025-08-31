@@ -1,11 +1,10 @@
 use crate::{
-    macros::decl_derive::derive,
+    macros::{masked_builder::masked_builder, zeroed_default::zeroed_default},
     nvim_types::{Buffer, ThinString, Window},
     th,
 };
 
-derive!(
-    derive(masked_builder, zeroed_default);
+masked_builder!(
     #[repr(C)]
     pub struct OptionOpt<'a> {
         #[builder_fn_skip]
@@ -15,6 +14,8 @@ derive!(
         filetype: ThinString<'a>,
     }
 );
+
+zeroed_default!(OptionOpt<'_>);
 
 impl<'a> OptionOpt<'a> {
     pub fn scope(&mut self, scope: OptionScope) -> &mut Self {

@@ -1,13 +1,12 @@
 use std::error::Error;
 use std::mem::MaybeUninit;
 
-use crate::macros::decl_derive::derive;
+use crate::macros::{masked_builder::masked_builder, zeroed_default::zeroed_default};
 use crate::nvim_types::args::open_term_cb::OpenTermOnInputArgs;
 use crate::nvim_types::lua::{Function, NvFn};
 use crate::nvim_types::{Boolean, lua_ref::LuaRef};
 
-derive! {
-    derive(masked_builder, zeroed_default);
+masked_builder! {
     #[repr(C)]
     pub struct OpenTermOpts {
         #[builder_fn_skip]
@@ -15,6 +14,8 @@ derive! {
         force_crlf: Boolean,
     }
 }
+
+zeroed_default!(OpenTermOpts);
 
 impl OpenTermOpts {
     pub fn on_input<E: 'static + Error>(

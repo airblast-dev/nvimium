@@ -1,6 +1,5 @@
 pub mod comp_unique_id;
 pub(crate) mod constified;
-pub mod decl_derive;
 pub(crate) mod hash_face;
 pub mod masked_builder;
 pub mod nvim_values;

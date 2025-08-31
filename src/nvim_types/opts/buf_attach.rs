@@ -1,18 +1,14 @@
 use std::error::Error;
 
 use crate::{
-    macros::decl_derive::derive,
+    macros::{masked_builder::masked_builder, zeroed_default::zeroed_default},
     nvim_types::{
-        Boolean, LuaRef,
         args::buf_attach_cb::{
             BufOnBytesArgs, BufOnChangedTickArgs, BufOnDetach, BufOnLinesArgs, BufOnReload,
-        },
-        lua::{Function, NvFn},
+        }, lua::{Function, NvFn}, Boolean, LuaRef,
     },
 };
-
-derive!(
-    derive(masked_builder, zeroed_default);
+masked_builder! {
     #[repr(C)]
     pub struct BufAttachOpts {
         #[builder_fn_skip]
@@ -28,7 +24,9 @@ derive!(
         utf_sizes: Boolean,
         preview: Boolean,
     }
-);
+}
+
+zeroed_default!(BufAttachOpts);
 
 impl BufAttachOpts {
     pub fn on_lines<

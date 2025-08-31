@@ -1,7 +1,8 @@
-use crate::macros::decl_derive::derive;
+use crate::macros::{masked_builder::masked_builder, zeroed_default::zeroed_default};
 
-derive!(
-    derive(masked_builder, zeroed_default);
+masked_builder!(
     #[repr(C)]
     pub struct GetMarkOpts {}
 );
+
+zeroed_default!(GetMarkOpts);

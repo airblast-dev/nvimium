@@ -1,10 +1,9 @@
 use crate::{
-    macros::decl_derive::derive,
-    nvim_types::{Boolean, Integer, string::ThinString},
+    macros::{masked_builder::masked_builder, zeroed_default::zeroed_default},
+    nvim_types::{string::ThinString, Boolean, Integer},
 };
 
-derive!(
-    derive(masked_builder, zeroed_default);
+masked_builder!(
     #[repr(C)]
     #[derive(Clone)]
     pub struct GetHlOpts<'a> {
@@ -14,3 +13,5 @@ derive!(
         create: Boolean,
     }
 );
+
+zeroed_default!(GetHlOpts<'_>);

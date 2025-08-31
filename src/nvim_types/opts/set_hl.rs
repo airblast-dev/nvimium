@@ -1,10 +1,9 @@
 use crate::{
-    macros::decl_derive::derive,
+    macros::{masked_builder::masked_builder, zeroed_default::zeroed_default},
     nvim_types::{Boolean, HlGroupId, Integer, OwnedThinString, object_subs::StringOrInt},
 };
 
-derive! {
-    derive(zeroed_default, masked_builder);
+masked_builder! {
     #[repr(C)]
     pub struct SetHlOpts {
         bold: Boolean,
@@ -46,3 +45,5 @@ derive! {
         url: OwnedThinString,
     }
 }
+
+zeroed_default!(SetHlOpts);

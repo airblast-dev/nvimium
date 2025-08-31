@@ -1,9 +1,13 @@
-use crate::{macros::decl_derive::derive, nvim_types::Array};
+use crate::{
+    macros::{masked_builder::masked_builder, zeroed_default::zeroed_default},
+    nvim_types::Array,
+};
 
-derive! {
-    derive(masked_builder, zeroed_default);
+masked_builder!(
     #[repr(C)]
     pub struct ContextOpts {
         list: Array,
     }
-}
+);
+
+zeroed_default!(ContextOpts);
