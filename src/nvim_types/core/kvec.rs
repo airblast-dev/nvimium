@@ -547,9 +547,6 @@ impl<T> IntoIterator for KVec<T> {
 
 impl<T> Drop for KVec<T> {
     fn drop(&mut self) {
-        if Self::ZST {
-            return;
-        }
         let cap = self.capacity();
         unsafe {
             let len = self.len();
@@ -557,8 +554,9 @@ impl<T> Drop for KVec<T> {
             self.set_len(0);
             // SAFETY: if capacity is greater than zero we have an allocated pointer which is non
             // null
+            core::ptr::slice_from_raw_parts_mut(self.as_ptr(), len).drop_in_place();
+
             if cap > 0 {
-                core::ptr::slice_from_raw_parts_mut(self.as_ptr(), len).drop_in_place();
                 GLOBAL_ALLOCATOR.dealloc(self.ptr as _, Layout::array::<T>(cap).unwrap_unchecked());
             }
         }
