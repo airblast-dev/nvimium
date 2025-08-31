@@ -116,20 +116,20 @@ impl TrackedArena {
     }
 }
 
+#[inline(never)]
 pub(crate) unsafe fn call_with_arena<R, F: FnOnce(*mut Arena) -> R>(f: F) -> R {
+    struct NestRestore(Boolean);
+    impl Drop for NestRestore {
+        fn drop(&mut self) {
+            unsafe { (&raw mut TRACKED_ARENA.is_nested).write(self.0) };
+        }
+    }
+
     unsafe {
         let ret;
         {
-
-            let _drop_lock = NestRestore((&raw mut TRACKED_ARENA.is_nested).read());
+            let _drop_lock = NestRestore((&raw mut TRACKED_ARENA.is_nested).replace(true));
             // in case of panics we ensure that
-            struct NestRestore(Boolean);
-            impl Drop for NestRestore {
-                fn drop(&mut self) {
-                    unsafe { (&raw mut TRACKED_ARENA.is_nested).write(self.0) };
-                }
-            }
-            (&raw mut TRACKED_ARENA.is_nested).write(true);
             let arena = &raw mut TRACKED_ARENA.arena;
             ret = f(arena);
         }
