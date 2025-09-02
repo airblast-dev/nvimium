@@ -7,12 +7,12 @@ use crate::nvim_types::{
 };
 
 unsafe extern "C" {
-    pub fn nvim_buf_create_user_command<'a>(
+    pub fn nvim_buf_create_user_command(
         chan: Channel,
         buf: Buffer,
-        name: ThinString<'a>,
-        command: UserCommand<'a>,
-        opts: *mut CreateUserCommandOpts<'a>,
+        name: ThinString<'_>,
+        command: UserCommand<'_>,
+        opts: *mut CreateUserCommandOpts<'_>,
         err: *mut Error,
     );
 
@@ -26,14 +26,14 @@ unsafe extern "C" {
 
     // TODO: nvim_cmd
 
-    pub fn nvim_create_user_command<'a>(
+    pub fn nvim_create_user_command(
         chan: Channel,
-        name: ThinString<'a>,
-        command: UserCommand<'a>,
-        opts: *mut CreateUserCommandOpts,
+        name: ThinString<'_>,
+        command: UserCommand<'_>,
+        opts: *mut CreateUserCommandOpts<'_>,
         err: *mut Error,
     );
-    pub fn nvim_del_user_command<'a>(name: ThinString<'a>, err: *mut Error);
+    pub fn nvim_del_user_command(name: ThinString<'_>, err: *mut Error);
 
     pub fn nvim_get_commands(
         opts: *mut GetCommandOpts,

@@ -87,7 +87,7 @@ pub fn del_var<S: AsThinString>(var: S) -> Result<(), Error> {
     }
 }
 
-pub fn echo<'a>(chunks: &'a Echo, history: Boolean, opts: &'a EchoOpts) -> Result<(), Error> {
+pub fn echo(chunks: &Echo, history: Boolean, opts: &EchoOpts) -> Result<(), Error> {
     call_check();
     tri_ez! {
         err;
@@ -115,9 +115,9 @@ pub fn err_writeln<S: AsThinString>(s: S) {
     };
 }
 
-pub fn eval_statusline<'a, S: AsThinString>(
+pub fn eval_statusline<S: AsThinString>(
     s: S,
-    opts: &EvalStatusLineOpts<'a>,
+    opts: &EvalStatusLineOpts<'_>,
 ) -> Result<EvalStatusLine, Error> {
     call_check();
 
@@ -254,7 +254,7 @@ pub fn get_current_win() -> Window {
     unsafe { global::nvim_get_current_win() }
 }
 
-pub fn get_hl<'a>(ns: NameSpace, opts: &GetHlOpts<'a>) -> Result<HighlightGroups, Error> {
+pub fn get_hl(ns: NameSpace, opts: &GetHlOpts<'_>) -> Result<HighlightGroups, Error> {
     call_check();
 
     unsafe {
@@ -625,11 +625,11 @@ pub fn set_hl_ns_fast(ns: NameSpace) -> Result<(), Error> {
     }
 }
 
-pub fn set_keymap<'a, S: AsThinString, S1: AsThinString>(
+pub fn set_keymap<S: AsThinString, S1: AsThinString>(
     mode: KeyMapMode,
     lhs: S,
     rhs: S1,
-    opts: &mut SetKeymapOpts<'a>,
+    opts: &mut SetKeymapOpts<'_>,
 ) -> Result<(), Error> {
     call_check();
     tri_ez! {

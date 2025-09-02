@@ -23,13 +23,13 @@ unsafe extern "C" {
     ) -> MaybeUninit<Boolean>;
 
     pub fn nvim_buf_call(buf: Buffer, f: LuaRef, err: *mut Error) -> MaybeUninit<Object>;
-    pub fn nvim_buf_del_mark<'a>(
+    pub fn nvim_buf_del_mark(
         buf: Buffer,
-        name: ThinString<'a>,
+        name: ThinString<'_>,
         err: *mut Error,
     ) -> MaybeUninit<Boolean>;
 
-    pub fn nvim_buf_del_var<'a>(buf: Buffer, name: ThinString<'a>, err: *mut Error);
+    pub fn nvim_buf_del_var(buf: Buffer, name: ThinString<'_>, err: *mut Error);
     pub fn nvim_buf_delete(buf: Buffer, opts: *mut BufDeleteOpts, err: *mut Error);
     pub fn nvim_buf_get_changedtick(buf: Buffer, err: *mut Error) -> MaybeUninit<Integer>;
     pub fn nvim_buf_get_keymap(
@@ -81,50 +81,50 @@ unsafe extern "C" {
     pub fn nvim_buf_is_loaded(buf: Buffer) -> Boolean;
     pub fn nvim_buf_is_valid(buf: Buffer) -> Boolean;
     pub fn nvim_buf_line_count(buf: Buffer, err: *mut Error) -> MaybeUninit<Integer>;
-    pub fn nvim_buf_set_keymap<'a>(
+    pub fn nvim_buf_set_keymap(
         chan: Channel,
         buf: Buffer,
         mode: KeyMapMode,
-        lhs: ThinString<'a>,
-        rhs: ThinString<'a>,
+        lhs: ThinString<'_>,
+        rhs: ThinString<'_>,
         opts: *mut SetKeymapOpts,
         err: *mut Error,
     );
-    pub fn nvim_buf_set_lines<'a>(
+    pub fn nvim_buf_set_lines(
         chan: Channel,
         buf: Buffer,
         start: Integer,
         end: Integer,
         strict_indexing: Boolean,
-        replacement: Borrowed<'a, Array>,
+        replacement: Borrowed<'_, Array>,
         arena: *mut Arena,
         err: *mut Error,
     );
 
-    pub fn nvim_buf_set_mark<'a>(
+    pub fn nvim_buf_set_mark(
         buf: Buffer,
-        name: ThinString<'a>,
+        name: ThinString<'_>,
         line: Integer,
         col: Integer,
         opts: *mut SetMarkOpts,
         err: *mut Error,
     ) -> MaybeUninit<Boolean>;
-    pub fn nvim_buf_set_name<'a>(buf: Buffer, name: ThinString<'a>, err: *mut Error);
-    pub fn nvim_buf_set_text<'a>(
+    pub fn nvim_buf_set_name(buf: Buffer, name: ThinString<'_>, err: *mut Error);
+    pub fn nvim_buf_set_text(
         chan: Channel,
         buf: Buffer,
         start_row: Integer,
         start_col: Integer,
         end_row: Integer,
         end_col: Integer,
-        replacement: Borrowed<'a, Array>,
+        replacement: Borrowed<'_, Array>,
         arena: *mut Arena,
         err: *mut Error,
     );
-    pub fn nvim_buf_set_var<'a>(
+    pub fn nvim_buf_set_var(
         buf: Buffer,
-        name: ThinString<'a>,
-        val: Borrowed<'a, Object>,
+        name: ThinString<'_>,
+        val: Borrowed<'_, Object>,
         err: *mut Error,
     );
 }

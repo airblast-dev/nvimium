@@ -6,11 +6,11 @@ use crate::nvim_types::{
 };
 
 unsafe extern "C" {
-    pub fn nvim_tabpage_del_var<'a>(tp: TabPage, name: ThinString<'a>, err: *mut Error);
+    pub fn nvim_tabpage_del_var(tp: TabPage, name: ThinString<'_>, err: *mut Error);
     pub fn nvim_tabpage_get_number(tp: TabPage, error: *mut Error) -> MaybeUninit<Integer>;
-    pub fn nvim_tabpage_get_var<'a>(
+    pub fn nvim_tabpage_get_var(
         tp: TabPage,
-        name: ThinString<'a>,
+        name: ThinString<'_>,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
@@ -21,10 +21,10 @@ unsafe extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<ArrayOf<Window>>;
-    pub fn nvim_tabpage_set_var<'a>(
+    pub fn nvim_tabpage_set_var(
         tp: TabPage,
-        name: ThinString<'a>,
-        value: Borrowed<'a, Object>,
+        name: ThinString<'_>,
+        value: Borrowed<'_, Object>,
         err: *mut Error,
     );
     pub fn nvim_tabpage_set_win(tp: TabPage, win: Window, err: *mut Error);

@@ -27,9 +27,9 @@ pub fn get_all_options() -> Result<OptionsInfo, Error> {
     }
 }
 
-pub fn get_options_info2<'a, TH: AsThinString>(
+pub fn get_options_info2<TH: AsThinString>(
     name: TH,
-    opts: &mut OptionOpt<'a>,
+    opts: &mut OptionOpt<'_>,
 ) -> Result<OptionInfo, Error> {
     call_check();
 
@@ -44,9 +44,9 @@ pub fn get_options_info2<'a, TH: AsThinString>(
     }
 }
 
-pub fn get_option_value<'a, TH: AsThinString>(
+pub fn get_option_value<TH: AsThinString>(
     name: TH,
-    opts: &mut OptionOpt<'a>,
+    opts: &mut OptionOpt<'_>,
 ) -> Result<Object, Error> {
     call_check();
 
@@ -57,10 +57,10 @@ pub fn get_option_value<'a, TH: AsThinString>(
     }
 }
 
-pub fn set_option_value<'a, TH: AsThinString>(
+pub fn set_option_value<TH: AsThinString>(
     name: TH,
     value: Object,
-    opts: &mut OptionOpt<'a>,
+    opts: &mut OptionOpt<'_>,
 ) -> Result<(), Error> {
     call_check();
 

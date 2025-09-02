@@ -14,17 +14,17 @@ use crate::{
     },
 };
 
-pub fn buf_create_user_command<'a>(
+pub fn buf_create_user_command<TH: AsThinString>(
     buf: Buffer,
-    name: ThinString<'a>,
-    command: UserCommand<'a>,
-    opts: &mut CreateUserCommandOpts<'a>,
+    name: TH,
+    command: UserCommand<'_>,
+    opts: &mut CreateUserCommandOpts<'_>,
 ) -> Result<(), Error> {
     call_check();
     unsafe {
         tri_ez! {
             err;
-            nvim_buf_create_user_command(Channel::LUA_INTERNAL_CALL, buf, name, command, opts, &mut err);
+            nvim_buf_create_user_command(Channel::LUA_INTERNAL_CALL, buf, name.as_thinstr(), command, opts, &mut err);
         }
     }
 }
@@ -52,10 +52,10 @@ pub fn buf_get_commands(buf: Buffer, opts: &mut GetCommandOpts) -> Result<Comman
     }
 }
 
-pub fn create_user_command<'a, TH: AsThinString>(
+pub fn create_user_command<TH: AsThinString>(
     name: TH,
-    command: UserCommand<'a>,
-    opts: &mut CreateUserCommandOpts<'a>,
+    command: UserCommand<'_>,
+    opts: &mut CreateUserCommandOpts<'_>,
 ) -> Result<(), Error> {
     call_check();
     tri_ez! {

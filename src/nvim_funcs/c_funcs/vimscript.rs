@@ -10,10 +10,10 @@ use crate::nvim_types::{
 };
 
 unsafe extern "C" {
-    pub fn nvim_call_dict_function<'a>(
-        dict: ObjectRef<'a>,
-        func: ThinString<'a>,
-        args: Borrowed<'a, Array>,
+    pub fn nvim_call_dict_function(
+        dict: ObjectRef<'_>,
+        func: ThinString<'_>,
+        args: Borrowed<'_, Array>,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
@@ -23,21 +23,21 @@ unsafe extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
-    pub fn nvim_command<'a>(command: ThinString<'a>, err: *mut Error);
-    pub fn nvim_eval<'a>(
-        eval: ThinString<'a>,
+    pub fn nvim_command(command: ThinString<'_>, err: *mut Error);
+    pub fn nvim_eval(
+        eval: ThinString<'_>,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
-    pub fn nvim_exec2<'a>(
+    pub fn nvim_exec2(
         chan: Channel,
-        exec: ThinString<'a>,
+        exec: ThinString<'_>,
         opts: *const ExecOpts,
         err: *mut Error,
     ) -> MaybeUninit<Dict>;
-    pub fn nvim_parse_expression<'a>(
-        expr: ThinString<'a>,
-        flags: ThinString<'a>,
+    pub fn nvim_parse_expression(
+        expr: ThinString<'_>,
+        flags: ThinString<'_>,
         highlight: Boolean,
         arena: *mut Arena,
         error: *mut Error,

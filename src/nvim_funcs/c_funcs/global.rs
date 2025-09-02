@@ -24,44 +24,44 @@ use std::mem::ManuallyDrop;
 //
 // TLDR; every function here can only accept a ThinString as its string type.
 unsafe extern "C" {
-    pub fn nvim_chan_send<'a>(chan: Channel, bytes: ThinString<'a>, err: *mut Error);
+    pub fn nvim_chan_send(chan: Channel, bytes: ThinString<'_>, err: *mut Error);
     pub fn nvim_create_buf(
         listed: Boolean,
         scratch: Boolean,
         err: *mut Error,
     ) -> MaybeUninit<Buffer>;
     pub fn nvim_del_current_line(arena: *mut Arena, err: *mut Error);
-    pub fn nvim_del_keymap<'a>(
+    pub fn nvim_del_keymap(
         chan: Channel,
         map_mode: KeyMapMode,
-        lhs: ThinString<'a>,
+        lhs: ThinString<'_>,
         err: *mut Error,
     );
-    pub fn nvim_del_mark<'a>(name: ThinString<'a>, err: *mut Error) -> MaybeUninit<Boolean>;
-    pub fn nvim_del_var<'a>(var_name: ThinString<'a>, err: *mut Error);
-    pub fn nvim_echo<'a>(
-        chunks: Borrowed<'a, Echo>,
+    pub fn nvim_del_mark(name: ThinString<'_>, err: *mut Error) -> MaybeUninit<Boolean>;
+    pub fn nvim_del_var(var_name: ThinString<'_>, err: *mut Error);
+    pub fn nvim_echo(
+        chunks: Borrowed<'_, Echo>,
         history: bool,
         opts: *const EchoOpts,
         err: *mut Error,
     );
     #[deprecated]
-    pub fn nvim_err_write<'a>(s: ThinString<'a>);
+    pub fn nvim_err_write(s: ThinString<'_>);
     #[deprecated]
-    pub fn nvim_err_writeln<'a>(s: ThinString<'a>);
-    pub fn nvim_eval_statusline<'a>(
-        s: ThinString<'a>,
-        opts: *const EvalStatusLineOpts<'a>,
+    pub fn nvim_err_writeln(s: ThinString<'_>);
+    pub fn nvim_eval_statusline(
+        s: ThinString<'_>,
+        opts: *const EvalStatusLineOpts<'_>,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Dict>;
-    pub fn nvim_exec_lua<'a>(
-        code: ThinString<'a>,
-        args: Borrowed<'a, Array>,
+    pub fn nvim_exec_lua(
+        code: ThinString<'_>,
+        args: Borrowed<'_, Array>,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
-    pub fn nvim_feedkeys<'a>(keys: ThinString<'a>, mode: ThinString<'a>, escape_ks: Boolean);
+    pub fn nvim_feedkeys(keys: ThinString<'_>, mode: ThinString<'_>, escape_ks: Boolean);
     /// Returns a shared value, caller must clone to mutate the value
     pub fn nvim_get_chan_info(
         channel_id: Channel,
@@ -69,11 +69,11 @@ unsafe extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<ManuallyDrop<Dict>>;
-    pub fn nvim_get_color_by_name<'a>(name: ThinString<'a>) -> Integer;
+    pub fn nvim_get_color_by_name(name: ThinString<'_>) -> Integer;
     // the color names returned are not owned, to avoid freeing a const value deal with the
     // deallocation of the Dict manually
     pub fn nvim_get_color_map(arena: *mut Arena) -> ManuallyDrop<Dict>;
-    pub fn nvim_get_context<'a>(
+    pub fn nvim_get_context(
         opts: *const ContextOpts,
         arena: *mut Arena,
         err: *mut Error,
@@ -87,17 +87,17 @@ unsafe extern "C" {
     pub fn nvim_get_current_win() -> Window;
     // TODO: replace with custom struct or clone and partially free the returned values stored in
     // the dictionary have lifetimes that are known at runtime
-    pub fn nvim_get_hl<'a>(
+    pub fn nvim_get_hl(
         ns_id: NameSpace,
-        opts: *const GetHlOpts<'a>,
+        opts: *const GetHlOpts<'_>,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Dict>;
-    pub fn nvim_get_hl_id_by_name<'a>(name: ThinString<'a>) -> Integer;
+    pub fn nvim_get_hl_id_by_name(name: ThinString<'_>) -> Integer;
     pub fn nvim_get_hl_ns(opts: *const GetHlNsOpts, err: *mut Error) -> MaybeUninit<NameSpace>;
     pub fn nvim_get_keymap(mode: KeyMapMode, arena: *mut Arena) -> ManuallyDrop<Array>;
-    pub fn nvim_get_mark<'a>(
-        name: ThinString<'a>,
+    pub fn nvim_get_mark(
+        name: ThinString<'_>,
         opts: *const GetMarkOpts,
         arena: *mut Arena,
         err: *mut Error,
@@ -109,27 +109,27 @@ unsafe extern "C" {
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Array>;
-    pub fn nvim_get_runtime_file<'a>(
-        name: ThinString<'a>,
+    pub fn nvim_get_runtime_file(
+        name: ThinString<'_>,
         all: Boolean,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Array>;
-    pub fn nvim_get_var<'a>(
-        name: ThinString<'a>,
+    pub fn nvim_get_var(
+        name: ThinString<'_>,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
-    pub fn nvim_get_vvar<'a>(
-        name: ThinString<'a>,
+    pub fn nvim_get_vvar(
+        name: ThinString<'_>,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Object>;
-    pub fn nvim_input<'a>(channel: Channel, keys: ThinString<'a>) -> Integer;
-    pub fn nvim_input_mouse<'a>(
-        button: ThinString<'a>,
-        action: ThinString<'a>,
-        modifier: ThinString<'a>,
+    pub fn nvim_input(channel: Channel, keys: ThinString<'_>) -> Integer;
+    pub fn nvim_input_mouse(
+        button: ThinString<'_>,
+        action: ThinString<'_>,
+        modifier: ThinString<'_>,
         grid: Integer,
         row: Integer,
         col: Integer,
@@ -141,30 +141,30 @@ unsafe extern "C" {
     pub fn nvim_list_tabpages(arena: *mut Arena) -> ManuallyDrop<ArrayOf<TabPage>>;
     pub fn nvim_list_uis(arena: *mut Arena) -> ManuallyDrop<Array>;
     pub fn nvim_list_wins(arena: *mut Arena) -> ManuallyDrop<ArrayOf<Window>>;
-    pub fn nvim_load_context<'a>(dict: Borrowed<'a, Dict>, err: *mut Error) -> MaybeUninit<Object>;
+    pub fn nvim_load_context(dict: Borrowed<'_, Dict>, err: *mut Error) -> MaybeUninit<Object>;
     pub fn nvim_open_term(
         buffer: Buffer,
         opts: *mut OpenTermOpts,
         err: *mut Error,
     ) -> MaybeUninit<Channel>;
-    pub fn nvim_paste<'a>(
+    pub fn nvim_paste(
         channel: Channel,
-        src: ThinString<'a>,
+        src: ThinString<'_>,
         crlf: Boolean,
         phase: PastePhase,
         arena: *mut Arena,
         err: *mut Error,
     ) -> MaybeUninit<Boolean>;
-    pub fn nvim_put<'a>(
-        lines: Borrowed<'a, Array>,
-        behavior: ThinString<'a>,
+    pub fn nvim_put(
+        lines: Borrowed<'_, Array>,
+        behavior: ThinString<'_>,
         after: Boolean,
         follow: Boolean,
         arena: *mut Arena,
         err: *mut Error,
     );
-    pub fn nvim_replace_termcodes<'a>(
-        s: ThinString<'a>,
+    pub fn nvim_replace_termcodes(
+        s: ThinString<'_>,
         from_part: Boolean,
         do_lt: Boolean,
         special: Boolean,
@@ -177,29 +177,29 @@ unsafe extern "C" {
         err: *mut Error,
     );
     pub fn nvim_set_current_buf(buf: Buffer, err: *mut Error);
-    pub fn nvim_set_current_dir<'a>(dir: ThinString<'a>, err: *mut Error);
-    pub fn nvim_set_current_line<'a>(line: ThinString<'a>, arena: *mut Arena, err: *mut Error);
+    pub fn nvim_set_current_dir(dir: ThinString<'_>, err: *mut Error);
+    pub fn nvim_set_current_line(line: ThinString<'_>, arena: *mut Arena, err: *mut Error);
     pub fn nvim_set_current_tabpage(tp: TabPage, err: *mut Error);
     pub fn nvim_set_current_win(win: Window, err: *mut Error);
     // unlike other options this theoretically might be mutated (url field)
-    pub fn nvim_set_hl<'a>(
+    pub fn nvim_set_hl(
         chan: Channel,
         ns: NameSpace,
-        name: ThinString<'a>,
+        name: ThinString<'_>,
         val: *mut SetHlOpts,
         err: *mut Error,
     );
     pub fn nvim_set_hl_ns(ns: NameSpace, err: *mut Error);
     pub fn nvim_set_hl_ns_fast(ns: NameSpace, err: *mut Error);
-    pub fn nvim_set_keymap<'a>(
+    pub fn nvim_set_keymap(
         chan: Channel,
         mode: KeyMapMode,
-        lhs: ThinString<'a>,
-        rhs: ThinString<'a>,
+        lhs: ThinString<'_>,
+        rhs: ThinString<'_>,
         opts: *mut SetKeymapOpts,
         err: *mut Error,
     );
-    pub fn nvim_set_var<'a>(name: ThinString<'a>, obj: Borrowed<'a, Object>, err: *mut Error);
-    pub fn nvim_set_vvar<'a>(name: ThinString<'a>, obj: Borrowed<'a, Object>, err: *mut Error);
-    pub fn nvim_strwidth<'a>(name: ThinString<'a>, err: *mut Error) -> MaybeUninit<Integer>;
+    pub fn nvim_set_var(name: ThinString<'_>, obj: Borrowed<'_, Object>, err: *mut Error);
+    pub fn nvim_set_vvar(name: ThinString<'_>, obj: Borrowed<'_, Object>, err: *mut Error);
+    pub fn nvim_strwidth(name: ThinString<'_>, err: *mut Error) -> MaybeUninit<Integer>;
 }
