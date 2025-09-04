@@ -156,7 +156,7 @@ impl NvString {
     /// Get the buffer as a slice
     ///
     /// The slice does not include the null byte. For a slice that does include the null byte use
-    /// [`String::as_slice_with_null`].
+    /// [`NvString::as_slice_with_null`].
     #[inline(always)]
     pub fn as_slice(&self) -> &[u8] {
         self.as_thinstr().as_slice()
@@ -255,7 +255,7 @@ impl NvString {
     /// Leaks the [`String`]
     ///
     /// To avoid memory leaks the allocation must be dropped manually or its ownership must pass an
-    /// FFI boundry where the foreign function will free it. Almost always [`String::as_thinstr`]
+    /// FFI boundry where the foreign function will free it. Almost always [`NvString::as_thinstr`]
     /// should be preferred unless you really know you need this.
     pub(crate) fn leak(self) -> ThinString<'static> {
         // SAFETY: we do not drop the allocation which leaks the string

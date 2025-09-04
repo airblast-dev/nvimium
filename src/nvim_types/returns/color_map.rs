@@ -37,10 +37,10 @@ impl ColorMap {
     /// Initializes a [`ColorMap`] by draining the values out of the dictonary
     ///
     /// # Note
-    /// The [`Drop`] impl for the [`Dictionary`]'s key values are not called because the strings
+    /// The [`Drop`] impl for the [`Dict`]'s key values are not called because the strings
     /// for color names are stored in constants.
     ///
-    /// This function is guaranteed to drain all values stored in the [`Dictionary`].
+    /// This function is guaranteed to drain all values stored in the [`Dict`].
     pub fn from_c_func_ret(d: &mut Dict) -> Self {
         #[allow(unused_mut)]
         let mut kv_ptr: NonNull<KVec<(ThinString<'static>, [u8; 3])>> = unsafe {

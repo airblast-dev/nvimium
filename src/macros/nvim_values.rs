@@ -72,6 +72,7 @@
 /// assert_eq!(my_dict, some_return_val);
 /// # }
 /// ```
+/// [Dict](crate::nvim_types::Dict)
 #[macro_export]
 macro_rules! dict {
     ($($key:tt = $val:tt $(: $kind:tt)?),*) => {{
@@ -95,6 +96,7 @@ macro_rules! dict {
 /// A macro to easily initialize an [`Array`]
 ///
 /// This macro follows the same rules and syntax as [`dict`], see its documentation instead.
+/// [Array](crate::nvim_types::Array)
 #[macro_export]
 macro_rules! array {
     ($($val:tt $(: $kind:tt)?),*) => {{
