@@ -469,14 +469,14 @@ pub fn list_wins() -> KVec<Window> {
 }
 
 // TODO: might not be safe to call, look into details
-fn load_context(ctx: &Dict) -> Result<Object, Error> {
-    call_check();
-    tri! {
-        let mut err;
-        unsafe { global::nvim_load_context(ctx.into(), &mut err) },
-        Ok(obj) => Ok(unsafe{obj.assume_init()})
-    }
-}
+//      fn load_context(ctx: &Dict) -> Result<Object, Error> {
+//          call_check();
+//          tri! {
+//              let mut err;
+//              unsafe { global::nvim_load_context(ctx.into(), &mut err) },
+//              Ok(obj) => Ok(unsafe{obj.assume_init()})
+//          }
+//      }
 
 pub fn open_term(buf: Buffer, opts: &mut OpenTermOpts) -> Result<Channel, Error> {
     call_check();
