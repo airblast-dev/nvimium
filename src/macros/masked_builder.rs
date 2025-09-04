@@ -162,10 +162,3 @@ macro_rules! gen_funcs {
     };
 }
 pub(crate) use gen_funcs;
-
-masked_builder! {
-    struct A {
-        a: u8 = "hello",
-        b: u8,
-    }
-}
