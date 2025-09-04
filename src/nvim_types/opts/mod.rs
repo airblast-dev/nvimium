@@ -11,10 +11,10 @@ pub mod get_hl_ns;
 pub mod get_mark;
 pub mod get_text;
 pub mod open_term;
+pub mod open_win_opts;
 pub mod option;
 pub mod paste;
 pub mod select_popupmenu_item;
 pub mod set_hl;
 pub mod set_keymap;
 pub mod set_mark;
-
