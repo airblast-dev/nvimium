@@ -3,23 +3,26 @@ use std::error::Error;
 use crate::{
     macros::{masked_builder::masked_builder, zeroed_default::zeroed_default},
     nvim_types::{
+        Boolean, LuaRef,
         args::buf_attach_cb::{
             BufOnBytesArgs, BufOnChangedTickArgs, BufOnDetach, BufOnLinesArgs, BufOnReload,
-        }, lua::{Function, NvFn}, Boolean, LuaRef,
+        },
+        lua::{Function, NvFn},
     },
 };
+
 masked_builder! {
     #[repr(C)]
     pub struct BufAttachOpts {
-        #[builder_fn_skip]
+        #[builder(skip)]
         on_lines: LuaRef,
-        #[builder_fn_skip]
+        #[builder(skip)]
         on_bytes: LuaRef,
-        #[builder_fn_skip]
+        #[builder(skip)]
         on_changedtick: LuaRef,
-        #[builder_fn_skip]
+        #[builder(skip)]
         on_detach: LuaRef,
-        #[builder_fn_skip]
+        #[builder(skip)]
         on_reload: LuaRef,
         utf_sizes: Boolean,
         preview: Boolean,

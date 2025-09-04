@@ -7,10 +7,11 @@ use crate::{
 masked_builder!(
     #[repr(C)]
     pub struct OptionOpt<'a> {
-        #[builder_fn_skip]
+        #[builder(skip)]
         scope: ThinString<'a>,
         win: Window,
         buf: Buffer,
+        #[builder(nv_str)]
         filetype: ThinString<'a>,
     }
 );

@@ -3,7 +3,10 @@ pub use nvim_test;
 pub mod nvim_types;
 pub use thread_lock;
 pub mod allocator;
+
+#[doc(hidden)]
 pub mod macros;
+
 pub mod nvim_funcs;
 
 #[global_allocator]

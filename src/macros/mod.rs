@@ -1,12 +1,26 @@
+// hidden because the macro is called in user code through a macro
+#[doc(hidden)]
 pub mod comp_unique_id;
 pub(crate) mod constified;
 pub(crate) mod hash_face;
-pub mod masked_builder;
-pub mod nvim_values;
-pub mod one_of_objects;
-pub mod thinstring;
-pub mod tri;
-pub mod zeroed_default;
+pub(crate) mod masked_builder;
+pub(crate) mod nv_enum;
+pub(crate) mod nvim_values;
+pub(crate) mod one_of_objects;
+pub(crate) mod thinstring;
+pub(crate) mod tri;
+pub(crate) mod zeroed_default;
+pub(crate) mod utils;
+
+macro_rules! func_gen {
+    ($inner:ident: $inner_ty:ty) => {
+        pub fn $inner<T: Into<$inner_ty>>(&mut self, $inner: T) -> &mut Self {
+            self.$inner = $inner.into();
+            self
+        }
+    };
+}
+pub(crate) use func_gen;
 
 macro_rules! builder {
     (
@@ -28,23 +42,12 @@ macro_rules! builder {
 
         impl$(<$($gen),*>),* $ident$(<$($gen),*>),* {
             $(
-               $crate::func_gen!($field: $field_ty);
+               $crate::macros::func_gen!($field: $field_ty);
             )*
         }
     };
 }
 pub(crate) use builder;
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! func_gen {
-    ($inner:ident: $inner_ty:ty) => {
-        pub fn $inner<T: Into<$inner_ty>>(&mut self, $inner: T) -> &mut Self {
-            self.$inner = $inner.into();
-            self
-        }
-    };
-}
 
 #[cfg(test)]
 mod tests {

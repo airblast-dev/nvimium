@@ -16,24 +16,24 @@ masked_builder! {
         underdashed: Boolean,
         italic: Boolean,
         reverse: Boolean,
-        #[builder_fn_skip]
+        #[builder(skip)]
         altfont: Boolean,
         nocombine: Boolean,
         default: Boolean,
         cterm: StringOrInt,
         foreground: StringOrInt,
-        #[builder_fn_skip]
+        #[builder(skip)]
         fg: StringOrInt,
         background: StringOrInt,
-        #[builder_fn_skip]
+        #[builder(skip)]
         bg: StringOrInt,
         ctermfg: StringOrInt,
         ctermbg: StringOrInt,
         special: StringOrInt,
-        #[builder_fn_skip]
+        #[builder(skip)]
         sp: StringOrInt,
         link: HlGroupId,
-        #[builder_fn_skip]
+        #[builder(skip)]
         global_link: HlGroupId,
         fallback: Boolean,
         blend: Integer,
@@ -41,7 +41,7 @@ masked_builder! {
         bg_indexed: Boolean,
         force: Boolean,
         // it is unsound to not skip this as neovim will free this if the mask is set
-        #[builder_fn_skip]
+        #[builder(skip)]
         url: OwnedThinString,
     }
 }

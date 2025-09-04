@@ -1,10 +1,15 @@
 use std::error::Error;
 use std::mem::MaybeUninit;
 
-use crate::macros::masked_builder::masked_builder;
-use crate::macros::zeroed_default::zeroed_default;
-use crate::nvim_types::lua::{Function, NvFn};
-use crate::nvim_types::{Boolean, lua_ref::LuaRef, string::ThinString};
+use crate::{
+    macros::{masked_builder::masked_builder, zeroed_default::zeroed_default},
+    nvim_types::{
+        Boolean,
+        lua::{Function, NvFn},
+        lua_ref::LuaRef,
+        string::ThinString,
+    },
+};
 
 masked_builder! {
     #[repr(C)]
@@ -16,8 +21,9 @@ masked_builder! {
         expr: Boolean,
         unique: Boolean,
         // Manually implemented
-        #[builder_fn_skip]
+        #[builder(skip)]
         callback: LuaRef,
+        #[builder(nv_str)]
         desc: ThinString<'a>,
         replace_keycodes: Boolean,
     }

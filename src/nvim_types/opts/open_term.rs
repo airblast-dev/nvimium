@@ -1,15 +1,20 @@
 use std::error::Error;
 use std::mem::MaybeUninit;
 
-use crate::macros::{masked_builder::masked_builder, zeroed_default::zeroed_default};
-use crate::nvim_types::args::open_term_cb::OpenTermOnInputArgs;
-use crate::nvim_types::lua::{Function, NvFn};
-use crate::nvim_types::{Boolean, lua_ref::LuaRef};
+use crate::{
+    macros::{masked_builder::masked_builder, zeroed_default::zeroed_default},
+    nvim_types::{
+        Boolean,
+        args::open_term_cb::OpenTermOnInputArgs,
+        lua::{Function, NvFn},
+        lua_ref::LuaRef,
+    },
+};
 
 masked_builder! {
     #[repr(C)]
     pub struct OpenTermOpts {
-        #[builder_fn_skip]
+        #[builder(skip)]
         on_input: LuaRef,
         force_crlf: Boolean,
     }
