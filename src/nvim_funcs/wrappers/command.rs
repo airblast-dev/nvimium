@@ -7,7 +7,7 @@ use crate::{
         nvim_create_user_command, nvim_del_user_command, nvim_get_commands,
     },
     nvim_types::{
-        AsThinString, Buffer, Channel, Error, ThinString, call_with_arena,
+        AsThinString, Buffer, Channel, Error, call_with_arena,
         func_types::create_user_command::UserCommand,
         opts::{create_user_command::CreateUserCommandOpts, get_commands::GetCommandOpts},
         returns::commands::CommandsInfos,
