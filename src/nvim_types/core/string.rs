@@ -813,7 +813,7 @@ impl OwnedThinString {
         }
     }
 
-    pub(crate) fn leak(self) -> ThinString<'static> {
+    pub fn leak(self) -> ThinString<'static> {
         // SAFETY: we do not drop the allocation which leaks the string
         //
         // use as_thinstr for null pointer check
