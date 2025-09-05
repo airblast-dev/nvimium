@@ -22,7 +22,6 @@ pub(crate) unsafe fn assign_field<T>(
     field.write(value);
 }
 
-
 /// Create a struct with masked fields
 ///
 /// # The mask
@@ -71,7 +70,7 @@ macro_rules! masked_builder {
           ),*];
 
           /// Contains the bit indexes to set when assigning a value to the structs fields.
-          /// 
+          ///
           /// The values are ordered in the same way the structs fields are declared.
           /// These values should be used directly and instead should be used by performing shifts
           /// on 1 such as `1 << MASK_OFFSETS[2]`.
@@ -100,9 +99,14 @@ pub(crate) use masked_builder;
 /// Decides which type to actually store whilst acknowledging the builder attribute on the field.
 macro_rules! gen_field {
     (
-        #[nv_enum] $field_name:ident: $field_ty:ty
+        #[nv_str_enum] $field_name:ident: $field_ty:ty
     ) => {
         $crate::nvim_types::ThinString<'static>
+    };
+    (
+        #[nv_obj_ref_enum] $field_name:ident: $field_ty:ty
+    ) => {
+        $crate::nvim_types::object::ObjectRef<'static>
     };
     (
         #[skip] $field_name:ident: $field_ty:ty
@@ -126,9 +130,9 @@ pub(crate) use gen_field;
 ///
 /// Accepts the following syntax of `@IDX=#1; #[#2] field_name field_ident...`
 /// #1 = The index to use when looking up the Nth bit to set when assigning this field
-/// #2 = One of the following attributes [nv_enum, nv_str, skip, into]
+/// #2 = One of the following attributes [nv_str_enum, nv_str, skip, into]
 ///
-/// # nv_enum
+/// # nv_str_enum
 ///
 /// The function is modified to accept a neovim string enum where each variant is represented as a
 /// string. This is the same as nv_str but instead of using [`AsThinString`] it calls a method of
@@ -154,11 +158,23 @@ macro_rules! gen_funcs {
     (@IDX=$idx:expr;) => {};
     (
         @IDX=$idx:expr;
-        #[nv_enum] $field_name:ident: $field_ty:ty,
+        #[nv_str_enum] $field_name:ident: $field_ty:ty,
         $($next:tt)*
     ) => {
         pub fn $field_name(&mut self, $field_name: $field_ty) -> &mut Self {
             self.$field_name.write($field_name.as_enum_str());
+            self.mask |= 1 << builder::MASK_OFFSETS[$idx];
+            self
+        }
+        $crate::macros::masked_builder::gen_funcs!(@IDX=$idx + 1; $($next)*);
+    };
+    (
+        @IDX=$idx:expr;
+        #[nv_obj_ref_enum] $field_name:ident: $field_ty:ty,
+        $($next:tt)*
+    ) => {
+        pub fn $field_name(&mut self, $field_name: $field_ty) -> &mut Self {
+            self.$field_name.write($field_name.as_obj_ref());
             self.mask |= 1 << builder::MASK_OFFSETS[$idx];
             self
         }
