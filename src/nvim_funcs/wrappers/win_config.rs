@@ -21,7 +21,7 @@ mod tests {
         self as nvimium,
         nvim_types::{
             Buffer,
-            opts::win_opts::{Anchor, Border, Split, WinConfig},
+            opts::win_opts::{Anchor, Border, Relative, Split, WinConfig},
         },
     };
 
@@ -33,9 +33,11 @@ mod tests {
             .border(Border::Double)
             .row(2.)
             .col(6.)
+            .width(50)
+            .height(25)
             .focusable(true)
             .mouse(true)
-            .split(Split::Above);
-        super::open_win(Buffer::new(0), true, &config);
+            .relative(Relative::Editor);
+        super::open_win(Buffer::new(0), true, &config).unwrap();
     }
 }
