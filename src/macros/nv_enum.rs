@@ -1,8 +1,10 @@
-macro_rules! nv_enum {
-    ($vis:vis enum $enum_name:ident {
+macro_rules! nv_str_enum {
+    (
+        $(#[$($enum_attr:tt)+])*
+        $vis:vis enum $enum_name:ident {
         $($enum_variant:ident = $enum_str_val:literal,)*
     }) => {
-        #[derive(Clone, Copy)]
+        $(#[$($enum_attr)+])*
         $vis enum $enum_name {
             $($enum_variant, )*
         }
@@ -25,12 +27,39 @@ macro_rules! nv_enum {
         }
     };
 }
+pub(crate) use nv_str_enum;
+
+macro_rules! nv_obj_ref_enum {
+    (
+        $(#[$($enum_attr:tt)+])*
+        $vis:vis enum $enum_name:ident {
+        $($enum_variant:ident = $enum_val:expr,)*
+    }) => {
+        $(#[$($enum_attr)+])*
+        $vis enum $enum_name {
+            $($enum_variant, )*
+        }
+
+        impl $enum_name {
+            const LOOKUP: &[$crate::nvim_types::object::ObjectRef<'static>] = &[$($enum_val),*];
+        }
+
+        impl $enum_name {
+            #[inline]
+            pub(crate) const fn as_obj_ref(&self) -> $crate::nvim_types::object::ObjectRef<'static> {
+                Self::LOOKUP[*self as usize].copied()
+            }
+        }
+    };
+}
+pub(crate) use nv_obj_ref_enum;
 
 #[cfg(test)]
 mod tests {
     use crate::nvim_types::AsThinString;
 
-    nv_enum!(
+    nv_str_enum!(
+        #[derive(Clone, Copy)]
         enum MyEnum {
             A = "a",
             B = "b",
