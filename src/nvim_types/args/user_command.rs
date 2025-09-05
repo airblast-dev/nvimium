@@ -105,17 +105,17 @@ impl FromLuaMany for UserCommandArgs<'static> {
             let nargs = {
                 get_table_str_val(l, -1, c"nargs").ok().map(|nargs_s| {
                     if th!("0") == nargs_s {
-                        UserCommandNarg::ZERO
+                        UserCommandNarg::Zero
                     } else if th!("1") == nargs_s {
-                        UserCommandNarg::ONE
+                        UserCommandNarg::One
                     } else if th!("?") == nargs_s {
-                        UserCommandNarg::ZERO_OR_ONE
+                        UserCommandNarg::ZeroOrOne
                     } else if th!("+") == nargs_s {
-                        UserCommandNarg::ONE_OR_MORE
+                        UserCommandNarg::OneOrMore
                     }
                     // "*" case
                     else {
-                        UserCommandNarg::ZERO_OR_MORE
+                        UserCommandNarg::ZeroOrMore
                     }
                 })
             };

@@ -131,11 +131,11 @@ impl CommandInfos {
 
         let nargs = if let Object::String(s) = nargs.deref() {
             match s.as_thinstr().as_slice() {
-                b"0" => UserCommandNarg::ZERO,
-                b"*" => UserCommandNarg::ZERO_OR_MORE,
-                b"?" => UserCommandNarg::ZERO_OR_ONE,
-                b"+" => UserCommandNarg::ONE_OR_MORE,
-                b"1" => UserCommandNarg::ONE,
+                b"0" => UserCommandNarg::Zero,
+                b"*" => UserCommandNarg::ZeroOrMore,
+                b"?" => UserCommandNarg::ZeroOrOne,
+                b"+" => UserCommandNarg::OneOrMore,
+                b"1" => UserCommandNarg::One,
                 _ => unreachable!("unknown narg value"),
             }
         } else {

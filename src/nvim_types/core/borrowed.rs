@@ -1,6 +1,7 @@
 use core::{marker::PhantomData, mem::ManuallyDrop};
 
 #[repr(transparent)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Borrowed<'a, T>(ManuallyDrop<T>, PhantomData<&'a T>);
 
 impl<'a, T> Borrowed<'a, T> {

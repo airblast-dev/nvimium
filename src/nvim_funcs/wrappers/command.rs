@@ -121,9 +121,9 @@ mod tests {
             c"MyCmdNvimium".as_thinstr(),
             UserCommand::command(&c":echomsg \"hello\""),
             CreateUserCommandOpts::default()
-                .complete(UserCommandCompleteKind::MESSAGES)
+                .complete(UserCommandCompleteKind::Messages)
                 .force(true)
-                .nargs(UserCommandNarg::ZERO_OR_MORE),
+                .nargs(UserCommandNarg::ZeroOrMore),
         )
         .unwrap();
 
@@ -157,7 +157,7 @@ mod tests {
             }),
             CreateUserCommandOpts::default()
                 .force(true)
-                .nargs(UserCommandNarg::ONE),
+                .nargs(UserCommandNarg::One),
         )
         .unwrap();
 

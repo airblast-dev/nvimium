@@ -532,6 +532,12 @@ impl<'a> ObjectRef<'a> {
             val: ObjectRefVal { string: v },
         }
     }
+
+    pub(crate) const fn copied(&self) -> Self {
+        let mut s = MaybeUninit::uninit();
+        unsafe { core::ptr::copy_nonoverlapping(self, &raw mut s as *mut Self, 1) };
+        unsafe { s.assume_init() }
+    }
 }
 
 #[repr(C)]
@@ -541,8 +547,8 @@ pub(crate) union ObjectRefVal<'a> {
     pub num: Integer,
     pub float: Float,
     pub string: ThinString<'a>,
-    pub array: ManuallyDrop<Array>,
-    pub dict: ManuallyDrop<Dict>,
+    pub array: ManuallyDrop<Borrowed<'a, Array>>,
+    pub dict: ManuallyDrop<Borrowed<'a, Dict>>,
     pub buffer: Buffer,
     pub window: Window,
     pub tab_page: TabPage,
@@ -573,7 +579,7 @@ impl<'a> From<&'a Array> for ObjectRef<'a> {
         ObjectRef {
             tag: ObjectTag::Array,
             val: ObjectRefVal {
-                array: ManuallyDrop::new(unsafe { (value as *const Array).read() }),
+                array: ManuallyDrop::new(value.into()),
             },
         }
     }
